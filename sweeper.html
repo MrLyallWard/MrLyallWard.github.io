@@ -1,0 +1,71 @@
+<html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024">
+<script>
+ class Level { 
+  span = 16;
+  length = 64;
+  mines = [];
+  constructor() {
+   while (this.mines.length < (this.length-1)) this.mines.push(this.row());
+  }
+  work() {
+   if (this.mines.length < this.length) {	
+    this.mines.push(this.row());
+    console.log('level length ' + this.mines.length);
+   }
+  }
+  row() {var a = []; while (a.length < this.span) a.push(0); return a;}
+ }
+ class Menu {
+  step;
+  canvas;
+  context;
+  constructor() {
+   this.step = 0;
+   this.canvas = document.getElementById('board');
+   this.canvas.setAttribute("width", 160);
+   this.canvas.setAttribute("height", 480);
+   this.context = this.canvas.getContext("2d");
+  }
+  work() {
+   console.log('menu step ' + (this.step += 1));
+  }
+ }
+ class Board {
+  step;
+  canvas;
+  context;
+  constructor() {
+   this.step = 0;
+   this.canvas = document.getElementById('board');
+   this.canvas.setAttribute("width", 480);
+   this.canvas.setAttribute("height", 480);
+   this.context = this.canvas.getContext("2d");
+  }
+  work() {
+   console.log('board step ' + (this.step += 1));
+  }
+ }
+ var level = new Level();
+ var menu;
+ var board;
+ function tick()
+ {
+   menu.work();
+   board.work();
+ }
+ function startup()
+ { 
+   menu = new Menu();
+   board = new Board();
+   setInterval(function(){tick()}, 1000); 
+   setInterval(function(){level.work()}, 1); 
+ }
+ window.onload = startup;
+ console.log('Page started');
+</script></head><body>
+  <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
+  <canvas id="menu" width="32" height="32" oncontextmenu="return false;"></canvas>
+  <br/>"Copyright Lyall Ward 2024"
+</body><script>
+</script>
+</html>
