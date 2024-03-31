@@ -1,11 +1,14 @@
-<html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024">
-<script>
+<html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  class Level { 
   span = 16;
   length = 64;
   mines = [];
+  cleared = [];
+  proximity = [];
   constructor() {
-   while (this.mines.length < (this.length-1)) this.mines.push(this.row());
+   while (this.mines.length < this.length) this.mines.push(this.row());
+   while (this.cleared.length < this.length) this.cleared.push(this.row());
+   while (this.proximity.length < this.length) this.proximity.push(this.row());
   }
   work() {
    if (this.mines.length < this.length) {	
@@ -65,7 +68,5 @@
 </script></head><body>
   <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
   <canvas id="menu" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <br/>"Copyright Lyall Ward 2024"
-</body><script>
-</script>
-</html>
+  <font size="1"><small><br/>Copyright Lyall Ward 2024</small></font>
+</body></html>
