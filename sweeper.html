@@ -1,7 +1,30 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
+ const S = Object.freeze({
+  0: Symbol("0"), 1: Symbol("1"), 2: Symbol("2"),
+  3: Symbol("3"), 4: Symbol("4"), 5: Symbol("5"),
+  6: Symbol("6"), 7: Symbol("7"), 8: Symbol("8"),
+  mine: Symbol("mine"), blam: Symbol("blam"), unknown: Symbol("unknown"), flag: Symbol("flag")
+ })
+ // 16 by 16 character font
+ const border = [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ];
+ const one    = [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ];
+ const two    = [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ];
+ const three  = [ 0x0000, 0x0000, 0x0000, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x03F0,  0x03F0, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ];
+ const four   = [ 0x0000, 0x0000, 0x0000, 0x0770,  0x0770, 0x0E70, 0x0E70, 0x1FF8,  0x1FF8, 0x0070, 0x0070, 0x0070,  0x0070, 0x0000, 0x0000, 0x0000 ];
+ const five   = [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ];
+ const six    = [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF0, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ];
+ const seven  = [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x0078, 0x00F0, 0x01E0,  0x01C0, 0x03C0, 0x0380, 0x0380,  0x0380, 0x0000, 0x0000, 0x0000 ];
+ const eight  = [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x1C38, 0x0FF0,  0x0FF0, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ];
+ const light  = [ 0xFFFE, 0xFFFC, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0x8000, 0x0000 ];
+ const dark   = [ 0x0000, 0x0001, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x3FFF, 0x7FFF ];
+ const flag   = [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ];
+ const post   = [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ];
+ const mine   = [ 0x0000, 0x0000, 0x0080, 0x0080,  0x0BE8, 0x07F0, 0x0FF8, 0x0FF8,  0x3FFE, 0x0FF8, 0x0FF8, 0x07F0,  0x0BE8, 0x0080, 0x0080, 0x0000 ];
+ const dot    = [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0300, 0x0300,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ];
+ const blam   = [ 0x0000, 0x7FFF, 0x7F7F, 0x7F7F,  0x7417, 0x780F, 0x7007, 0x7007,  0x4001, 0x7007, 0x7007, 0x780F,  0x7417, 0x7F7F, 0x7F7F, 0x7FFF ];
  class Level { 
   span = 16;
-  length = 64;
+  length = 32;
   mines = [];
   cleared = [];
   proximity = [];
@@ -18,6 +41,46 @@
   }
   row() {var a = []; while (a.length < this.span) a.push(0); return a;}
  }
+ class Squares {
+  canvases = [];
+  contexts = [];
+  constructor() {
+   for (let i = 0; i < 13; i++) { 
+    this.canvases.push(document.createElement('canvas'));
+    this.canvases[i].setAttribute("width", 0x200);
+    this.canvases[i].setAttribute("height", 0x200);
+	this.contexts.push(this.canvases[i].getContext("2d"));
+   }
+   this.contexts[0].fillStyle='#BDBDBD'; //blank template
+   this.contexts[0].fillRect(0x000,0x000,0x200,0x200);
+   this.contexts[0].fill();
+   this.Draw(11,  0, light,  "#FFFFFF");
+   this.Draw(11, 11, dark,   "#7B7B7B");
+   this.Draw(12, 11, flag,   "#FF0000");
+   this.Draw(12, 12, post,   "#000000");
+   this.Draw( 0,  0, border, "#7B7B7B");
+   this.Draw( 1,  0, one,    "#0000FF");
+   this.Draw( 2,  0, two,    "#007B00");
+   this.Draw( 3,  0, three,  "#FF0000");
+   this.Draw( 4,  0, four,   "#00007B");
+   this.Draw( 5,  0, five,   "#7B0000");
+   this.Draw( 6,  0, six,    "#007B7B");
+   this.Draw( 7,  0, seven,  "#1E1E1E");
+   this.Draw( 8,  0, eight,  "#FF00FF");
+   this.Draw( 9,  0, mine,   "#000000");
+   this.Draw( 9,  9, dot,    "#FFFFFF");
+   this.Draw(10,  9, blam,   "#FF0000");
+  }
+  Draw(context, canvas, pixels, style) {
+   var c = this.contexts[context];
+   c.drawImage(this.canvases[canvas], 0, 0);
+   c.fillStyle=style;
+   for (let i = 0; i < pixels.length; i++) {
+	var p = pixels[i];
+	var y = i * 0x20;
+	for (let x = 0; x < 0x200; x += 0x20, p <<= 1) {
+	 if ((p & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
+ }
  class Menu {
   step;
   canvas;
@@ -25,8 +88,8 @@
   constructor() {
    this.step = 0;
    this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 160);
-   this.canvas.setAttribute("height", 480);
+   this.canvas.setAttribute("width", 512);
+   this.canvas.setAttribute("height", 512);
    this.context = this.canvas.getContext("2d");
   }
   work() {
@@ -37,15 +100,19 @@
   step;
   canvas;
   context;
+  squares;
   constructor() {
+   this.squares = new Squares;
    this.step = 0;
    this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 480);
-   this.canvas.setAttribute("height", 480);
+   this.canvas.setAttribute("width", 3840); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
+   this.canvas.setAttribute("height", 2160); // side by side, with some space for controls and scores
    this.context = this.canvas.getContext("2d");
   }
   work() {
    console.log('board step ' + (this.step += 1));
+   var i = this.step % this.squares.canvases.length;
+   this.context.drawImage(this.squares.canvases[i], 0, 0);
   }
  }
  var level = new Level();
@@ -64,7 +131,7 @@
    setInterval(function(){level.work()}, 1); 
  }
  window.onload = startup;
- console.log('Page started');
+ console.log('Sweeper started');
 </script></head><body>
   <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
   <canvas id="menu" width="32" height="32" oncontextmenu="return false;"></canvas>
