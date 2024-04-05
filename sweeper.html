@@ -1,28 +1,69 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
- const S = Object.freeze({
-  0: Symbol("0"), 1: Symbol("1"), 2: Symbol("2"),
-  3: Symbol("3"), 4: Symbol("4"), 5: Symbol("5"),
-  6: Symbol("6"), 7: Symbol("7"), 8: Symbol("8"),
-  mine: Symbol("mine"), blam: Symbol("blam"), unknown: Symbol("unknown"), flag: Symbol("flag")
- })
- class Level { 
+ //const S = Object.freeze({
+ // 0: Symbol("0"), 1: Symbol("1"), 2: Symbol("2"),
+ // 3: Symbol("3"), 4: Symbol("4"), 5: Symbol("5"),
+ // 6: Symbol("6"), 7: Symbol("7"), 8: Symbol("8"),
+ // mine: Symbol("mine"), blam: Symbol("blam"), unknown: Symbol("unknown"), flag: Symbol("flag")
+ //})
+ const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, erorr:13 })
+ class Level {
+  x = -1;
+  y = -1;
   span = 16;
   length = 32;
   mines = [];
   cleared = [];
+  flagged = [];
   proximity = [];
   constructor() {
    while (this.mines.length < this.length) this.mines.push(this.row());
    while (this.cleared.length < this.length) this.cleared.push(this.row());
-   while (this.proximity.length < this.length) this.proximity.push(this.row());
+   while (this.flagged.length < this.length) this.flagged.push(this.row());
+   while (this.proximity.length < this.length) this.proximity.push(this.row()); 
+   for (let i = 0; i < 32; i++) {this.addMine(this.rand16(), this.rand16()); }
   }
   work() {
    if (this.mines.length < this.length) {	
     this.mines.push(this.row());
-    console.log('level length ' + this.mines.length);
-   }
+    console.log('level length ' + this.mines.length); }
   }
   row() {var a = []; while (a.length < this.span) a.push(0); return a;}
+  rand16() {return Math.floor(Math.random() * 16);}
+  addMine(x, y) {
+   if (this.mines[y][x] != 0) return false;
+   this.mines[y][x] = 1;
+   for (let X=(x-1); X<=(x+1); X++) {for (let Y=(y-1); Y<=(y+1); Y++) {this.addProximity(X, Y);} }
+  }
+  addProximity(x, y) { if ((x>=0) && (y>=0) && (x<this.span) && (y<this.length)) {this.proximity[y][x]++;} }
+  At(x, y) {
+   if ((this.x == x) && (this.y == y)) return Square.explosion;
+   if (this.flagged[y][x] != 0) return Square.flag;
+   if (this.cleared[y][x] == 0) return Square.unknown;
+   if (this.mines[y][x] != 0) return Square.mine;
+   return this.proximity[y][x];
+  }
+  step(x, y) {
+   if (this.flagged[y][x] !=0) return;
+   if ((this.mines[y][x] != 0)) {
+    this.x = x;
+	this.y = y;
+	for (let c = 0; c < this.mines.length; c++) for (let r = 0; r < this.mines[c].length; r++) {if (this.mines[c][r] != 0) this.cleared[c][r] = 1;}
+   }
+   this.clear(x, y);
+  }
+  flag(x, y) {
+   if ((x>=0) && (x<this.span) && (y>=0) && (y<this.length) && (this.cleared[y][x] == 0)) {
+    this.flagged[y][x] = (this.flagged[y][x] == 1)?0:1;
+   } 
+  }
+  clear(x, y) {
+   if ((x>=0) && (x<this.span) && (y>=0) && (y<this.length) && (this.cleared[y][x] == 0) && (this.flagged[y][x] == 0)) {
+    this.cleared[y][x] = 1;
+	if (this.proximity[y][x] == 0) {
+     this.clear(x-1,y-1); this.clear(x,y-1); this.clear(x+1,y-1);
+	 this.clear(x-1,y  );                    this.clear(x+1,y  );
+	 this.clear(x-1,y+1); this.clear(x,y+1); this.clear(x+1,y+1); }}
+  }
  }
  class Squares {
   canvases = [];
@@ -43,9 +84,10 @@
    [11, 11, [ 0xFFFE, 0xFFFC, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0x8000, 0x0000 ], "#FFFFFF"],  //light
    [11, 11, [ 0x0000, 0x0001, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x3FFF, 0x7FFF ], "#7B7B7B"],  //shadow
    [12, 11, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#FF0000"],  //flag
-   [12, 12, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#000000"]]; //post
+   [12, 12, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#000000"],  //post
+   [13,  9, [ 0x0000, 0x0000, 0x2002, 0x1004,  0x0808, 0x0410, 0x0220, 0x0140,  0x0080, 0x0140, 0x0220, 0x0410,  0x0808, 0x1004, 0x2002, 0x0000 ], "#FF0000"]]; //cross
   constructor() {
-   for (let i = 0; i < 13; i++) { 
+   for (let i = 0; i < 14; i++) { 
     this.canvases.push(document.createElement('canvas'));
     this.canvases[i].setAttribute("width", 0x200);
     this.canvases[i].setAttribute("height", 0x200);
@@ -53,76 +95,118 @@
    }
    this.Blank(this.contexts[0]);
    this.Blank(this.contexts[11]);
-   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); }
-  }
+   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
   Blank(context) {
    context.fillStyle='#BDBDBD'; //blank template
    context.fillRect(0x000,0x000,0x200,0x200);
-   context.fill();
-  }
+   context.fill(); }
   DrawFont(font) {
    var c = this.contexts[font[0]];
    c.drawImage(this.canvases[font[1]], 0, 0);
    c.fillStyle=font[3];
    for (let i = 0; i < font[2].length; i++) {
-	var p = font[2][i];
+	var pixels = font[2][i];
 	var y = i * 0x20;
-	for (let x = 0; x < 0x200; x += 0x20, p <<= 1) {
-	 if ((p & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
-}
- class Menu {
-  step;
-  canvas;
-  context;
-  constructor() {
-   this.step = 0;
-   this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 512);
-   this.canvas.setAttribute("height", 512);
-   this.context = this.canvas.getContext("2d");
+	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
+	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
+ }
+ class Control {
+  constructor () {
+   window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
+   window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
+   window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }}); 
   }
-  work() {
-   console.log('menu step ' + (this.step += 1));
+  mousedown(e) {
+   switch (e.target.id) {
+	case 'board':board.click(e.offsetX, e.offsetY);break;
+   }
+  }
+  mousemove(e) {
+   switch (e.target.id) {
+    case 'board':board.check(e.offsetX, e.offsetY);break;
+   }
+  }
+  mouseup(e) {
+   switch (e.target.id) {
+    case 'board':board.clicked(e.offsetX, e.offsetY, e.button);break;
+   }
   }
  }
  class Board {
-  step;
   canvas;
   context;
   squares;
+  x;
+  y;
   constructor() {
    this.squares = new Squares;
    this.step = 0;
    this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 3840); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
+   this.canvas.setAttribute("width", 2160); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
    this.canvas.setAttribute("height", 2160); // side by side, with some space for controls and scores
-   this.context = this.canvas.getContext("2d");
-  }
+   this.context = this.canvas.getContext("2d"); }
   work() {
-   console.log('board step ' + (this.step += 1));
-   var i = this.step % this.squares.canvases.length;
-   this.context.drawImage(this.squares.canvases[i], 0, 0);
+   for (let y = 0; y < 16; y ++) {
+	for (let x = 0; x < 16; x ++) {
+	 this.context.drawImage(this.squares.canvases[level.At(x,y)], 56 + (x * 128), 56 + (y * 128), 128, 128);
+    }
+   }
+  }
+  coord(a) {return Math.floor((a-56) / 128);}
+  click(x, y) { this.x = this.coord(x); this.y = this.coord(y); }
+  check(x, y) { if ((this.coord(x) != this.x) || (this.coord(y) != this.y)) {this.x = this.y = -1;}}
+  clicked(x, y, button) {
+   x = this.coord(x);
+   y = this.coord(y);
+   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<16) && (y<16)) {
+	if (button == 0) {
+	 level.step(x,y); 
+	} else {
+	 level.flag(x,y);
+	}
+   }
   }
  }
+ class Menu {
+  side;
+  step;
+  canvas;
+  context;
+  constructor(side) {
+   this.step = 0;
+   this.side = side;
+   this.canvas = document.getElementById(side);
+   this.canvas.setAttribute("width", (3840 - 2160)/2);
+   this.canvas.setAttribute("height", 2160);
+   this.context = this.canvas.getContext("2d"); }
+  work() {
+   console.log('menu step ' + (this.step += 1)); }
+  update(x, y) {};
+ }
+ 
+ var control = new Control();
  var level = new Level();
- var menu;
+ var left;
  var board;
+ var right;
  function tick()
  {
-   menu.work();
+   //menu.work();
    board.work();
  }
  function startup()
  { 
-   menu = new Menu();
    board = new Board();
-   setInterval(function(){tick()}, 1000); 
+   left = new Menu('left');
+   right = new Menu('right');
+   setInterval(function(){tick()}, 40); 
    setInterval(function(){level.work()}, 1); 
  }
  window.onload = startup;
  console.log('Sweeper started');
 </script></head><body>
   <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <canvas id="menu" width="32" height="32" oncontextmenu="return false;"></canvas>
+  <canvas id="left" width="32" height="32" oncontextmenu="return false;"></canvas>
+  <canvas id="right" width="32" height="32" oncontextmenu="return false;"></canvas>
   <font size="1"><small><br/>Copyright Lyall Ward 2024</small></font>
 </body></html>
