@@ -1,10 +1,4 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
- //const S = Object.freeze({
- // 0: Symbol("0"), 1: Symbol("1"), 2: Symbol("2"),
- // 3: Symbol("3"), 4: Symbol("4"), 5: Symbol("5"),
- // 6: Symbol("6"), 7: Symbol("7"), 8: Symbol("8"),
- // mine: Symbol("mine"), blam: Symbol("blam"), unknown: Symbol("unknown"), flag: Symbol("flag")
- //})
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, erorr:13 })
  class Level {
   x = -1;
@@ -37,12 +31,16 @@
   addProximity(x, y) { if ((x>=0) && (y>=0) && (x<this.span) && (y<this.length)) {this.proximity[y][x]++;} }
   At(x, y) {
    if ((this.x == x) && (this.y == y)) return Square.explosion;
-   if (this.flagged[y][x] != 0) return Square.flag;
+   if (this.flagged[y][x] != 0) {
+    if ((this.mines[y][x] == 0) && (this.x > -1)) return Square.erorr;
+	return Square.flag;
+   }
    if (this.cleared[y][x] == 0) return Square.unknown;
    if (this.mines[y][x] != 0) return Square.mine;
    return this.proximity[y][x];
   }
   step(x, y) {
+   if (this.x > -1) return;
    if (this.flagged[y][x] !=0) return;
    if ((this.mines[y][x] != 0)) {
     this.x = x;
@@ -52,6 +50,7 @@
    this.clear(x, y);
   }
   flag(x, y) {
+   if (this.x > -1) return;
    if ((x>=0) && (x<this.span) && (y>=0) && (y<this.length) && (this.cleared[y][x] == 0)) {
     this.flagged[y][x] = (this.flagged[y][x] == 1)?0:1;
    } 
@@ -68,7 +67,7 @@
  class Squares {
   canvases = [];
   contexts = [];
-  font = [ // 13 characters of a 16 by 16 character font for the board playfield
+  font = [ // 14 characters of a 16 by 16 character font for the board playfield
    [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#7B7B7B"],  // 0
    [ 1,  0, [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ], "#0000FF"],  // 1
    [ 2,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ], "#007B00"],  // 2
@@ -85,7 +84,7 @@
    [11, 11, [ 0x0000, 0x0001, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x3FFF, 0x7FFF ], "#7B7B7B"],  //shadow
    [12, 11, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#FF0000"],  //flag
    [12, 12, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#000000"],  //post
-   [13,  9, [ 0x0000, 0x0000, 0x2002, 0x1004,  0x0808, 0x0410, 0x0220, 0x0140,  0x0080, 0x0140, 0x0220, 0x0410,  0x0808, 0x1004, 0x2002, 0x0000 ], "#FF0000"]]; //cross
+   [13,  9, [ 0x0000, 0x0000, 0x2002, 0x3006,  0x180C, 0x0C18, 0x0630, 0x0360,  0x01C0, 0x0360, 0x0630, 0x0C18,  0x180C, 0x3006, 0x2002, 0x0000 ], "#FF0000"]]; //cross
   constructor() {
    for (let i = 0; i < 14; i++) { 
     this.canvases.push(document.createElement('canvas'));
@@ -95,7 +94,13 @@
    }
    this.Blank(this.contexts[0]);
    this.Blank(this.contexts[11]);
-   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
+   for (let a = 0; a < this.font.length; a++) {
+    console.log("Draw font step " + a);
+    this.DrawFont(this.font[a]);
+    console.log("Drawn font step " + a);
+   }
+   console.log("squares constructed");
+  }
   Blank(context) {
    context.fillStyle='#BDBDBD'; //blank template
    context.fillRect(0x000,0x000,0x200,0x200);
@@ -108,7 +113,11 @@
 	var pixels = font[2][i];
 	var y = i * 0x20;
 	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
-	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
+	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); 
+	 }
+	}
+   }
+  }
  }
  class Control {
   constructor () {
