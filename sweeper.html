@@ -90,16 +90,10 @@
     this.canvases.push(document.createElement('canvas'));
     this.canvases[i].setAttribute("width", 0x200);
     this.canvases[i].setAttribute("height", 0x200);
-	this.contexts.push(this.canvases[i].getContext("2d"));
-   }
+	this.contexts.push(this.canvases[i].getContext("2d")); }
    this.Blank(this.contexts[0]);
    this.Blank(this.contexts[11]);
-   for (let a = 0; a < this.font.length; a++) {
-    console.log("Draw font step " + a);
-    this.DrawFont(this.font[a]);
-    console.log("Drawn font step " + a);
-   }
-   console.log("squares constructed");
+   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); }
   }
   Blank(context) {
    context.fillStyle='#BDBDBD'; //blank template
@@ -113,11 +107,7 @@
 	var pixels = font[2][i];
 	var y = i * 0x20;
 	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
-	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); 
-	 }
-	}
-   }
-  }
+	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
  }
  class Control {
   constructor () {
