@@ -1,66 +1,73 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, erorr:13, question:14, danger:15 })
  class Level {
-  c = -1;
-  r = -1;
-  rowOffset = 0;
-  span = 16;
-  length = 256;
+  #c = -1;
+  #r = -1;
+  #rowOffset = 0;
+  #span = 16;
+  #length = 256;
   mines = [];
   cleared = [];
   flagged = [];
   proximity = [];
   constructor() {
-   while (this.mines.length < this.length) this.mines.push(this.row());
-   while (this.cleared.length < this.length) this.cleared.push(this.row());
-   while (this.flagged.length < this.length) this.flagged.push(this.row());
-   while (this.proximity.length < this.length) this.proximity.push(this.row()); 
-   for (let i = 0; i < 640;) {if (this.addMine(this.rand(16), 2+this.rand(254))) i++;}}
+   while (this.mines.length < this.#length) this.mines.push(this.row());
+   while (this.cleared.length < this.#length) this.cleared.push(this.row());
+   while (this.flagged.length < this.#length) this.flagged.push(this.row());
+   while (this.proximity.length < this.#length) this.proximity.push(this.row()); 
+   for (let i = 0; i < 640;) {if (this.addMine(this.rand(this.#span), 2+this.rand(this.#length-2))) i++;}}
   work() {
-   if (this.mines.length < this.length) {
+   if (this.mines.length < this.#length) {
     this.mines.push(this.row());
     console.log('level length ' + this.mines.length); } }
-  row() {var a = []; while (a.length < this.span) a.push(0); return a;}
-  maxRow() { return this.length - this.row -1; }
+  row() {var a = []; while (a.length < this.#span) a.push(0); return a;}
+  maxRow() { return this.#length - this.row -1; }
   rand(n) {return Math.floor(Math.random() * n);}
   addMine(c, r) {
    if (this.mines[r][c] != 0) return false;
    this.mines[r][c] = 1;
    for (let C=(c-1); C<=(c+1); C++) {for (let R=(r-1); R<=(r+1); R++) {this.addProximity(C, R);} } 
    return true; }
-  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<this.span) && (r<this.length)) {this.proximity[r][c]++;} }
+  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<this.#span) && (r<this.#length)) {this.proximity[r][c]++;} }
   clear(c, r) {
-   if ((c>=0) && (c<this.span) && (r>=0) && (r<this.length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
+   if ((c>=0) && (c<this.#span) && (r>=0) && (r<this.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
     this.cleared[r][c] = 1;
 	if (this.proximity[r][c] == 0) {
      this.clear(c-1,r-1); this.clear(c,r-1); this.clear(c+1,r-1);
 	 this.clear(c-1,r  );                    this.clear(c+1,r  );
 	 this.clear(c-1,r+1); this.clear(c,r+1); this.clear(c+1,r+1); }}}
   offset(r) {
-   this.rowOffset += r;
-   if (this.rowOffset < 0) this.rowOffset = 0; else if (this.rowOffset >= this.maxRow()) this.rowOffset = this.maxRow(); }
+   this.#rowOffset += r;
+   if (this.#rowOffset < 0) this.#rowOffset = 0; else if (this.#rowOffset >= this.maxRow()) this.#rowOffset = this.maxRow(); }
+  correctRow(r) {
+   r = this.#rowOffset + this.#span - r - 1;
+   return r;
+  }
   
   At(c, r) {
-   if ((this.c == c) && (this.r == r)) return Square.explosion;
+   r = this.correctRow(r);
+   if ((this.#c == c) && (this.#r == r)) return Square.explosion;
    if (this.flagged[r][c] != 0) {
-    if ((this.mines[r][c] == 0) && (this.c > -1)) return Square.erorr;
+    if ((this.mines[r][c] == 0) && (this.#c > -1)) return Square.erorr;
 	return Square.flag; }
    if (this.cleared[r][c] == 0) return Square.unknown;
    if (this.mines[r][c] != 0) return Square.mine;
    return this.proximity[r][c]; }
-   
-  step(c, r) {
+    
+  Step(c, r) {
+   r = this.correctRow(r);
    if (this.c > -1) return;
    if (this.flagged[r][c] !=0) return;
    if ((this.mines[r][c] != 0)) {
-    this.c = c;
-	this.r = r;
+    this.#c = c;
+	this.#r = r;
 	for (let c = 0; c < this.mines.length; c++) for (let r = 0; r < this.mines[c].length; r++) {if (this.mines[c][r] != 0) this.cleared[c][r] = 1;} }
    this.clear(c, r); }
    
-  flag(c, r) {
+  Flag(c, r) {
+   r = this.correctRow(r);
    if (this.c > -1) return;
-   if ((c>=0) && (c<this.span) && (r>=0) && (r<this.length) && (this.cleared[r][c] == 0)) {
+   if ((c>=0) && (c<this.#span) && (r>=0) && (r<this.#length) && (this.cleared[r][c] == 0)) {
     this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
 	
  }
@@ -155,7 +162,7 @@
    x = this.coord(x);
    y = this.coord(y);
    if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<16) && (y<16)) {
-	if (button == 0) {level.step(x,y);} else {level.flag(x,y);}}}
+	if (button == 0) {level.Step(x,y);} else {level.Flag(x,y);}}}
   offset(y) {level.offset(y);}
  }
  class Menu {
