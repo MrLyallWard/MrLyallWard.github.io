@@ -1,37 +1,74 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
- const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, erorr:13, question:14, danger:15 })
+ const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
+ class Solution {
+  that;
+  found = Level.array(); 
+  solved = Level.array();
+  probability = Level.array();
+  constructor(level) {this.that = level;}
+  At(c, r) {
+   if (level.cleared[r][c] == 0) {
+    if (level.flagged[r][c] != 0) {
+	 if (level.mines[r][c] == 0) return Square.error;
+     return Square.flag; }
+    return Square.question; }
+   return level.proximity[r][c]; }
+  work() {
+   for (let i = 0; i < this.solved.length; i++) {
+	for (let j = 0; j < this.solved[0].length; j++) {
+	 if (this.solved[i][j] != 0) {
+	  if (level.proximity[i][j] > 0) {
+	  }
+	 }
+	}
+   }
+  }
+  unsolved(a, i, j) {
+   var count = 0;
+   if (i > 0) {
+	if ((j > 0) && (a[i-1][j-1] == 0)) count++;
+    if (a[i-1][j] == 0) count++;
+	if ((j < (a[0].length-1)) && (a[i-1][j+1] == 0)) count++;
+   }
+  }
+ }
  class Level {
   #c = -1;
   #r = -1;
   #rowOffset = 0;
-  #span = 16;
-  #length = 256;
-  mines = this.array();
-  cleared = this.array();
-  flagged = this.array();
-  proximity = this.array();
-  found = this.array();
-  solved = this.array();
+  #shift = false;
+  static #span = 16;
+  static #length = 256;
+  mines = Level.array();
+  cleared = Level.array();
+  flagged = Level.array();
+  proximity = Level.array();
+  solution;
   constructor() {
-   for (let i = 0; i < 640;) {if (this.addMine(this.rand(this.#span), 2+this.rand(this.#length-2))) i++;}
-   this.clear(0,0);}
+   for (let i = 0; i < 640;) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
+   this.solution = new Solution(this);
+   this.clear(0,0); }
   work() {
-   if (this.mines.length < this.#length) {
+   if (this.mines.length < Level.#length) {
     this.mines.push(this.row());
-    console.log('level length ' + this.mines.length); } }
-  array(a) {a = []; while (a.length < this.#length) a.push(this.row()); return a;}
-  row() {var a = []; while (a.length < this.#span) a.push(0); return a;}
-  maxRow() { return this.#length - this.row -1; }
+    console.log('level length ' + this.mines.length); } 
+   if (this.solution === undefined) {
+    this.solution = new Solution(this); }
+  }
+  static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
+  static row() {var a = []; while (a.length < Level.#span) a.push(0); return a;}
+  maxRow() { return Level.#length - Level.#span - 1; }
   rand(n) {return Math.floor(Math.random() * n);}
   addMine(c, r) {
    if (this.mines[r][c] != 0) return false;
    this.mines[r][c] = 1;
    for (let C=(c-1); C<=(c+1); C++) {for (let R=(r-1); R<=(r+1); R++) {this.addProximity(C, R);} }
    return true; }
-  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<this.#span) && (r<this.#length)) {this.proximity[r][c]++;} }
+  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<Level.#span) && (r<Level.#length)) {this.proximity[r][c]++;} }
   clear(c, r) {
-   if ((c>=0) && (c<this.#span) && (r>=0) && (r<this.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
+   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
     this.cleared[r][c] = 1;
+	this.solution.solved[r][c] = 1;
 	if (this.proximity[r][c] == 0) {
      this.clear(c-1,r-1); this.clear(c,r-1); this.clear(c+1,r-1);
 	 this.clear(c-1,r  );                    this.clear(c+1,r  );
@@ -39,26 +76,31 @@
 	 
   offset(r) {
    this.#rowOffset += r;
-   if (this.#rowOffset < 0) this.#rowOffset = 0; else if (this.#rowOffset >= this.maxRow()) this.#rowOffset = this.maxRow(); }
-   
+   if (this.#rowOffset < 0) this.#rowOffset = 0; 
+   if (this.#rowOffset > this.maxRow()) {
+    this.#rowOffset = this.maxRow(); 
+   }
+  }	
+  finished() { return (this.#r >= 0) || (this.#c >= 0); }
   correctRow(r) {
-   r = this.#rowOffset + this.#span - r - 1;
+   r = this.#rowOffset + Level.#span - r - 1;
    return r;
   }
-  
+  Shift(shift) {this.#shift = shift; }
   At(c, r) {
    r = this.correctRow(r);
    if ((this.#c == c) && (this.#r == r)) return Square.explosion;
-   if (this.flagged[r][c] != 0) {
-    if ((this.mines[r][c] == 0) && (this.#c > -1)) return Square.erorr;
-	return Square.flag; }
-   if (this.cleared[r][c] == 0) return Square.unknown;
-   if (this.mines[r][c] != 0) return Square.mine;
+   if (this.#shift && !this.finished()) { return this.solution.At(c, r); } else {
+    if (this.flagged[r][c] != 0) {
+     if ((this.mines[r][c] == 0) && (this.finished())) return Square.error;
+	 return Square.flag; }
+    if (this.cleared[r][c] == 0) return Square.unknown;
+    if (this.mines[r][c] != 0) return Square.mine; }
    return this.proximity[r][c]; }
     
   Step(c, r) {
    r = this.correctRow(r);
-   if (this.c > -1) return;
+   if (this.finished()) return;
    if (this.flagged[r][c] !=0) return;
    if ((this.mines[r][c] != 0)) {
     this.#c = c;
@@ -68,8 +110,8 @@
    
   Flag(c, r) {
    r = this.correctRow(r);
-   if (this.c > -1) return;
-   if ((c>=0) && (c<this.#span) && (r>=0) && (r<this.#length) && (this.cleared[r][c] == 0)) {
+   if (this.finished()) return;
+   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0)) {
     this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
 	
  }
@@ -122,6 +164,8 @@
  }
  class Control {
   constructor () {
+   window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
+   window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
    window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
    window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
    window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
@@ -138,6 +182,9 @@
   wheel(e) {
    board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
    console.log("mouse wheel"); }
+  shift(e) {
+   level.Shift(e.shiftKey);
+  }
  }
  class Board {
   canvas;
@@ -145,6 +192,7 @@
   squares;
   x;
   y;
+  key;
   constructor() {
    this.squares = new Squares;
    this.step = 0;
@@ -189,14 +237,14 @@
  var board;
  var right;
  function tick() {
-   board.work();
-   window.scrollbars.visible = false; }
+  board.work();
+  window.scrollbars.visible = false; }
  function startup() { 
-   board = new Board();
-   left = new Menu('left');
-   right = new Menu('right');
-   setInterval(function(){tick()}, 40); 
-   setInterval(function(){level.work()}, 1); }
+  board = new Board();
+  left = new Menu('left');
+  right = new Menu('right');
+  setInterval(function(){tick()}, 40); 
+  setInterval(function(){level.work()}, 1); }
  window.onload = startup;
  console.log('Sweeper started');
 </script></head><body>
