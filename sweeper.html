@@ -1,10 +1,12 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
  class Solution {
+  #region = [ [-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1] ];
   that;
   found = Level.array(); 
   solved = Level.array();
   probability = Level.array();
+  #i;#j;#count;#area;#countArray;
   constructor(level) {this.that = level;}
   At(c, r) {
    if (level.cleared[r][c] == 0) {
@@ -23,14 +25,15 @@
 	}
    }
   }
-  unsolved(a, i, j) {
-   var count = 0;
-   if (i > 0) {
-	if ((j > 0) && (a[i-1][j-1] == 0)) count++;
-    if (a[i-1][j] == 0) count++;
-	if ((j < (a[0].length-1)) && (a[i-1][j+1] == 0)) count++;
-   }
+  count(a, i, j) {
+   this.#count = this.#area = 0;
+   this.#i = i;
+   this.#j = j;
+   this.#countArray = a;
+   this.#region.foreach(this.arrayCounter);
   }
+  arrayCounter(ij) {this.#area++; if (this.peek(this.#countArray, this.#i+ij[0], this.#j+ij[1])) this.#count++;}
+  peek(array, i, j) {if ((i < 0) || (j < 0) || (i >= array[0].length) || (j >= array.length)) return 0; return array[i][j];}
  }
  class Level {
   #c = -1;
