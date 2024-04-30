@@ -1,12 +1,13 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
+ var sol;
  class Solution {
-  #region = [ [-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1] ];
+  region = [ [-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1] ];
   that;
   found = Level.array(); 
   solved = Level.array();
   probability = Level.array();
-  #i;#j;#count;#area;#countArray;
+  i;j;count;area;countArray;
   constructor(level) {this.that = level;}
   At(c, r) {
    if (level.cleared[r][c] == 0) {
@@ -16,23 +17,30 @@
     return Square.question; }
    return level.proximity[r][c]; }
   work() {
-   for (let i = 0; i < this.solved.length; i++) {
-	for (let j = 0; j < this.solved[0].length; j++) {
-	 if (this.solved[i][j] != 0) {
-	  if (level.proximity[i][j] > 0) {
+   var start = (new Date()).getTime();
+   for (let k = 0; k < 1000; k++) {
+    for (let i = 0; i < this.solved.length; i++) {
+ 	 for (let j = 0; j < this.solved[0].length; j++) {
+	  if (this.solved[i][j] != 0) {
+	   this.solveIt(this.solved, i, j);
 	  }
 	 }
 	}
    }
+   var end = (new Date()).getTime();
+   console.log("solution full work time " + (end - start));
   }
-  count(a, i, j) {
-   this.#count = this.#area = 0;
-   this.#i = i;
-   this.#j = j;
-   this.#countArray = a;
-   this.#region.foreach(this.arrayCounter);
+  solveIt(a, i, j) {
+   var p = level.proximity[i][j];
+   if (p > 0) {
+    this.count = this.area = 0;
+    this.i = i;
+    this.j = j;
+    this.countArray = sol.solved;
+    this.region.forEach(sol.arrayCounter);
+   }
   }
-  arrayCounter(ij) {this.#area++; if (this.peek(this.#countArray, this.#i+ij[0], this.#j+ij[1])) this.#count++;}
+  arrayCounter(ij) {sol.area++; if (sol.peek(sol.countArray, sol.i+ij[0], sol.j+ij[1])) sol.count++;}
   peek(array, i, j) {if ((i < 0) || (j < 0) || (i >= array[0].length) || (j >= array.length)) return 0; return array[i][j];}
  }
  class Level {
@@ -40,27 +48,29 @@
   #r = -1;
   #rowOffset = 0;
   #shift = false;
+  once = false;
   static #span = 16;
-  static #length = 256;
+  static #length = 64;
+  static #density = this.#length*2.5;
   mines = Level.array();
   cleared = Level.array();
   flagged = Level.array();
   proximity = Level.array();
   solution;
   constructor() {
-   for (let i = 0; i < 640;) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
-   this.solution = new Solution(this);
+   for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
+   sol = this.solution = new Solution(this);
    this.clear(0,0); }
   work() {
    if (this.mines.length < Level.#length) {
     this.mines.push(this.row());
     console.log('level length ' + this.mines.length); } 
-   if (this.solution === undefined) {
-    this.solution = new Solution(this); }
+   if (this.solution === undefined) { this.solution = new Solution(this); }
+   if (!this.once) { this.once = true; this.solution.work(); }
   }
   static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
   static row() {var a = []; while (a.length < Level.#span) a.push(0); return a;}
-  maxRow() { return Level.#length - Level.#span - 1; }
+  maxRow() { return Level.#length - Level.#span; }
   rand(n) {return Math.floor(Math.random() * n);}
   addMine(c, r) {
    if (this.mines[r][c] != 0) return false;
