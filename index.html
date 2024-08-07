@@ -1,0 +1,285 @@
+<html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
+ const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
+ var sol;
+ class Solution {
+  region = [ [-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1] ];
+  that;
+  found = Level.array(); 
+  solved = Level.array();
+  probability = Level.array();
+  i;j;count;area;countArray;
+  constructor(level) {this.that = level;}
+  At(c, r) {
+   if (level.cleared[r][c] == 0) {
+    if (level.flagged[r][c] != 0) {
+	 if (level.mines[r][c] == 0) return Square.error;
+     return Square.flag; }
+    return Square.question; }
+   return level.proximity[r][c]; }
+  work() {
+   var start = (new Date()).getTime();
+   for (let k = 0; k < 1000; k++) {
+    for (let i = 0; i < this.solved.length; i++) {
+ 	 for (let j = 0; j < this.solved[0].length; j++) {
+	  if (this.solved[i][j] != 0) {
+	   this.solveIt(this.solved, i, j);
+	  }
+	 }
+	}
+   }
+   var end = (new Date()).getTime();
+   console.log("solution full work time " + (end - start));
+  }
+  solveIt(a, i, j) {
+   var p = level.proximity[i][j];
+   if (p > 0) {
+    this.count = this.area = 0;
+    this.i = i;
+    this.j = j;
+    this.countArray = sol.solved;
+    this.region.forEach(sol.arrayCounter);
+   }
+  }
+  arrayCounter(ij) {sol.area++; if (sol.peek(sol.countArray, sol.i+ij[0], sol.j+ij[1])) sol.count++;}
+  peek(array, i, j) {if ((i < 0) || (j < 0) || (i >= array[0].length) || (j >= array.length)) return 0; return array[i][j];}
+ }
+ class Level {
+  #c = -1;
+  #r = -1;
+  #rowOffset = 0;
+  #score = 0;
+  #distance = 0;
+  #shift = false;
+  once = true;
+  static #span = 20;
+  static #length = 5000;
+  static #density = this.#length*(10/3);
+  mines = Level.array();
+  cleared = Level.array();
+  flagged = Level.array();
+  proximity = Level.array();
+  solution;
+  constructor() {
+   for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
+   sol = this.solution = new Solution(this);
+   this.clear(0,0); }
+  work() {
+   if (this.mines.length < Level.#length) {
+    this.mines.push(this.row());
+    console.log('level length ' + this.mines.length); } 
+   if (this.solution === undefined) { this.solution = new Solution(this); }
+   if (!this.once) { this.once = true; this.solution.work(); }
+  }
+  static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
+  static row() {var a = []; while (a.length < Level.#span) a.push(0); return a;}
+  maxRow() { return Level.#length - Level.#span; }
+  rand(n) {return Math.floor(Math.random() * n);}
+  addMine(c, r) {
+   if (this.mines[r][c] != 0) return false;
+   this.mines[r][c] = 1;
+   for (let C=(c-1); C<=(c+1); C++) {for (let R=(r-1); R<=(r+1); R++) {this.addProximity(C, R);} }
+   return true; }
+  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<Level.#span) && (r<Level.#length)) {this.proximity[r][c]++;} }
+  clear(c, r) {
+   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
+    this.cleared[r][c] = 1;
+	this.solution.solved[r][c] = 1;
+	if (this.proximity[r][c] == 0) {
+     this.clear(c-1,r-1); this.clear(c,r-1); this.clear(c+1,r-1);
+	 this.clear(c-1,r  );                    this.clear(c+1,r  );
+	 this.clear(c-1,r+1); this.clear(c,r+1); this.clear(c+1,r+1); }}}
+	 
+  offset(r) {
+   this.#rowOffset += r;
+   if (this.#rowOffset < 0) this.#rowOffset = 0; 
+   if (this.#rowOffset > this.maxRow()) {
+    this.#rowOffset = this.maxRow(); 
+   }
+  }	
+  finished() { return (this.#r >= 0) || (this.#c >= 0); }
+  correctRow(r) {
+   r = this.#rowOffset + Level.#span - r - 1;
+   return r;
+  }
+  Shift(shift) {this.#shift = shift; }
+  At(c, r) {
+   r = this.correctRow(r);
+   if ((this.#c == c) && (this.#r == r)) return Square.explosion;
+   var finished = this.finished();
+   if (this.#shift && !finished) { return this.solution.At(c, r); } else {
+    if (this.flagged[r][c] != 0) {
+     if ((this.mines[r][c] == 0) && (finished)) return Square.error;
+	 return Square.flag; }
+    if (finished && (this.mines[r][c] != 0)) return Square.mine;
+    if (this.cleared[r][c] == 0) return Square.unknown; }
+   return this.proximity[r][c]; }
+    
+  Step(c, r) {
+   r = this.correctRow(r);
+   if (this.finished()) return;
+   if (this.flagged[r][c] !=0) return;
+   if ((this.mines[r][c] == 0)) {
+    this.#score++; 
+    if (r > this.#distance) this.#distance = r;
+   } else { this.#c = c; this.#r = r; };
+   this.clear(c, r); }
+   
+  Flag(c, r) {
+   r = this.correctRow(r);
+   if (this.finished()) return;
+   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0)) {
+    this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
+	
+  Undo(c, r) {
+   r = this.correctRow(r);
+   if ((this.#c == c) && (this.#r == r)) {
+    this.#c = -1;
+    this.#r = -1; 
+	this.cleared[r][c] = 0; } }
+  
+  Score() { return "distance " + this.#distance + ", score " + this.#score; }  
+ }
+ class Squares {
+  canvases = [];
+  contexts = [];
+  font = [ // 16 characters of a 16 by 16 character font for the board playfield
+   [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
+   [ 1,  0, [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ], "#0000FF"],  // 1
+   [ 2,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ], "#008000"],  // 2
+   [ 3,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x03F0,  0x03F0, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ], "#FF0000"],  // 3
+   [ 4,  0, [ 0x0000, 0x0000, 0x0000, 0x0770,  0x0770, 0x0E70, 0x0E70, 0x1FF8,  0x1FF8, 0x0070, 0x0070, 0x0070,  0x0070, 0x0000, 0x0000, 0x0000 ], "#000080"],  // 4
+   [ 5,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ], "#800000"],  // 5
+   [ 6,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF0, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#008080"],  // 6
+   [ 7,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x0078, 0x00F0, 0x01E0,  0x01C0, 0x03C0, 0x0380, 0x0380,  0x0380, 0x0000, 0x0000, 0x0000 ], "#000000"],  // 7
+   [ 8,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x1C38, 0x0FF0,  0x0FF0, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#808080"],  // 8
+   [ 9,  0, [ 0x0000, 0x0000, 0x0080, 0x0080,  0x0BE8, 0x07F0, 0x0FF8, 0x0FF8,  0x3FFE, 0x0FF8, 0x0FF8, 0x07F0,  0x0BE8, 0x0080, 0x0080, 0x0000 ], "#000000"],  //mine
+   [ 9,  9, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0300, 0x0300,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#FFFFFF"],  //dot
+   [10,  9, [ 0x0000, 0x7FFF, 0x7F7F, 0x7F7F,  0x7417, 0x780F, 0x7007, 0x7007,  0x4001, 0x7007, 0x7007, 0x780F,  0x7417, 0x7F7F, 0x7F7F, 0x7FFF ], "#FF0000"],  //explosion
+   [11, 11, [ 0xFFFE, 0xFFFC, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0x8000, 0x0000 ], "#FFFFFF"],  //light
+   [11, 11, [ 0x0000, 0x0001, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x3FFF, 0x7FFF ], "#808080"],  //shadow
+   [12, 11, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#FF0000"],  //flag
+   [12, 12, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#000000"],  //post
+   [13,  9, [ 0x0000, 0x0000, 0x2002, 0x3006,  0x180C, 0x0C18, 0x0630, 0x0360,  0x01C0, 0x0360, 0x0630, 0x0C18,  0x180C, 0x3006, 0x2002, 0x0000 ], "#FF0000"],  //cross
+   [14, 11, [ 0x0000, 0x0000, 0x0000, 0x03C0,  0x0660, 0x0660, 0x0060, 0x00C0,  0x0180, 0x0180, 0x0000, 0x0180,  0x0180, 0x0000, 0x0000, 0x0000 ], "#000000"],  //?
+   [15,  0, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x01E0, 0x0330, 0x0330, 0x0030,  0x0060, 0x00C0, 0x00C0, 0x0000,  0x00C0, 0x00C0, 0x0000, 0x0000 ], "#000000"],  //?
+  ];
+  constructor() {
+   for (let i = 0; i < 16; i++) { 
+    this.canvases.push(document.createElement('canvas'));
+    this.canvases[i].setAttribute("width", 0x200);
+    this.canvases[i].setAttribute("height", 0x200);
+	this.contexts.push(this.canvases[i].getContext("2d")); }
+   this.Blank(this.contexts[0]);
+   this.Blank(this.contexts[11]);
+   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
+  Blank(context) {
+   context.fillStyle='#BFBFBF'; //blank template
+   context.fillRect(0x000,0x000,0x200,0x200);
+   context.fill(); }
+  DrawFont(font) {
+   var c = this.contexts[font[0]];
+   c.drawImage(this.canvases[font[1]], 0, 0);
+   c.fillStyle=font[3];
+   for (let i = 0; i < font[2].length; i++) {
+	var pixels = font[2][i];
+	var y = i * 0x20;
+	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
+	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
+ }
+ class Control {
+  constructor () {
+   window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
+   window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
+   window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
+   window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
+   window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
+   window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }}); }
+  mousedown(e) {
+   switch (e.target.id) {
+	case 'board':board.click(e.offsetX, e.offsetY);break; } }
+  mousemove(e) {
+   switch (e.target.id) {
+    case 'board':board.check(e.offsetX, e.offsetY);break; } }
+  mouseup(e) {
+   switch (e.target.id) {
+    case 'board':board.clicked(e.offsetX, e.offsetY, e.button);break; } }
+  wheel(e) {
+   board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
+   console.log("mouse wheel"); }
+  shift(e) {
+   level.Shift(e.shiftKey);
+  }
+ }
+ class Board {
+  canvas;
+  context;
+  squares;
+  x;
+  y;
+  key;
+  constructor() {
+   this.squares = new Squares;
+   this.step = 0;
+   this.canvas = document.getElementById('board');
+   this.canvas.setAttribute("width", 2700); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
+   this.canvas.setAttribute("height", 2700); // side by side, with some space for controls and scores
+   this.context = this.canvas.getContext("2d"); }
+  work() {
+   for (let y = 0; y < 20; y ++) {
+	for (let x = 0; x < 20; x ++) {
+	 this.context.drawImage(this.squares.canvases[level.At(x,y)], 56 + (x * 128), 56 + (y * 128), 128, 128);}}
+  }
+  coord(a) {return Math.floor((a-56) / 128);}
+  click(x, y) { this.x = this.coord(x); this.y = this.coord(y); }
+  check(x, y) { if ((this.coord(x) != this.x) || (this.coord(y) != this.y)) {this.x = this.y = -1;}}
+  clicked(x, y, button) {
+   x = this.coord(x);
+   y = this.coord(y);
+   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<20) && (y<20)) {
+    switch (button) {
+	 case 0: level.Step(x,y); break;
+	 case 1: level.Undo(x,y); break;
+	 case 2: level.Flag(x,y); break; }}}
+  offset(y) {level.offset(y);}
+ }
+ class Menu {
+  side;
+  step;
+  canvas;
+  context;
+  constructor(side) {
+   this.step = 0;
+   this.side = side;
+   this.canvas = document.getElementById(side);
+   this.canvas.setAttribute("width", 2); //(3840 - 2160)/2);
+   this.canvas.setAttribute("height", 2); //2160);
+   this.context = this.canvas.getContext("2d"); }
+  work() {
+   console.log('menu step ' + (this.step += 1)); }
+  update(x, y) {};
+ }
+ var control = new Control();
+ var level = new Level();
+ var left;
+ var board;
+ var right;
+ var score;
+ function tick() {
+  board.work();
+  window.scrollbars.visible = false; 
+  score.innerText = level.Score(); }
+ function startup() { 
+  score = document.getElementById("score");
+  board = new Board();
+  left = new Menu('left');
+  right = new Menu('right');
+  setInterval(function(){tick()}, 40); 
+  setInterval(function(){level.work()}, 1); }
+ window.onload = startup;
+ console.log('Sweeper started');
+</script></head><body>
+  <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
+  <canvas id="left" width="2" height="2" oncontextmenu="return false;"></canvas>
+  <canvas id="right" width="2" height="2" oncontextmenu="return false;"></canvas>
+  <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
+</body></html>
