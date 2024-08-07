@@ -47,11 +47,13 @@
   #c = -1;
   #r = -1;
   #rowOffset = 0;
+  #score = 0;
+  #distance = 0;
   #shift = false;
-  once = false;
-  static #span = 16;
-  static #length = 64;
-  static #density = this.#length*2.5;
+  once = true;
+  static #span = 20;
+  static #length = 5000;
+  static #density = this.#length*(10/3);
   mines = Level.array();
   cleared = Level.array();
   flagged = Level.array();
@@ -103,22 +105,23 @@
   At(c, r) {
    r = this.correctRow(r);
    if ((this.#c == c) && (this.#r == r)) return Square.explosion;
-   if (this.#shift && !this.finished()) { return this.solution.At(c, r); } else {
+   var finished = this.finished();
+   if (this.#shift && !finished) { return this.solution.At(c, r); } else {
     if (this.flagged[r][c] != 0) {
-     if ((this.mines[r][c] == 0) && (this.finished())) return Square.error;
+     if ((this.mines[r][c] == 0) && (finished)) return Square.error;
 	 return Square.flag; }
-    if (this.cleared[r][c] == 0) return Square.unknown;
-    if (this.mines[r][c] != 0) return Square.mine; }
+    if (finished && (this.mines[r][c] != 0)) return Square.mine;
+    if (this.cleared[r][c] == 0) return Square.unknown; }
    return this.proximity[r][c]; }
     
   Step(c, r) {
    r = this.correctRow(r);
    if (this.finished()) return;
    if (this.flagged[r][c] !=0) return;
-   if ((this.mines[r][c] != 0)) {
-    this.#c = c;
-	this.#r = r;
-	for (let c = 0; c < this.mines.length; c++) for (let r = 0; r < this.mines[c].length; r++) {if (this.mines[c][r] != 0) this.cleared[c][r] = 1;} }
+   if ((this.mines[r][c] == 0)) {
+    this.#score++; 
+    if (r > this.#distance) this.#distance = r;
+   } else { this.#c = c; this.#r = r; };
    this.clear(c, r); }
    
   Flag(c, r) {
@@ -127,6 +130,14 @@
    if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0)) {
     this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
 	
+  Undo(c, r) {
+   r = this.correctRow(r);
+   if ((this.#c == c) && (this.#r == r)) {
+    this.#c = -1;
+    this.#r = -1; 
+	this.cleared[r][c] = 0; } }
+  
+  Score() { return "distance " + this.#distance + ", score " + this.#score; }  
  }
  class Squares {
   canvases = [];
@@ -162,7 +173,7 @@
    this.Blank(this.contexts[11]);
    for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
   Blank(context) {
-   context.fillStyle='#BDBDBD'; //blank template
+   context.fillStyle='#BFBFBF'; //blank template
    context.fillRect(0x000,0x000,0x200,0x200);
    context.fill(); }
   DrawFont(font) {
@@ -210,12 +221,12 @@
    this.squares = new Squares;
    this.step = 0;
    this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 2160); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
-   this.canvas.setAttribute("height", 2160); // side by side, with some space for controls and scores
+   this.canvas.setAttribute("width", 2700); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
+   this.canvas.setAttribute("height", 2700); // side by side, with some space for controls and scores
    this.context = this.canvas.getContext("2d"); }
   work() {
-   for (let y = 0; y < 16; y ++) {
-	for (let x = 0; x < 16; x ++) {
+   for (let y = 0; y < 20; y ++) {
+	for (let x = 0; x < 20; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], 56 + (x * 128), 56 + (y * 128), 128, 128);}}
   }
   coord(a) {return Math.floor((a-56) / 128);}
@@ -224,8 +235,11 @@
   clicked(x, y, button) {
    x = this.coord(x);
    y = this.coord(y);
-   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<16) && (y<16)) {
-	if (button == 0) {level.Step(x,y);} else {level.Flag(x,y);}}}
+   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<20) && (y<20)) {
+    switch (button) {
+	 case 0: level.Step(x,y); break;
+	 case 1: level.Undo(x,y); break;
+	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
  }
  class Menu {
@@ -237,8 +251,8 @@
    this.step = 0;
    this.side = side;
    this.canvas = document.getElementById(side);
-   this.canvas.setAttribute("width", 64); //(3840 - 2160)/2);
-   this.canvas.setAttribute("height", 64); //2160);
+   this.canvas.setAttribute("width", 2); //(3840 - 2160)/2);
+   this.canvas.setAttribute("height", 2); //2160);
    this.context = this.canvas.getContext("2d"); }
   work() {
    console.log('menu step ' + (this.step += 1)); }
@@ -249,10 +263,13 @@
  var left;
  var board;
  var right;
+ var score;
  function tick() {
   board.work();
-  window.scrollbars.visible = false; }
+  window.scrollbars.visible = false; 
+  score.innerText = level.Score(); }
  function startup() { 
+  score = document.getElementById("score");
   board = new Board();
   left = new Menu('left');
   right = new Menu('right');
@@ -262,7 +279,7 @@
  console.log('Sweeper started');
 </script></head><body>
   <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <canvas id="left" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <canvas id="right" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <font size="1"><small><br/>Copyright Lyall Ward 2024</small></font>
+  <canvas id="left" width="2" height="2" oncontextmenu="return false;"></canvas>
+  <canvas id="right" width="2" height="2" oncontextmenu="return false;"></canvas>
+  <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
 </body></html>
