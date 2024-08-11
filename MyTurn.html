@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<head>
+<title>My Turn</title>
+<meta name="copyright" content="Copyright Lyall Ward 2014" >
+ <script src="tile.js"></script>
+ <script src="level.js"></script>
+ <script src="sound.js"></script>
+ <script src="keyboard.js"></script>
+ <script src="anime.js"></script>
+ <script src="motion.js"></script>
+ <script src="menu.js"></script>
+ <script src="custom.js"></script>
+ <script>
+  var timer;
+  var asText;
+  var asJson;
+
+  function runTimer(){
+   if(menu.isOff(window.innerWidth,window.innerHeight)){
+    anime.adjustTime(menu.Speed());
+    motion.update(window.innerWidth,window.innerHeight); 
+    custom_save();
+   } else if(menu.wasntPaused())levelInit();
+  }
+
+  function levelInit(){
+   if(timer!=undefined)clearInterval(timer);
+   anime.init(menu.Scale(),'canvas',local.levels[menu.Level()]);
+   menu.init(anime,key);
+   motion.init(anime,key);
+   timer=setInterval(function(){runTimer()},menu.Speed());
+  }
+
+  function startup(){
+   menu.load();
+   key.init();
+   snd.init();
+   custom_load();
+   timer=setInterval(function(){levelInit()},250);
+  }
+
+  window.onload = startup;
+ </script>
+</head>
+
+<body id="body" bgcolor="#000000">
+   <canvas id="canvas" width="20" height="20" oncontextmenu="return false;"></canvas>
+   <p id="JSON" style="font-size:0%">nothing</p>
+</body>
+
+</html>

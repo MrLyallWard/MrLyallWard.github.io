@@ -139,6 +139,10 @@
   
   Score() { return "distance " + this.#distance + ", score " + this.#score; }  
  }
+ class Digits {
+  canvases = [];
+  contexts = [];
+ }
  class Squares {
   canvases = [];
   contexts = [];
@@ -274,7 +278,8 @@
   left = new Menu('left');
   right = new Menu('right');
   setInterval(function(){tick()}, 40); 
-  setInterval(function(){level.work()}, 1); }
+  setInterval(function(){level.work()}, 1); 
+  document.documentElement.requestFullscreen(); }
  window.onload = startup;
  console.log('Sweeper started');
 </script></head><body>
