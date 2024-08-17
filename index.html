@@ -52,19 +52,19 @@
 	}
    }
    start(e) {
-    e.preventDefault();
+    e.stopImmediatePropagation();
     this.touchCount++;
     this.leftText.innerText = "touch " + this.touchCount;
     this.rightText.innerText = "touch";	
    }
    move(e) {
-    e.preventDefault();
+    e.stopImmediatePropagation();
     this.rightText.innerText = "moves " + e.changedTouches.length;	
 	//t = e.changedTouches[e.changedTouches.length-1];
     //this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.screenX + ", " + t.screenY;
    }
    end(e) {
-    e.preventDefault();
+    e.stopImmediatePropagation();
     this.touchCount--;   
     this.leftText.innerText = (this.touchCount == 0) ? "" : ("touch " + this.touchCount);
    }
