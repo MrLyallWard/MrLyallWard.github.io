@@ -32,6 +32,9 @@
    heightText;
    leftText;
    rightText;
+   x;
+   y;
+   touchCount = 0;
    constructor () {
     this.widthText = document.getElementById("width");
     this.heightText = document.getElementById("height");
@@ -41,6 +44,7 @@
     window.addEventListener("touchstart", function(e) {try { page.start(e); } catch (x) { }}); 
     window.addEventListener("touchmove", function(e) {try { page.move(e); } catch (x) { }}); 
     window.addEventListener("touchend", function(e) {try { page.end(e); } catch (x) { }}); 
+    window.addEventListener("touchcancel", function(e) {try { page.end(e); } catch (x) { }}); 
    }
    wheel(e) {
     if (e.ctrlKey) {
@@ -48,12 +52,17 @@
 	}
    }
    start(e) {
-    this.leftText.innerText = "touch";
+    this.touchCount++;
+    this.leftText.innerText = "touch " + this.touchCount;
    }
    move(e) {
+    e.preventDefault();
+	t = e.changedTouches[e.changedTouches.length-1];
+	this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.pageX + ", " + t.pageY;
    }
    end(e) {
-    this.leftText.innerText = "";
+    this.touchCount--;   
+    this.leftText.innerText = (this.touchCount == 0) ? "" : ("touch " + this.touchCount);
    }
   }  
   function startup() { page = new Page(); }
