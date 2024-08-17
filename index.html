@@ -9,8 +9,54 @@
   </tr>
   <tr>
    <td bgcolor="#F0F0F0">Miner</td>
-   <td bgcolor="#DFFFD0"><a href="MyTurn.html">Check in soon</td>
+   <td bgcolor="#DFFFD0"><a href="MyTurn.html">Console styled plaform arcade game</td>
    <td bgcolor="#EFFFD0">2015</td>
   </tr>
+  <tr>
+   <td bgcolor="#F0F0F0">Debugging</td>
+   <td bgcolor="#DFFFD0" id="width">width</td>
+   <td bgcolor="#EFFFD0" id="height">height</td>
+  </tr>
+  <tr>
+   <td bgcolor="#F0F0F0">Touch</td>
+   <td bgcolor="#DFFFD0" id="left"> </td>
+   <td bgcolor="#EFFFD0" id="right"> </td>
+  </tr>
  </table></strong></big>
+ <script>
+  var page;
+  class Page {
+   width;
+   height;
+   widthText;
+   heightText;
+   leftText;
+   rightText;
+   constructor () {
+    this.widthText = document.getElementById("width");
+    this.heightText = document.getElementById("height");
+    this.leftText = document.getElementById("left");
+    this.rightText = document.getElementById("right");
+    window.addEventListener("wheel", function(e) {try { page.wheel(e); } catch (x) { }}); 
+    window.addEventListener("touchstart", function(e) {try { page.start(e); } catch (x) { }}); 
+    window.addEventListener("touchmove", function(e) {try { page.move(e); } catch (x) { }}); 
+    window.addEventListener("touchend", function(e) {try { page.end(e); } catch (x) { }}); 
+   }
+   wheel(e) {
+    if (e.ctrlKey) {
+     this.widthText.innerText = "mousewheel.deltaX = " + e.deltaX; 
+	}
+   }
+   start(e) {
+    this.leftText.innerText = "touch";
+   }
+   move(e) {
+   }
+   end(e) {
+    this.leftText.innerText = "";
+   }
+  }  
+  function startup() { page = new Page(); }
+  window.onload = startup;
+ </script>
 </body></html>
