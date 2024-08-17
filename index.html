@@ -56,9 +56,9 @@
     this.leftText.innerText = "touch " + this.touchCount;
    }
    move(e) {
-    e.preventDefault();
-	t = e.changedTouches[e.changedTouches.length-1];
-	this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.pageX + ", " + t.pageY;
+    this.rightText = "right";	
+	//t = e.changedTouches[e.changedTouches.length-1];
+    //this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.pageX + ", " + t.pageY;
    }
    end(e) {
     this.touchCount--;   
