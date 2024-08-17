@@ -54,9 +54,10 @@
    start(e) {
     this.touchCount++;
     this.leftText.innerText = "touch " + this.touchCount;
+    this.rightText.innerText = "touch";	
    }
    move(e) {
-    this.rightText = "right";	
+    this.rightText.innerText = "moves";	
 	//t = e.changedTouches[e.changedTouches.length-1];
     //this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.pageX + ", " + t.pageY;
    }
