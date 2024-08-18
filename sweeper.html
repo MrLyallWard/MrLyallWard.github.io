@@ -197,7 +197,8 @@
    window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
    window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
    window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
-   window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }}); }
+   window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }});
+   window.addEventListener("resize", function(e) {try { control.resize(e); } catch (x) { }}); }
   mousedown(e) {
    switch (e.target.id) {
 	case 'board':board.click(e.offsetX, e.offsetY);break; } }
@@ -212,6 +213,9 @@
    console.log("mouse wheel"); }
   shift(e) {
    level.Shift(e.shiftKey);
+  }
+  resize(e) {
+   e.stopImmediatePropagation();
   }
  }
  class Board {
@@ -245,6 +249,7 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
+  size(w, h) {this.canvas.setAttribute("width", w); this.canvas.setAttribute("height", h);} 
  }
  class Menu {
   side;
@@ -255,12 +260,12 @@
    this.step = 0;
    this.side = side;
    this.canvas = document.getElementById(side);
-   this.canvas.setAttribute("width", 2); //(3840 - 2160)/2);
-   this.canvas.setAttribute("height", 2); //2160);
+   this.size(2,2);
    this.context = this.canvas.getContext("2d"); }
   work() {
    console.log('menu step ' + (this.step += 1)); }
   update(x, y) {};
+  size(w, h) {this.canvas.setAttribute("width", w); this.canvas.setAttribute("height", h);} 
  }
  var control = new Control();
  var level = new Level();
@@ -279,12 +284,13 @@
   right = new Menu('right');
   setInterval(function(){tick()}, 40); 
   setInterval(function(){level.work()}, 1); 
-  document.documentElement.requestFullscreen(); }
+  //document.documentElement.requestFullscreen(); 
+  }
  window.onload = startup;
  console.log('Sweeper started');
 </script></head><body>
+  <canvas id="left" width="256" height="256" oncontextmenu="return false;"></canvas>
   <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <canvas id="left" width="2" height="2" oncontextmenu="return false;"></canvas>
-  <canvas id="right" width="2" height="2" oncontextmenu="return false;"></canvas>
+  <canvas id="right" width="256" height="256" oncontextmenu="return false;"></canvas>
   <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
 </body></html>

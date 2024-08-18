@@ -45,6 +45,7 @@
     window.addEventListener("touchmove", function(e) {try { page.move(e); } catch (x) { }}); 
     window.addEventListener("touchend", function(e) {try { page.end(e); } catch (x) { }}); 
     window.addEventListener("touchcancel", function(e) {try { page.end(e); } catch (x) { }}); 
+    window.addEventListener("resize", function(e) {try { page.resize(e); } catch (x) { }}); 
    }
    wheel(e) {
     if (e.ctrlKey) {
@@ -67,6 +68,10 @@
     e.stopImmediatePropagation();
     this.touchCount--;   
     this.leftText.innerText = (this.touchCount == 0) ? "" : ("touch " + this.touchCount);
+   }
+   resize(e) {
+    this.leftTest.innerText = window.innerHeight;
+    this.rightTest.innerText = window.innerWidth;
    }
   }  
   function startup() { page = new Page(); }
