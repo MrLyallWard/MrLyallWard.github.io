@@ -1,48 +1,5 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
- var sol;
- class Solution {
-  region = [ [-1,-1], [0,-1], [1,-1], [-1,0], [0,0], [1,0], [-1,1], [0,1], [1,1] ];
-  that;
-  found = Level.array(); 
-  solved = Level.array();
-  probability = Level.array();
-  i;j;count;area;countArray;
-  constructor(level) {this.that = level;}
-  At(c, r) {
-   if (level.cleared[r][c] == 0) {
-    if (level.flagged[r][c] != 0) {
-	 if (level.mines[r][c] == 0) return Square.error;
-     return Square.flag; }
-    return Square.question; }
-   return level.proximity[r][c]; }
-  work() {
-   var start = (new Date()).getTime();
-   for (let k = 0; k < 1000; k++) {
-    for (let i = 0; i < this.solved.length; i++) {
- 	 for (let j = 0; j < this.solved[0].length; j++) {
-	  if (this.solved[i][j] != 0) {
-	   this.solveIt(this.solved, i, j);
-	  }
-	 }
-	}
-   }
-   var end = (new Date()).getTime();
-   console.log("solution full work time " + (end - start));
-  }
-  solveIt(a, i, j) {
-   var p = level.proximity[i][j];
-   if (p > 0) {
-    this.count = this.area = 0;
-    this.i = i;
-    this.j = j;
-    this.countArray = sol.solved;
-    this.region.forEach(sol.arrayCounter);
-   }
-  }
-  arrayCounter(ij) {sol.area++; if (sol.peek(sol.countArray, sol.i+ij[0], sol.j+ij[1])) sol.count++;}
-  peek(array, i, j) {if ((i < 0) || (j < 0) || (i >= array[0].length) || (j >= array.length)) return 0; return array[i][j];}
- }
  class Level {
   #c = -1;
   #r = -1;
@@ -58,16 +15,13 @@
   cleared = Level.array();
   flagged = Level.array();
   proximity = Level.array();
-  solution;
   constructor() {
    for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
-   sol = this.solution = new Solution(this);
    this.clear(0,0); }
   work() {
    if (this.mines.length < Level.#length) {
     this.mines.push(this.row());
     console.log('level length ' + this.mines.length); } 
-   if (this.solution === undefined) { this.solution = new Solution(this); }
    if (!this.once) { this.once = true; this.solution.work(); }
   }
   static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
@@ -83,7 +37,6 @@
   clear(c, r) {
    if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
     this.cleared[r][c] = 1;
-	this.solution.solved[r][c] = 1;
 	if (this.proximity[r][c] == 0) {
      this.clear(c-1,r-1); this.clear(c,r-1); this.clear(c+1,r-1);
 	 this.clear(c-1,r  );                    this.clear(c+1,r  );
@@ -216,28 +169,42 @@
   }
   resize(e) {
    e.stopImmediatePropagation();
+   this.size();
+  }
+  size() {
+   var h = window.innerHeight;
+   var w = window.innerWidth;
+   var s = (w<h)?w:h;
+   board.size(s,s);
   }
  }
  class Board {
   canvas;
   context;
   squares;
-  x;
-  y;
+  board;
+  show;
+  x; y; w; h;
   key;
   constructor() {
    this.squares = new Squares;
    this.step = 0;
-   this.canvas = document.getElementById('board');
-   this.canvas.setAttribute("width", 2700); // fit 16 by 16 of 128x128 and 4 by 4 of 512x512
-   this.canvas.setAttribute("height", 2700); // side by side, with some space for controls and scores
-   this.context = this.canvas.getContext("2d"); }
+   this.board = document.getElementById('board');
+   this.show = this.board.getContext("2d"); 
+  }
   work() {
+   if (this.canvas == undefined) {
+    this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute("width", 2560); // fit 20 by 20 of 128x128
+    this.canvas.setAttribute("height", 2560);
+    this.context = this.canvas.getContext("2d"); 
+   }
    for (let y = 0; y < 20; y ++) {
 	for (let x = 0; x < 20; x ++) {
-	 this.context.drawImage(this.squares.canvases[level.At(x,y)], 56 + (x * 128), 56 + (y * 128), 128, 128);}}
+	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * 128), (y * 128), 128, 128);}}
+   this.show.drawImage(this.canvas, 0, 0, 2560, 2560, 0, 0, this.w, this.h);
   }
-  coord(a) {return Math.floor((a-56) / 128);}
+  coord(a) {return Math.floor((a * 20) / this.w);}
   click(x, y) { this.x = this.coord(x); this.y = this.coord(y); }
   check(x, y) { if ((this.coord(x) != this.x) || (this.coord(y) != this.y)) {this.x = this.y = -1;}}
   clicked(x, y, button) {
@@ -249,7 +216,7 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
-  size(w, h) {this.canvas.setAttribute("width", w); this.canvas.setAttribute("height", h);} 
+  size(w, h) {this.w=w; this.h=h; this.board.setAttribute("width", w); this.board.setAttribute("height", h);} 
  }
  class Menu {
   side;
@@ -272,15 +239,15 @@
  var left;
  var board;
  var right;
- var score;
+ //var score;
  function tick() {
   board.work();
   window.scrollbars.visible = false; 
-  score.innerText = level.Score(); }
+  //score.innerText = level.Score(); 
+ }
  function startup() { 
-  score = document.getElementById("score");
-  board = new Board();
   left = new Menu('left');
+  board = new Board();
   right = new Menu('right');
   setInterval(function(){tick()}, 40); 
   setInterval(function(){level.work()}, 1); 
@@ -288,9 +255,11 @@
   }
  window.onload = startup;
  console.log('Sweeper started');
+ // <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
 </script></head><body>
-  <canvas id="left" width="256" height="256" oncontextmenu="return false;"></canvas>
-  <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
-  <canvas id="right" width="256" height="256" oncontextmenu="return false;"></canvas>
-  <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
+ <table style="width:100%"><tr>
+  <td><canvas id="left" width="128" height="256" oncontextmenu="return false;"></canvas></td>
+  <td><canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas></td>
+  <td><canvas id="right" width="128" height="256" oncontextmenu="return false;"></canvas></td>
+ </tr></table> 
 </body></html>
