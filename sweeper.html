@@ -162,7 +162,7 @@
    switch (e.target.id) {
     case 'board':board.clicked(e.offsetX, e.offsetY, e.button);break; } }
   wheel(e) {
-   board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
+   if (!e.ctrlKey) board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
    console.log("mouse wheel"); }
   shift(e) {
    level.Shift(e.shiftKey);
@@ -230,7 +230,8 @@
  function startup() { 
   board = new Board();
   setInterval(function(){tick()}, 40); 
-  setInterval(function(){level.work()}, 1); 
+  setInterval(function(){level.work()}, 1);
+  control.size();
   }
  window.onload = startup;
  console.log('Sweeper started');
