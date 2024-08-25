@@ -172,10 +172,7 @@
    this.size();
   }
   size() {
-   var h = window.innerHeight;
-   var w = window.innerWidth;
-   var s = (w<h)?w:h;
-   board.size(s,s);
+   board.size(window.innerHeight, window.innerHeight); //window.innerWidth,window.innerHeight);
   }
  }
  class Board {
@@ -227,7 +224,7 @@
    this.step = 0;
    this.side = side;
    this.canvas = document.getElementById(side);
-   this.size(2,2);
+   this.size(0,0);
    this.context = this.canvas.getContext("2d"); }
   work() {
    console.log('menu step ' + (this.step += 1)); }
@@ -257,7 +254,7 @@
  console.log('Sweeper started');
  // <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
 </script></head><body>
- <table style="width:100%"><tr>
+ <table style="width:100%" border="0"><tr>
   <td><canvas id="left" width="128" height="256" oncontextmenu="return false;"></canvas></td>
   <td><canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas></td>
   <td><canvas id="right" width="128" height="256" oncontextmenu="return false;"></canvas></td>
