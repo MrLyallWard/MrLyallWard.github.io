@@ -172,7 +172,7 @@
    this.size();
   }
   size() {
-   board.size(window.innerHeight, window.innerHeight); //window.innerWidth,window.innerHeight);
+   board.size(window.innerHeight, window.innerHeight);
   }
  }
  class Board {
@@ -213,50 +213,28 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
-  size(w, h) {this.w=w; this.h=h; this.board.setAttribute("width", w); this.board.setAttribute("height", h);} 
- }
- class Menu {
-  side;
-  step;
-  canvas;
-  context;
-  constructor(side) {
-   this.step = 0;
-   this.side = side;
-   this.canvas = document.getElementById(side);
-   this.size(0,0);
-   this.context = this.canvas.getContext("2d"); }
-  work() {
-   console.log('menu step ' + (this.step += 1)); }
-  update(x, y) {};
-  size(w, h) {this.canvas.setAttribute("width", w); this.canvas.setAttribute("height", h);} 
+  size(w, h) {
+   console.log("width = " + this.board.width);
+   this.w=w; this.h=h; 
+   this.board.style.top = "-100px";
+   this.board.setAttribute("width", w); 
+   this.board.setAttribute("height", h);} 
  }
  var control = new Control();
  var level = new Level();
- var left;
  var board;
- var right;
- //var score;
  function tick() {
   board.work();
   window.scrollbars.visible = false; 
-  //score.innerText = level.Score(); 
  }
  function startup() { 
-  left = new Menu('left');
   board = new Board();
-  right = new Menu('right');
   setInterval(function(){tick()}, 40); 
   setInterval(function(){level.work()}, 1); 
-  //document.documentElement.requestFullscreen(); 
   }
  window.onload = startup;
  console.log('Sweeper started');
  // <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
-</script></head><body>
- <table style="width:100%" border="0"><tr>
-  <td><canvas id="left" width="128" height="256" oncontextmenu="return false;"></canvas></td>
-  <td><canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas></td>
-  <td><canvas id="right" width="128" height="256" oncontextmenu="return false;"></canvas></td>
- </tr></table> 
+</script></head><style> c{position: absolute; left: 0px; top: 0px; } </style><body>
+ <c><canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas></c>
 </body></html>
