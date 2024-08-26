@@ -143,6 +143,55 @@
 	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
 	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
  }
+ class Finger {
+  id;
+  x;
+  y;
+  startX;
+  startY;
+  moving;
+  constructor(t) {
+   this.id = t.identifier;
+   this.x = this.startX = t.clientX;
+   this.y = this.startY = t.clientY;
+  }
+  click(t) {}
+  move(t) {
+  
+  }
+ }
+ class Fingers {
+  fingers;
+  constructor() {
+   fingers = new Map();
+   window.addEventListener("toushstart", function(e) {try { fingers.start(e); } catch (x) { }});
+   window.addEventListener("toushmove", function(e) {try { fingers.move(e); } catch (x) { }});
+   window.addEventListener("toushend", function(e) {try { fingers.end(e); } catch (x) { }});
+   window.addEventListener("toushcancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
+  }
+  start(e) {
+   e.preventDefault();
+   for (var t of e.touches) fingers.set(new finger(t));
+  }
+  move(e) {
+   for (var t of e.touches) { 
+    if (fingers.has(t.identifier)) {
+	 fingers.get(t.identifier).move();
+	}
+   }
+  }
+  end(e) {
+   for (var t of e.touches) { 
+    if (fingers.has(t.identifier)) {
+	 fingers.get(t.identifier).click();
+	 fingers.delete(t.identifier); 
+	}
+   }
+  }
+  cancel(e) {
+   for (var t of e.touches) { if (fingers.has(t.identifier)) fingers.delete(t.identifier); }
+  }
+ }
  class Control {
   constructor () {
    window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
@@ -205,7 +254,9 @@
   X(a) {return Math.floor(((a-this.o) * 20) / this.h);}
   //coord(a) {return Math.floor(((a-this.o) * 20) / this.h);}
   click(x, y) { this.x = this.X(x); this.y = this.Y(y); }
-  check(x, y) { if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;}}
+  check(x, y) {
+   if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;}
+  }
   clicked(x, y, button) {
    x = this.X(x);
    y = this.Y(y);
@@ -221,6 +272,7 @@
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} 
  }
+ var fingers = new Fingers();
  var control = new Control();
  var level = new Level();
  var board;
