@@ -166,30 +166,27 @@
   step;
   constructor() {
    fingers = new Map();
-   window.addEventListener("toushstart", function(e) {try { fingers.start(e); } catch (x) { }});
-   window.addEventListener("toushmove", function(e) {try { fingers.move(e); } catch (x) { }});
-   window.addEventListener("toushend", function(e) {try { fingers.end(e); } catch (x) { }});
-   window.addEventListener("toushcancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
+   window.addEventListener("pointerdown", function(e) {try { fingers.start(e); } catch (x) { }});
+   window.addEventListener("pointermove", function(e) {try { fingers.move(e); } catch (x) { }});
+   window.addEventListener("pointerup", function(e) {try { fingers.end(e); } catch (x) { }});
+   window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
   }
   start(e) {
    e.preventDefault();
-   for (var t of e.touches) fingers.set(new finger(t));
+   switch (e.pointerType) {
+	case 'mouse':board.click(e.offsetX, e.offsetY);break;
+   } 
   }
   move(e) {
    e.preventDefault();
-   for (var t of e.touches) { 
-    if (fingers.has(t.identifier)) {
-	 fingers.get(t.identifier).move();
-	}
+   switch (e.pointerType) {
+    case 'mouse':board.check(e.offsetX, e.offsetY);break; 
    }
   }
   end(e) {
    e.preventDefault();
-   for (var t of e.touches) { 
-    if (fingers.has(t.identifier)) {
-	 fingers.get(t.identifier).click();
-	 fingers.delete(t.identifier); 
-	}
+   switch (e.pointerType) {
+    case 'mouse':board.clicked(e.offsetX, e.offsetY, e.button);break;
    }
   }
   cancel(e) {
@@ -207,9 +204,9 @@
   constructor () {
    window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
    window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
-   window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
-   window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
-   window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
+   //window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
+   //window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
+   //window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
    window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }});
    window.addEventListener("resize", function(e) {try { control.resize(e); } catch (x) { }}); }
   mousedown(e) {
