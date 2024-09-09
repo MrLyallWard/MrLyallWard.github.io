@@ -162,8 +162,11 @@
  }
  class Fingers {
   fingers;
-  half;
+  length;
   step;
+  left;
+  right;
+  top;
   constructor() {
    fingers = new Map();
    window.addEventListener("pointerdown", function(e) {try { fingers.start(e); } catch (x) { }});
@@ -199,8 +202,18 @@
    for (var t of e.touches) { if (fingers.has(t.identifier)) fingers.delete(t.identifier); }
   }
   size(w,h) {
-   this.step = h/20;
-   this.half = w/2;
+   if (h<w) {
+    this.length = h;
+	this.top = 0;
+	this.left = (w-h)/2;
+	this.right = w-this.left;
+   } else {
+    this.length = w;
+	this.top = w;
+	this.left = w/2;
+	this.right = w/2
+   }
+   this.step = this.length/20;
   }
   left() {
    return (fingers.length > 0);
@@ -245,7 +258,7 @@
   squares;
   board;
   show;
-  x; y; w; h; o;
+  x; y; w; h; o; l;
   key;
   constructor() {
    this.squares = new Squares;
@@ -265,10 +278,10 @@
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * 128), (y * 128), 128, 128);}}
    this.show.fillStyle = (fingers.left) ? "black" : "green";
    this.show.fillRect(4, 4, 68, 68);
-   this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.h, this.h);
+   this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
   }
-  Y(a) {return Math.floor(((a) * 20) / this.h);}
-  X(a) {return Math.floor(((a-this.o) * 20) / this.h);}
+  Y(a) {return Math.floor(((a) * 20) / this.l);}
+  X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
   click(x, y) { this.x = this.X(x); this.y = this.Y(y); }
   check(x, y) {
    if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;}
@@ -283,7 +296,7 @@
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
   size(w, h) {
-   this.w=w; this.h=h; this.o=(w-h)/2; 
+   this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2; 
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} 
  }
