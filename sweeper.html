@@ -174,7 +174,18 @@
    window.addEventListener("pointerup", function(e) {try { fingers.end(e); } catch (x) { }});
    window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
   }
+  show(e) {
+   console.log(
+    "id:"+e.pointerId+
+	", x:"+e.offsetX+
+	", y:"+e.offsetY+
+	", type:"+e.type+
+	", pointer:"+e.pointerType+
+	", buttons:"+e.buttons+
+	"");
+  }
   start(e) {
+   this.show(e);
    switch (e.pointerType) {
     case 'touch':
      board.click(e.offsetX, e.offsetY);
@@ -183,6 +194,7 @@
    }
   }
   move(e) {
+   this.show(e);
    switch (e.pointerType) {
     case 'touch':
      board.check(e.offsetX, e.offsetY);
@@ -191,6 +203,7 @@
    }
   }
   end(e) {
+   this.show(e);
    switch (e.pointerType) {
     case 'touch':
      board.clicked(e.offsetX, e.offsetY, e.button);
