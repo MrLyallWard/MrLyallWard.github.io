@@ -172,21 +172,27 @@
    window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
   }
   start(e) {
-   e.preventDefault();
    switch (e.pointerType) {
-	case 'mouse':board.click(e.offsetX, e.offsetY);break;
-   } 
+    case 'touch':
+     board.click(e.offsetX, e.offsetY);
+     e.preventDefault();
+     break;
+   }
   }
   move(e) {
-   e.preventDefault();
    switch (e.pointerType) {
-    case 'mouse':board.check(e.offsetX, e.offsetY);break; 
+    case 'touch':
+     board.check(e.offsetX, e.offsetY);
+     e.preventDefault();
+     break;
    }
   }
   end(e) {
-   e.preventDefault();
    switch (e.pointerType) {
-    case 'mouse':board.clicked(e.offsetX, e.offsetY, e.button);break;
+    case 'touch':
+     board.clicked(e.offsetX, e.offsetY, e.button);
+     e.preventDefault();
+     break;
    }
   }
   cancel(e) {
@@ -204,9 +210,9 @@
   constructor () {
    window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
    window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
-   //window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
-   //window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
-   //window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
+   window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
+   window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
+   window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
    window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }});
    window.addEventListener("resize", function(e) {try { control.resize(e); } catch (x) { }}); }
   mousedown(e) {
