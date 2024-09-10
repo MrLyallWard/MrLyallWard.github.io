@@ -214,8 +214,8 @@
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
-	 if ((this.leftThumb != undefined) && (this.pointerId == this.leftThumb.e.pointerId)) this.leftThumb.move(e, this.step);
-	 else if ((this.rightThumb != undefined) && (this.pointerId == this.rightThumb.e.pointerId)) this.rightThumb.move(e, this.step);
+	 if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) this.leftThumb.move(e, this.step);
+	 else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) this.rightThumb.move(e, this.step);
      board.check(e.offsetX, e.offsetY);
      e.preventDefault();
      break;
