@@ -214,7 +214,7 @@
   cancel(e) {
    for (var t of e.touches) { if (fingers.has(t.identifier)) fingers.delete(t.identifier); }
   }
-  size(w,h) {
+  window(w,h) {
    if (h<w) {
     this.length = h;
 	this.top = 0;
@@ -256,14 +256,9 @@
   shift(e) {
    level.Shift(e.shiftKey);
   }
-  resize(e) {
-   e.stopImmediatePropagation();
-   this.size();
-  }
-  size() {
-   board.size(window.innerWidth, window.innerHeight);
-   fingers.size(window.innerWidth, window.innerHeight);
-  }
+  resize(e) {e.stopImmediatePropagation(); this.size();}
+  size() {this.window((window.innerWidth)-0, (window.innerHeight)-0);}
+  window(w,h) {board.window(w,h); fingers.window(w,h);}
  }
  class Board {
   canvas;
@@ -308,7 +303,7 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
-  size(w, h) {
+  window(w, h) {
    this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2; 
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} 
@@ -330,6 +325,6 @@
  window.onload = startup;
  console.log('Sweeper started');
  // <center><font size="8"><label id="score">Copyright Lyall Ward 2024</label></font></center>
-</script></head><style> body { overscroll-behavior-y: none; } </style><body>
- <c><canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas></c>
+</script></head><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none;} </style><body>
+ <canvas id="board" width="32" height="32" oncontextmenu="return false;"></canvas>
 </body></html>
