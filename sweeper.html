@@ -155,6 +155,7 @@
   }
   move(e,step) {
    if (e.pointerId == this.e.pointerId) {
+    fingers.show(e);
     if (e.offsetY >= (this.y+step)) {
      this.y += step;
      this.moving = true;
@@ -199,7 +200,7 @@
 	"");
   }
   start(e) {
-   this.show(e);
+   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.click(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
@@ -210,7 +211,7 @@
    }
   }
   move(e) {
-   this.show(e);
+   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
@@ -222,7 +223,7 @@
    }
   }
   end(e) {
-   this.show(e);
+   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.clicked(e.offsetX, e.offsetY, e.button); e.preventDefault(); break;
     case 'touch':
