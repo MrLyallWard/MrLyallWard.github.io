@@ -150,8 +150,8 @@
   moving = false;
   constructor(e) {
    this.e = e;
-   this.x = this.offsetX;
-   this.y = this.offsetY;
+   this.x = e.offsetX;
+   this.y = e.offsetY;
   }
   move(e,step) {
    if (e.pointerId == this.e.pointerId) {
