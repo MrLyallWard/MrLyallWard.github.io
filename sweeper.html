@@ -155,12 +155,12 @@
   }
   move(e,step) {
    if (e.pointerId == this.e.pointerId) {
-    if (e.offsetX >= (this.x+step)) {
-     this.x += step;
+    if (e.offsetY >= (this.y+step)) {
+     this.y += step;
      this.moving = true;
      board.offset(1);
-    } else if (e.offsetX < (this.x-step)) {
-     this.x -= step;
+    } else if (e.offsetY < (this.y-step)) {
+     this.y -= step;
      this.moving = true;
      board.offset(-1);
     }
