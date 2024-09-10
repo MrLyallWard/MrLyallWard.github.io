@@ -155,12 +155,13 @@
   }
   move(e,step) {
    if (e.pointerId == this.e.pointerId) {
-    fingers.show(e);
     if (e.offsetY >= (this.y+step)) {
+     fingers.show(e);
      this.y += step;
      this.moving = true;
      board.offset(1);
     } else if (e.offsetY < (this.y-step)) {
+     fingers.show(e);
      this.y -= step;
      this.moving = true;
      board.offset(-1);
@@ -211,18 +212,18 @@
    }
   }
   move(e) {
-   this.show(e);
-   //switch (e.pointerType) {
-   // case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
-   // case 'touch':
-   // if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) this.leftThumb.move(e, this.step);
-   // else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) this.rightThumb.move(e, this.step);
-   // else {
-   //   board.check(e.offsetX, e.offsetY);
-   //   e.preventDefault();
-   // }
-   //  break;
-   //}
+   //this.show(e);
+   switch (e.pointerType) {
+    case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
+    case 'touch':
+    if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) this.leftThumb.move(e, this.step);
+    else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) this.rightThumb.move(e, this.step);
+    else {
+      board.check(e.offsetX, e.offsetY);
+      e.preventDefault();
+    }
+     break;
+   }
   }
   end(e) {
    //this.show(e);
@@ -235,8 +236,7 @@
    }
   }
   cancel(e) {
-   this.show(e);
-   //for (var t of e.touches) { if (fingers.has(t.identifier)) fingers.delete(t.identifier); }
+   //this.show(e);
   }
   window(w,h) {
    if (h<w) {
