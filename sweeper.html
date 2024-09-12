@@ -147,30 +147,38 @@
   e;
   x;
   y;
-  moving = false;
-  constructor(e) {
+  board;
+  constructor(e, board = undefined) {
    this.e = e;
+   this.board = board;
    this.x = e.offsetX;
    this.y = e.offsetY;
-  }
-  move(e,step) {
-   if (e.pointerId == this.e.pointerId) {
-    if (e.offsetY >= (this.y+step)) {
-     fingers.show(e);
-     this.y += step;
-     this.moving = true;
-     board.offset(1);
-    } else if (e.offsetY < (this.y-step)) {
-     fingers.show(e);
-     this.y -= step;
-     this.moving = true;
-     board.offset(-1);
-    }
+   if (this.board != undefined) {
+    this.board.click(e.offsetX, e.offsetY);
+    e.preventDefault();
    }
   }
+  move(e) {
+   if (e.pointerId == this.e.pointerId) {
+    if (this.board != undefined) {
+     board.check(e.offsetX, e.offsetY);
+     if (e.offsetY >= (this.y + fingers.step)) {
+      fingers.show(e);
+      this.y += fingers.step;
+      if (this.board != undefined) this.board.offset(1);
+     } else if (e.offsetY < (this.y - fingers.step)) {
+      fingers.show(e);
+      this.y -= fingers.step;
+      if (this.board != undefined) this.board.offset(-1);
+     }
+    }
+   }
+   e.preventDefault();
+  }
   up(e) {
-	if ((e.pointerId == this.e.pointerId) & !this.moving) {
-     board.clicked(e.offsetX, e.offsetY, e.button);
+	if (e.pointerId == this.e.pointerId) {
+     if (this.board != undefined) this.board.clicked(e.offsetX, e.offsetY, e.button);
+     e.preventDefault();
 	}
   }
   cancel(e) {}
@@ -184,13 +192,14 @@
   mouse;
   leftThumb;
   rightThumb;
+  middle;
   constructor() {
    window.addEventListener("pointerdown", function(e) {try { fingers.start(e); } catch (x) { }});
    window.addEventListener("pointermove", function(e) {try { fingers.move(e); } catch (x) { }});
    window.addEventListener("pointerup", function(e) {try { fingers.end(e); } catch (x) { }});
    window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
   }
-  show(e) {
+  show(e, note = "") {
    console.log(
     "id:"+e.pointerId+
 	", x:"+e.offsetX+
@@ -198,42 +207,40 @@
 	", type:"+e.type+
 	", pointer:"+e.pointerType+
 	", buttons:"+e.buttons+
-	"");
+	", " + note);
   }
   start(e) {
-   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.click(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
 	 if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) this.leftThumb = new Finger(e);
 	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) this.rightThumb = new Finger(e);
-	 else {board.click(e.offsetX, e.offsetY); e.preventDefault();}
+	 else this.middle = new Finger(e, board);
      break;
    }
   }
   move(e) {
-   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
-    if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) this.leftThumb.move(e, this.step);
-    else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) this.rightThumb.move(e, this.step);
-    else {
-      board.check(e.offsetX, e.offsetY);
-      e.preventDefault();
-    }
+	 var thumb = this.region(e);
+	 if (thumb != undefined) thumb.move(e);
      break;
    }
   }
   end(e) {
-   //this.show(e);
    switch (e.pointerType) {
     case 'mouse': board.clicked(e.offsetX, e.offsetY, e.button); e.preventDefault(); break;
     case 'touch':
-     board.clicked(e.offsetX, e.offsetY, e.button);
-     e.preventDefault();
+	 var thumb = this.region(e);
+	 if (thumb != undefined) thumb.up(e);
      break;
    }
+  }
+  region(e) {
+    if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) return this.leftThumb;
+    else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) return this.rightThumb;
+    else if ((this.middle != undefined) && (e.pointerId == this.middle.e.pointerId)) return this.middle;
   }
   cancel(e) {
    //this.show(e);
