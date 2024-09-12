@@ -148,15 +148,17 @@
   constructor(e, board = undefined) {
    this.e = e;
    this.board = board;
-   this.x = e.offsetX;
-   this.y = e.offsetY;
-   if (this.board != undefined) {
-    this.board.click(e.offsetX, e.offsetY);
-    e.preventDefault();
+   if (e != undefined) {
+    this.x = e.offsetX;
+    this.y = e.offsetY;
+    if (this.board != undefined) {
+     this.board.click(e.offsetX, e.offsetY);
+     e.preventDefault();
+    }
    }
   }
   move(e) {
-   if (e.pointerId == this.e.pointerId) {
+   if ((e != undefined) && (e.pointerId == this.e.pointerId)) {
     if (this.board != undefined) {
      board.check(e.offsetX, e.offsetY);
      if (e.offsetY >= (this.y + fingers.step)) {
@@ -169,8 +171,8 @@
       if (this.board != undefined) this.board.offset(-1);
      }
     }
+    e.preventDefault();
    }
-   e.preventDefault();
   }
   up(e) {
 	if (e.pointerId == this.e.pointerId) {
@@ -219,25 +221,20 @@
   move(e) {
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
-    case 'touch':
-	 var thumb = this.region(e);
-	 if (thumb != undefined) thumb.move(e);
-     break;
+    case 'touch':this.region(e).move(e); break;
    }
   }
   end(e) {
    switch (e.pointerType) {
     case 'mouse': board.clicked(e.offsetX, e.offsetY, e.button); e.preventDefault(); break;
-    case 'touch':
-	 var thumb = this.region(e);
-	 if (thumb != undefined) thumb.up(e);
-     break;
+    case 'touch': this.region(e).up(e); break;
    }
   }
   region(e) {
     if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) return this.leftThumb;
     else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) return this.rightThumb;
     else if ((this.middle != undefined) && (e.pointerId == this.middle.e.pointerId)) return this.middle;
+	else return new Finger();
   }
   cancel(e) {
    //this.show(e);
