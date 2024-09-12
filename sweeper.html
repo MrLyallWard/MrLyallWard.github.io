@@ -7,7 +7,6 @@
   #score = 0;
   #distance = 0;
   #shift = false;
-  once = true;
   static #span = 20;
   static #length = 5000;
   static #density = this.#length*(10/3);
@@ -22,7 +21,6 @@
    if (this.mines.length < Level.#length) {
     this.mines.push(this.row());
     console.log('level length ' + this.mines.length); } 
-   if (!this.once) { this.once = true; this.solution.work(); }
   }
   static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
   static row() {var a = []; while (a.length < Level.#span) a.push(0); return a;}
@@ -59,7 +57,7 @@
    r = this.correctRow(r);
    if ((this.#c == c) && (this.#r == r)) return Square.explosion;
    var finished = this.finished();
-   if (this.#shift && !finished) { return this.solution.At(c, r); } else {
+   if (this.#shift && !finished) { /*return this.solution.At(c, r);*/ } else {
     if (this.flagged[r][c] != 0) {
      if ((this.mines[r][c] == 0) && (finished)) return Square.error;
 	 return Square.flag; }
@@ -144,7 +142,7 @@
 	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
  }
  class Finger {
-  e; x; y; board;
+  e; x; y; board; moving = false;
   constructor(e, board = undefined) {
    this.e = e;
    this.board = board;
@@ -170,17 +168,23 @@
       this.y -= fingers.step;
       if (this.board != undefined) this.board.offset(-1);
      }
-    }
+    } else {
+	 this.moving = true;
+	}
     e.preventDefault();
    }
   }
   up(e) {
 	if (e.pointerId == this.e.pointerId) {
-     if (this.board != undefined) this.board.clicked(e.offsetX, e.offsetY, e.button);
+     if (this.board != undefined) {
+	  this.board.clicked(e.offsetX, e.offsetY, e.button);
+	  this.moving = false;
+     }
      e.preventDefault();
 	}
   }
   cancel(e) {}
+  isDown() {
  }
  class Fingers {
   length;
@@ -215,27 +219,22 @@
 	 if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) this.leftThumb = new Finger(e);
 	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) this.rightThumb = new Finger(e);
 	 else this.middle = new Finger(e, board);
-     break;
-   }
-  }
+     break; } }
   move(e) {
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
-    case 'touch':this.region(e).move(e); break;
-   }
-  }
+    case 'touch':this.region(e).move(e);
+	 if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
+	 break; } }
   end(e) {
    switch (e.pointerType) {
     case 'mouse': board.clicked(e.offsetX, e.offsetY, e.button); e.preventDefault(); break;
-    case 'touch': this.region(e).up(e); break;
-   }
-  }
+    case 'touch': this.region(e).up(e); break; } }
   region(e) {
     if ((this.leftThumb != undefined) && (e.pointerId == this.leftThumb.e.pointerId)) return this.leftThumb;
     else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) return this.rightThumb;
     else if ((this.middle != undefined) && (e.pointerId == this.middle.e.pointerId)) return this.middle;
-	else return new Finger();
-  }
+	else return new Finger(); }
   cancel(e) {
    //this.show(e);
   }
@@ -253,28 +252,16 @@
    }
    this.step = this.length/20;
   }
-  left() {
-   return (fingers.length > 0);
-  }
+  //left() {
+  // return (fingers.length > 0);
+  //}
  }
  class Control {
   constructor () {
    window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
    window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
-   //window.addEventListener("mousedown", function(e) {try { control.mousedown(e); } catch (x) { }});
-   //window.addEventListener("mouseup", function(e) {try { control.mouseup(e); } catch (x) { }});
-   //window.addEventListener("mousemove", function(e) {try { control.mousemove(e); } catch (x) { }});
    window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }});
    window.addEventListener("resize", function(e) {try { control.resize(e); } catch (x) { }}); }
-  mousedown(e) {
-   switch (e.target.id) {
-	case 'board':board.click(e.offsetX, e.offsetY);break; } }
-  mousemove(e) {
-   switch (e.target.id) {
-    case 'board':board.check(e.offsetX, e.offsetY);break; } }
-  mouseup(e) {
-   switch (e.target.id) {
-    case 'board':board.clicked(e.offsetX, e.offsetY, e.button);break; } }
   wheel(e) {
    if (!e.ctrlKey) board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
    console.log("mouse wheel"); }
@@ -344,7 +331,8 @@
  function startup() { 
   board = new Board();
   setInterval(function(){tick()}, 40); 
-  setInterval(function(){level.work()}, 1);
+  setInterval(function(){level.work()}, 100);
+  //if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
   control.size();
  }
  window.onload = startup;
