@@ -217,7 +217,7 @@
     case 'mouse': board.click(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
 	 if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) this.leftThumb = new Finger(e);
-	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) this.rightThumb = new Finger(e);
+	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) this.rightThumb = new Finger(e, board);
 	 else this.middle = new Finger(e, board);
      break; } }
   move(e) {
@@ -333,6 +333,8 @@
   setInterval(function(){tick()}, 40); 
   setInterval(function(){level.work()}, 100);
   //if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
+  //if (document.exitFullscreen) {document.exitFullscreen();}
+  }
   control.size();
  }
  window.onload = startup;
