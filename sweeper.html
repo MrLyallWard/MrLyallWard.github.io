@@ -147,8 +147,8 @@
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
   down(e){this.e = e;}
   up(e){
-   var l = this.x+(w/2);
-   var b = this.y+(w/2);
+   var l = this.x+(this.w/2);
+   var b = this.y+(this.w/2);
    if ((this.e.offsetX >= l) & (e.offsetX >= l) & 
        (this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
        (this.e.offsetY <= b) & (e.offsetY <= b)) {
