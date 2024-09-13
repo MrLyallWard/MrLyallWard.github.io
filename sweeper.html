@@ -141,14 +141,32 @@
 	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
 	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
  }
+ class RHS {
+  x; y; w; h; e;
+  constructor(){}
+  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+  down(e){this.e = e;}
+  up(e){
+   var l = this.x+(w/2);
+   var b = this.y+(w/2);
+   if ((this.e.offsetX >= l) & (e.offsetX >= l) & 
+       (this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
+       (this.e.offsetY <= b) & (e.offsetY <= b)) {
+    if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
+    else if (document.exitFullscreen) {document.exitFullscreen();}
+   }
+  }
+ }
  class Finger {
-  e; x; y; board; moving = false;
-  constructor(e, board = undefined) {
+  e; x; y; board; zone; moving = false;
+  constructor(e, board = undefined, zone = undefined) {
    this.e = e;
    this.board = board;
+   this.zone = sone;
    if (e != undefined) {
     this.x = e.offsetX;
     this.y = e.offsetY;
+	if (zone != undefined) zone.down(e);
     if (this.board != undefined) {
      this.board.click(e.offsetX, e.offsetY);
      e.preventDefault();
@@ -180,6 +198,7 @@
 	  this.board.clicked(e.offsetX, e.offsetY, e.button);
 	  this.moving = false;
      }
+	if (zone != undefined) zone.up(e);
      e.preventDefault();
 	}
   }
@@ -217,15 +236,13 @@
     case 'mouse': board.click(e.offsetX, e.offsetY); e.preventDefault(); break;
     case 'touch':
 	 if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) this.leftThumb = new Finger(e);
-	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) this.rightThumb = new Finger(e, board);
+	 else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) {rhs.down(e); this.rightThumb = new Finger(e, board, rhs);}
 	 else this.middle = new Finger(e, board);
      break; } }
   move(e) {
    switch (e.pointerType) {
     case 'mouse': board.check(e.offsetX, e.offsetY); e.preventDefault(); break;
-    case 'touch':this.region(e).move(e);
-	 if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
-	 break; } }
+    case 'touch':this.region(e).move(e); break; } }
   end(e) {
    switch (e.pointerType) {
     case 'mouse': board.clicked(e.offsetX, e.offsetY, e.button); e.preventDefault(); break;
@@ -250,6 +267,7 @@
 	this.left = w/2;
 	this.right = w/2
    }
+   rhs.size(this.right, this.top, this.left, h - this.top);
    this.step = this.length/20;
   }
   //left() {
@@ -277,6 +295,7 @@
   context;
   squares;
   board;
+  rhs;
   show;
   x; y; w; h; o; l;
   key;
@@ -285,14 +304,12 @@
    this.step = 0;
    this.board = document.getElementById('board');
    this.show = this.board.getContext("2d"); 
+   this.canvas = document.createElement('canvas');
+   this.canvas.setAttribute("width", 2560); // fit 20 by 20 of 128x128
+   this.canvas.setAttribute("height", 2560);
+   this.context = this.canvas.getContext("2d"); 
   }
   work() {
-   if (this.canvas == undefined) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute("width", 2560); // fit 20 by 20 of 128x128
-    this.canvas.setAttribute("height", 2560);
-    this.context = this.canvas.getContext("2d"); 
-   }
    for (let y = 0; y < 20; y ++) {
 	for (let x = 0; x < 20; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * 128), (y * 128), 128, 128);}}
@@ -320,6 +337,7 @@
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} 
  }
+ var rhs = new RHS();
  var fingers = new Fingers();
  var control = new Control();
  var level = new Level();
