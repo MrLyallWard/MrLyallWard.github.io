@@ -198,7 +198,7 @@
 	  this.board.clicked(e.offsetX, e.offsetY, e.button);
 	  this.moving = false;
      }
-	if (zone != undefined) zone.up(e);
+	if (this.zone != undefined) this.zone.up(e);
      e.preventDefault();
 	}
   }
