@@ -146,6 +146,7 @@
   constructor(){}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
   down(e){this.e = e;}
+  drawLeft(c, s) {c.drawImage(s, 0, 0, 0x200, 0x200, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   up(e){
    var l = this.x+(this.w/2);
    var b = this.y+(this.w/2);
@@ -154,13 +155,8 @@
     if ((this.e.offsetX >= l) & (e.offsetX >= l)) {
      if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
      else if (document.exitFullscreen) {document.exitFullscreen();}
-    } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {
-     fingers.press = (fingers.press == 0) ? 2 : 0; } } }// toggle board step/flag
-  drawLeft(c) {
-   var p = this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag];
-   c.drawImage(p, 0, 0, 0x200, 0x200, this.x + (this.w/8), y = this.y + (this.w/8), this.w/4, this.w/4);
-  }
- }
+    } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {// toggle board step/flag
+     fingers.press = (fingers.press == 0) ? 2 : 0; } } } }
  class Finger {
   e; x; y; board; zone; moving = false;
   constructor(e, board = undefined, zone = undefined) {
@@ -316,7 +312,7 @@
    this.show.fillStyle = (fingers.left) ? "black" : "green";
    this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
-   rhs.drawLeft(this.show);
+   rhs.drawLeft(this.show, this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag]);
   }
   Y(a) {return Math.floor(((a) * 20) / this.l);}
   X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
