@@ -155,9 +155,10 @@
      if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
      else if (document.exitFullscreen) {document.exitFullscreen();}
     } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {
-	 fingers.press = (fingers.press == 0) ? 2 : 0; // toggle board step/flag
-    }
-   }
+     fingers.press = (fingers.press == 0) ? 2 : 0; } } }// toggle board step/flag
+  drawLeft(c) {
+   var p = this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag];
+   c.drawImage(p, 0, 0, 0x200, 0x200, this.x + (this.w/8), y = this.y + (this.w/8), this.w/4, this.w/4);
   }
  }
  class Finger {
@@ -259,16 +260,16 @@
   cancel(e) { }
   window(w,h) {
    if (h<w) {
-    this.length = h;
-	this.top = 0;
-	this.left = (w-h)/2;
-	this.right = w-this.left;
+    this.length = h;     // *********
+    this.top = 0;        // * *   * *
+    this.left = (w-h)/2; // *********
+    this.right = w-this.left;
    } else {
-    this.length = w;
-	this.top = w;
-	this.left = w/2;
-	this.right = w/2
-   }
+    this.length = w;     // *****
+    this.top = w;        // *   *
+    this.left = w/2;     // *****
+    this.right = w/2     // * * *
+   }                     // *****
    rhs.size(this.right, this.top, this.left, h - this.top);
    this.step = this.length/20;
   }
@@ -315,13 +316,12 @@
    this.show.fillStyle = (fingers.left) ? "black" : "green";
    this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
+   rhs.drawLeft(this.show);
   }
   Y(a) {return Math.floor(((a) * 20) / this.l);}
   X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
   click(x, y) { this.x = this.X(x); this.y = this.Y(y); }
-  check(x, y) {
-   if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;}
-  }
+  check(x, y) { if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;} }
   clicked(x, y, button) {
    x = this.X(x);
    y = this.Y(y);
