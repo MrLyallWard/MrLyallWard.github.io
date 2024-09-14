@@ -149,11 +149,14 @@
   up(e){
    var l = this.x+(this.w/2);
    var b = this.y+(this.w/2);
-   if ((this.e.offsetX >= l) & (e.offsetX >= l) & 
-       (this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
+   if ((this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
        (this.e.offsetY <= b) & (e.offsetY <= b)) {
-    if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
-    else if (document.exitFullscreen) {document.exitFullscreen();}
+    if ((this.e.offsetX >= l) & (e.offsetX >= l)) {
+     if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
+     else if (document.exitFullscreen) {document.exitFullscreen();}
+    } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {
+	 fingers.press = (fingers.press == 0) ? 2 : 0; // toggle board step/flag
+    }
    }
   }
  }
@@ -195,7 +198,7 @@
   up(e) {
 	if (e.pointerId == this.e.pointerId) {
      if (this.board != undefined) {
-	  this.board.clicked(e.offsetX, e.offsetY, e.button);
+	  this.board.clicked(e.offsetX, e.offsetY, fingers.press);
 	  this.moving = false;
      }
 	if (this.zone != undefined) this.zone.up(e);
@@ -215,11 +218,12 @@
   leftThumb;
   rightThumb;
   middle;
+  press = 0;
   constructor() {
-   window.addEventListener("pointerdown", function(e) {try { fingers.start(e); } catch (x) { }});
-   window.addEventListener("pointermove", function(e) {try { fingers.move(e); } catch (x) { }});
-   window.addEventListener("pointerup", function(e) {try { fingers.end(e); } catch (x) { }});
-   window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch (x) { }});
+   window.addEventListener("pointerdown",   function(e) {try { fingers.start(e);  } catch(x){}});
+   window.addEventListener("pointermove",   function(e) {try { fingers.move(e);   } catch(x){}});
+   window.addEventListener("pointerup",     function(e) {try { fingers.end(e);    } catch(x){}});
+   window.addEventListener("pointercancel", function(e) {try { fingers.cancel(e); } catch(x){}});
   }
   show(e, note = "") {
    console.log(
@@ -252,9 +256,7 @@
     else if ((this.rightThumb != undefined) && (e.pointerId == this.rightThumb.e.pointerId)) return this.rightThumb;
     else if ((this.middle != undefined) && (e.pointerId == this.middle.e.pointerId)) return this.middle;
 	else return new Finger(); }
-  cancel(e) {
-   //this.show(e);
-  }
+  cancel(e) { }
   window(w,h) {
    if (h<w) {
     this.length = h;
@@ -270,16 +272,13 @@
    rhs.size(this.right, this.top, this.left, h - this.top);
    this.step = this.length/20;
   }
-  //left() {
-  // return (fingers.length > 0);
-  //}
  }
  class Control {
   constructor () {
-   window.addEventListener("keydown", function(e) {try { control.shift(e); } catch (x) { }});
-   window.addEventListener("keyup", function(e) {try { control.shift(e); } catch (x) { }});
-   window.addEventListener("wheel", function(e) {try { control.wheel(e); } catch (x) { }});
-   window.addEventListener("resize", function(e) {try { control.resize(e); } catch (x) { }}); }
+   window.addEventListener("keydown", function(e) {try {control.shift(e); } catch(x){}});
+   window.addEventListener("keyup",   function(e) {try {control.shift(e); } catch(x){}});
+   window.addEventListener("wheel",   function(e) {try {control.wheel(e); } catch(x){}});
+   window.addEventListener("resize",  function(e) {try {control.resize(e);} catch(x){}}); }
   wheel(e) {
    if (!e.ctrlKey) board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
    console.log("mouse wheel"); }
@@ -350,9 +349,6 @@
   board = new Board();
   setInterval(function(){tick()}, 40); 
   setInterval(function(){level.work()}, 100);
-  //if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
-  //if (document.exitFullscreen) {document.exitFullscreen();}
-  //}
   control.size();
  }
  window.onload = startup;
