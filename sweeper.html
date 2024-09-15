@@ -1,5 +1,5 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
- const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15 })
+ const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
  class Level {
   #c = -1;
   #r = -1;
@@ -117,9 +117,11 @@
    [13,  9, [ 0x0000, 0x0000, 0x2002, 0x3006,  0x180C, 0x0C18, 0x0630, 0x0360,  0x01C0, 0x0360, 0x0630, 0x0C18,  0x180C, 0x3006, 0x2002, 0x0000 ], "#FF0000"],  //cross
    [14, 11, [ 0x0000, 0x0000, 0x0000, 0x03C0,  0x0660, 0x0660, 0x0060, 0x00C0,  0x0180, 0x0180, 0x0000, 0x0180,  0x0180, 0x0000, 0x0000, 0x0000 ], "#000000"],  //?
    [15,  0, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x01E0, 0x0330, 0x0330, 0x0030,  0x0060, 0x00C0, 0x00C0, 0x0000,  0x00C0, 0x00C0, 0x0000, 0x0000 ], "#000000"],  //?
+   [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#000000"],  //min
+   [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#000000"],  //min
   ];
   constructor() {
-   for (let i = 0; i < 16; i++) { 
+   for (let i = 0; i < 18; i++) {
     this.canvases.push(document.createElement('canvas'));
     this.canvases[i].setAttribute("width", 0x200);
     this.canvases[i].setAttribute("height", 0x200);
@@ -141,12 +143,21 @@
 	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
 	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
  }
+ class Crosshairs {
+  e = undefined;
+  x; y;
+  leftX;RightX;leftY;rightY;
+  showing = false;
+  relocate(e) {this.leftX = e.offsetX; this.leftY = e.offsetY;}
+  moving(e) {showing = true;}
+ }
  class RHS {
   x; y; w; h; e;
   constructor(){}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
   down(e){this.e = e;}
   drawLeft(c, s) {c.drawImage(s, 0, 0, 0x200, 0x200, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
+  drawRight(c, s) {c.drawImage(s, 0, 0, 0x200, 0x200, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
   up(e){
    var l = this.x+(this.w/2);
    var b = this.y+(this.w/2);
@@ -313,6 +324,7 @@
    this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
    rhs.drawLeft(this.show, this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag]);
+   rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
   }
   Y(a) {return Math.floor(((a) * 20) / this.l);}
   X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
@@ -335,6 +347,7 @@
  var rhs = new RHS();
  var fingers = new Fingers();
  var control = new Control();
+ var crosshairs = new Crosshairs();
  var level = new Level();
  var board;
  function tick() {
