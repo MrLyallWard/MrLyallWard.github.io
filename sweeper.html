@@ -151,6 +151,24 @@
   relocate(e) {this.leftX = e.offsetX; this.leftY = e.offsetY;}
   moving(e) {showing = true;}
  }
+ class LHS {
+  X = [50, 45, 55, 50];
+  Y = [20, 25, 25, 20];
+  x; y; w; h; e;
+  constructor() {}
+  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+  down(e) {this.e = e;}
+  up(e) {}
+  draw(c) {
+   c.beginPath();
+   c.fillStyle = c.strokeStyle = "#E0E0E0";
+   c.moveTo((this.X[0]*this.w)/100,this.y+((this.Y[0]*this.h)/100));
+   for (let i=1; i<this.X.length; i++) c.lineTo((this.X[i]*this.w)/100,this.y+((this.Y[i]*this.h)/100));
+   c.stroke();
+   c.fill();
+   c.closePath();
+  }
+ }
  class RHS {
   x; y; w; h; e;
   constructor(){}
@@ -277,6 +295,7 @@
     this.left = w/2;     // *****
     this.right = w/2     // * * *
    }                     // *****
+   lhs.size(0, this.top, this.left, h - this.top);
    rhs.size(this.right, this.top, this.left, h - this.top);
    this.step = this.length/20;
   }
@@ -323,6 +342,7 @@
    this.show.fillStyle = (fingers.left) ? "black" : "green";
    this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
+   lhs.draw(this.show);
    rhs.drawLeft(this.show, this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag]);
    rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
   }
@@ -344,6 +364,7 @@
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} 
  }
+ var lhs = new LHS();
  var rhs = new RHS();
  var fingers = new Fingers();
  var control = new Control();
