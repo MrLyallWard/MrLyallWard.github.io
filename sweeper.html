@@ -152,8 +152,8 @@
   moving(e) {showing = true;}
  }
  class LHS {
-  X = [50, 45, 55, 50];
-  Y = [20, 25, 25, 20];
+  X = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
+  Y = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
   x; y; w; h; e;
   constructor() {}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
@@ -161,7 +161,8 @@
   up(e) {}
   draw(c) {
    c.beginPath();
-   c.fillStyle = c.strokeStyle = "#E0E0E0";
+   c.strokeStyle = "#F0F0F0";
+   c.fillStyle = "#E0E0E0";
    c.moveTo((this.X[0]*this.w)/100,this.y+((this.Y[0]*this.h)/100));
    for (let i=1; i<this.X.length; i++) c.lineTo((this.X[i]*this.w)/100,this.y+((this.Y[i]*this.h)/100));
    c.stroke();
@@ -339,8 +340,6 @@
    for (let y = 0; y < 20; y ++) {
 	for (let x = 0; x < 20; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * 128), (y * 128), 128, 128);}}
-   this.show.fillStyle = (fingers.left) ? "black" : "green";
-   this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
    lhs.draw(this.show);
    rhs.drawLeft(this.show, this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag]);
