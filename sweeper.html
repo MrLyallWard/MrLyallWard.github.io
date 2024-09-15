@@ -324,7 +324,7 @@
    this.show.fillRect(4, 4, 68, 68);
    this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
    rhs.drawLeft(this.show, this.squares.canvases[(fingers.press == 0)?Square.mine:Square.flag]);
-   rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.max:Square.min]);
+   rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
   }
   Y(a) {return Math.floor(((a) * 20) / this.l);}
   X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
