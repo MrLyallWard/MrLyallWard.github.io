@@ -43,7 +43,7 @@
    this.#rowOffset += r;
    if (this.#rowOffset < 0) this.#rowOffset = 0; 
    if (this.#rowOffset > this.maxRow()) {
-    this.#rowOffset = this.maxRow(); } }	
+    this.#rowOffset = this.maxRow(); } }
   finished() { return (this.#r >= 0) || (this.#c >= 0); }
   correctRow(r) {
    r = this.#rowOffset + Level.span - r - 1;
@@ -125,11 +125,11 @@
    for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
   Blank(context) {
    context.fillStyle='#BFBFBF'; //blank template
-   context.fillRect(0x000,0x000,Squares.length,Squares.length);
+   context.fillRect(0,0,Squares.length,Squares.length);
    context.fill(); }
   DrawFont(font) {
    var c = this.contexts[font[0]];
-   c.drawImage(this.canvases[font[1]], 0, 0);
+   c.drawImage(this.canvases[font[1]],0,0);
    c.fillStyle=font[3];
    for (let i = 0; i < font[2].length; i++) {
 	var pixels = font[2][i];
@@ -146,8 +146,8 @@
   moving(e) {showing = true;}
  }
  class LHS {
-  X = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
-  Y = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
+  static #AX = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
+  static #AY = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
   x; y; w; h; e;
   constructor() {}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
@@ -155,8 +155,8 @@
    c.beginPath();
    c.strokeStyle = "#F0F0F0";
    c.fillStyle = "#E0E0E0";
-   c.moveTo((this.X[0]*this.w)/100,this.y+((this.Y[0]*this.h)/100));
-   for (let i=1; i<this.X.length; i++) c.lineTo((this.X[i]*this.w)/100,this.y+((this.Y[i]*this.h)/100));
+   c.moveTo((LHS.#AX[0]*this.w)/100,this.y+((LHS.#AY[0]*this.h)/100));
+   for (let i=1; i<LHS.#AX.length; i++) c.lineTo((LHS.#AX[i]*this.w)/100,this.y+((LHS.#AY[i]*this.h)/100));
    c.stroke();
    c.fill();
    c.closePath(); }
