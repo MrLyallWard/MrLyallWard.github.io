@@ -7,7 +7,7 @@
   #score = 0;
   #distance = 0;
   #shift = false;
-  static #span = 20;
+  static span = 20;
   static #length = 5000;
   static #density = this.#length*(10/3);
   mines = Level.array();
@@ -15,7 +15,7 @@
   flagged = Level.array();
   proximity = Level.array();
   constructor() {
-   for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.#span), 2+this.rand(Level.#length-2))) i++;}
+   for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.span), 2+this.rand(Level.#length-2))) i++;}
    this.clear(0,0); }
   work() {
    if (this.mines.length < Level.#length) {
@@ -23,35 +23,31 @@
     console.log('level length ' + this.mines.length); } 
   }
   static array() {let a = []; while (a.length < Level.#length) a.push(this.row()); return a;}
-  static row() {var a = []; while (a.length < Level.#span) a.push(0); return a;}
-  maxRow() { return Level.#length - Level.#span; }
+  static row() {var a = []; while (a.length < Level.span) a.push(0); return a;}
+  maxRow() { return Level.#length - Level.span; }
   rand(n) {return Math.floor(Math.random() * n);}
   addMine(c, r) {
    if (this.mines[r][c] != 0) return false;
    this.mines[r][c] = 1;
    for (let C=(c-1); C<=(c+1); C++) {for (let R=(r-1); R<=(r+1); R++) {this.addProximity(C, R);} }
    return true; }
-  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<Level.#span) && (r<Level.#length)) {this.proximity[r][c]++;} }
+  addProximity(c, r) { if ((c>=0) && (r>=0) && (c<Level.span) && (r<Level.#length)) {this.proximity[r][c]++;} }
   clear(c, r) {
-   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
+   if ((c>=0) && (c<Level.span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0) && (this.flagged[r][c] == 0)) {
     this.cleared[r][c] = 1;
 	if (this.proximity[r][c] == 0) {
      this.clear(c-1,r-1); this.clear(c,r-1); this.clear(c+1,r-1);
 	 this.clear(c-1,r  );                    this.clear(c+1,r  );
 	 this.clear(c-1,r+1); this.clear(c,r+1); this.clear(c+1,r+1); }}}
-	 
   offset(r) {
    this.#rowOffset += r;
    if (this.#rowOffset < 0) this.#rowOffset = 0; 
    if (this.#rowOffset > this.maxRow()) {
-    this.#rowOffset = this.maxRow(); 
-   }
-  }	
+    this.#rowOffset = this.maxRow(); } }	
   finished() { return (this.#r >= 0) || (this.#c >= 0); }
   correctRow(r) {
-   r = this.#rowOffset + Level.#span - r - 1;
-   return r;
-  }
+   r = this.#rowOffset + Level.span - r - 1;
+   return r; }
   Shift(shift) {this.#shift = shift; }
   At(c, r) {
    r = this.correctRow(r);
@@ -63,8 +59,7 @@
 	 return Square.flag; }
     if (finished && (this.mines[r][c] != 0)) return Square.mine;
     if (this.cleared[r][c] == 0) return Square.unknown; }
-   return this.proximity[r][c]; }
-    
+   return this.proximity[r][c]; }  
   Step(c, r) {
    r = this.correctRow(r);
    if (this.finished()) return;
@@ -74,20 +69,17 @@
     if (r > this.#distance) this.#distance = r;
    } else { this.#c = c; this.#r = r; };
    this.clear(c, r); }
-   
   Flag(c, r) {
    r = this.correctRow(r);
    if (this.finished()) return;
-   if ((c>=0) && (c<Level.#span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0)) {
+   if ((c>=0) && (c<Level.span) && (r>=0) && (r<Level.#length) && (this.cleared[r][c] == 0)) {
     this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
-	
   Undo(c, r) {
    r = this.correctRow(r);
    if ((this.#c == c) && (this.#r == r)) {
     this.#c = -1;
     this.#r = -1; 
 	this.cleared[r][c] = 0; } }
-  
   Score() { return "distance " + this.#distance + ", score " + this.#score; }  
  }
  class Digits {
@@ -95,6 +87,8 @@
   contexts = [];
  }
  class Squares {
+  static length = 0x200;
+  static step = 0x20;
   canvases = [];
   contexts = [];
   font = [ // 16 characters of a 16 by 16 character font for the board playfield
@@ -123,15 +117,15 @@
   constructor() {
    for (let i = 0; i < 18; i++) {
     this.canvases.push(document.createElement('canvas'));
-    this.canvases[i].setAttribute("width", 0x200);
-    this.canvases[i].setAttribute("height", 0x200);
+    this.canvases[i].setAttribute("width", Squares.length);
+    this.canvases[i].setAttribute("height", Squares.length);
 	this.contexts.push(this.canvases[i].getContext("2d")); }
    this.Blank(this.contexts[0]);
    this.Blank(this.contexts[11]);
    for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
   Blank(context) {
    context.fillStyle='#BFBFBF'; //blank template
-   context.fillRect(0x000,0x000,0x200,0x200);
+   context.fillRect(0x000,0x000,Squares.length,Squares.length);
    context.fill(); }
   DrawFont(font) {
    var c = this.contexts[font[0]];
@@ -139,9 +133,9 @@
    c.fillStyle=font[3];
    for (let i = 0; i < font[2].length; i++) {
 	var pixels = font[2][i];
-	var y = i * 0x20;
-	for (let x = 0; x < 0x200; x += 0x20, pixels <<= 1) {
-	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, 0x20, 0x20); c.fill(); }}}}
+	var y = i * Squares.step;
+	for (let x = 0; x < Squares.length; x += Squares.step, pixels <<= 1) {
+	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, Squares.step, Squares.step); c.fill(); }}}}
  }
  class Crosshairs {
   e = undefined;
@@ -174,8 +168,8 @@
   x; y; w; h; e; press = 0;
   constructor(){}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
-  drawLeft(c, s) {c.drawImage(s, 0, 0, 0x200, 0x200, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
-  drawRight(c, s) {c.drawImage(s, 0, 0, 0x200, 0x200, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
+  drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
+  drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
   draw(c,s) {this.drawLeft(c,s); this.drawRight(c,s);}
   down(e){this.e = e;}
   move(e) {
@@ -210,7 +204,8 @@
      board.offset(-1); } } }
   up(e) {
    if ((this.e != undefined) & (e.pointerId == this.e.pointerId) & !this.moving) {
-    board.clicked(e.offsetX, e.offsetY, (e.pointerType == 'mouse') ? e.button : rhs.press); }
+    board.clicked(e.offsetX, e.offsetY, (e.pointerType == 'mouse') ? e.button : rhs.press);
+    crosshairs.relocate(e); }
    this.e = undefined; }
  }
  class Zones {
@@ -224,8 +219,7 @@
   region(e) {
    if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) return lhs;
    else if ((e.offsetX >= this.right) & (e.offsetY >= this.top)) return rhs;
-   else return middle;
-  }
+   else return middle;}
   window(w,h) {
    if (h<w) {
     this.length = h;     // *********
@@ -240,7 +234,7 @@
    }                     // *****
    lhs.size(0, this.top, this.left, h - this.top);
    rhs.size(this.right, this.top, this.left, h - this.top);
-   this.step = this.length/20;
+   this.step = this.length/Level.span;
   }
  }
  class Control {
@@ -260,6 +254,8 @@
   window(w,h) {board.window(w,h); zones.window(w,h);}
  }
  class Board {
+  static length = 2560;
+  static step = 128
   canvas;
   context;
   squares;
@@ -270,31 +266,30 @@
   key;
   constructor() {
    this.squares = new Squares;
-   this.step = 0;
    this.board = document.getElementById('board');
    this.show = this.board.getContext("2d"); 
    this.canvas = document.createElement('canvas');
-   this.canvas.setAttribute("width", 2560); // fit 20 by 20 of 128x128
-   this.canvas.setAttribute("height", 2560);
+   this.canvas.setAttribute("width", Board.length); // fit Level.span=20 by 20 of 128x128
+   this.canvas.setAttribute("height", Board.length);
    this.context = this.canvas.getContext("2d"); 
   }
   work() {
-   for (let y = 0; y < 20; y ++) {
-	for (let x = 0; x < 20; x ++) {
-	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * 128), (y * 128), 128, 128);}}
-   this.show.drawImage(this.canvas, 0, 0, 2560, 2560, this.o, 0, this.l, this.l);
+   for (let y = 0; y < Level.span; y ++) {
+	for (let x = 0; x < Level.span; x ++) {
+	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
+   this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    lhs.draw(this.show);
    rhs.drawLeft(this.show, this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
    rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
   }
-  Y(a) {return Math.floor(((a) * 20) / this.l);}
-  X(a) {return Math.floor(((a-this.o) * 20) / this.l);}
+  Y(a) {return Math.floor(((a) * Level.span) / this.l);}
+  X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
   click(x, y) { this.x = this.X(x); this.y = this.Y(y); }
   check(x, y) { if ((this.X(x) != this.x) || (this.Y(y) != this.y)) {this.x = this.y = -1;} }
   clicked(x, y, button) {
    x = this.X(x);
    y = this.Y(y);
-   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<20) && (y<20)) {
+   if ((x == this.x) && (y == this.y) && (x>-1) && (y>-1) && (x<Level.span) && (y<Level.span)) {
     switch (button) {
 	 case 0: level.Step(x,y); break;
 	 case 1: level.Undo(x,y); break;
@@ -303,8 +298,7 @@
   window(w, h) {
    this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2; 
    this.board.setAttribute("width", w); 
-   this.board.setAttribute("height", h);} 
- }
+   this.board.setAttribute("height", h);} }
  var level = new Level();
  var lhs = new LHS();
  var rhs = new RHS();
