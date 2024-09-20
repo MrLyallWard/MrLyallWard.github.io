@@ -173,7 +173,7 @@
   draw(c,s) {this.drawLeft(c,s); this.drawRight(c,s);}
   down(e){this.e = e;}
   move(e) {
-   if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {   
+   if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
    }
   }
   up(e){
@@ -296,7 +296,7 @@
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
   window(w, h) {
-   this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2; 
+   this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2;
    this.board.setAttribute("width", w); 
    this.board.setAttribute("height", h);} }
  var level = new Level();
@@ -309,11 +309,11 @@
  var board;
  function tick() {
   board.work();
-  window.scrollbars.visible = false; 
+  window.scrollbars.visible = false;
  }
- function startup() { 
+ function startup() {
   board = new Board();
-  setInterval(function(){tick()}, 40); 
+  setInterval(function(){tick()}, 40);
   setInterval(function(){level.work()}, 100);
   control.size();
  }
