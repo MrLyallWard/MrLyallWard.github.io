@@ -169,7 +169,11 @@
    c.fill();
    c.closePath(); }
   down(e) {this.e = e;}
-  move(e) {crosshairs.adjust(e.offsetX-this.offsetX, e.offsetY-this.offsetY); this.e=e;}
+  move(e) {
+   if (this.e!=undefined) {
+    crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY); this.e=e;
+   }
+  }
   up(e) {this.e = undefined;}
   showing() {return this.e != undefined;}
  }
