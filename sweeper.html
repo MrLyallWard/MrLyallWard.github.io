@@ -1,5 +1,6 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
+ class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Level {
   #c = -1;
   #r = -1;
@@ -89,9 +90,7 @@
  class Squares {
   static length = 0x200;
   static step = 0x20;
-  canvases = [];
-  contexts = [];
-  font = [ // 16 characters of a 16 by 16 character font for the board playfield
+  static #font = [ // 16 characters of a 16 by 16 character font for the board playfield
    [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
    [ 1,  0, [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ], "#0000FF"],  // 1
    [ 2,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ], "#008000"],  // 2
@@ -114,6 +113,8 @@
    [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#000000"],  //min
    [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#000000"],  //min
   ];
+  canvases = [];
+  contexts = [];
   constructor() {
    for (let i = 0; i < 18; i++) {
     this.canvases.push(document.createElement('canvas'));
@@ -122,28 +123,35 @@
 	this.contexts.push(this.canvases[i].getContext("2d")); }
    this.Blank(this.contexts[0]);
    this.Blank(this.contexts[11]);
-   for (let a = 0; a < this.font.length; a++) { this.DrawFont(this.font[a]); } }
+   for (let a = 0; a < Squares.#font.length; a++) { this.DrawFont(Squares.#font[a]); } }
   Blank(context) {
    context.fillStyle='#BFBFBF'; //blank template
    context.fillRect(0,0,Squares.length,Squares.length);
    context.fill(); }
-  DrawFont(font) {
-   var c = this.contexts[font[0]];
-   c.drawImage(this.canvases[font[1]],0,0);
-   c.fillStyle=font[3];
-   for (let i = 0; i < font[2].length; i++) {
-	var pixels = font[2][i];
+  DrawFont(f) {
+   var c = this.contexts[f[0]];
+   c.drawImage(this.canvases[f[1]],0,0);
+   c.fillStyle=f[3];
+   for (let i = 0; i < f[2].length; i++) {
+	var pixels = f[2][i];
 	var y = i * Squares.step;
 	for (let x = 0; x < Squares.length; x += Squares.step, pixels <<= 1) {
 	 if ((pixels & 0x8000) > 0) { c.fillRect(x, y, Squares.step, Squares.step); c.fill(); }}}}
  }
  class Crosshairs {
-  e = undefined;
-  x; y;
-  leftX;RightX;leftY;rightY;
-  showing = false;
-  relocate(e) {this.leftX = e.offsetX; this.leftY = e.offsetY;}
-  moving(e) {showing = true;}
+  o; l; min; max; x; y; e = undefined;
+  size(o,l) {
+   this.o=o; this.l=l; this.min = Math.floor((2*l) / Level.span); this.max = l-this.min;
+   if (this.x === undefined) this.x = (this.max + this.min)/2 - this.min;
+   if (this.y === undefined) this.y = this.max;
+   this.bound();}
+  relocate(e) {this.x = e.offsetX-this.o; this.y = e.offsetY; this.bound();}
+  adjust(x,y) {this.x+=x; this.y+=y; this.bound();}
+  bound(){
+   if (this.x < this.min) this.x = this.min; else if (this.x > this.max) this.x = this.max;
+   if (this.y < this.min) this.y = this.min; else if (this.y > this.max) this.y = this.max;}
+  top() {return new Point(((this.x-this.min)*Board.length)/this.l, ((this.y-this.min)*Board.length)/this.l);}
+  width() {return Board.step * 4;}
  }
  class LHS {
   static #AX = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
@@ -161,8 +169,9 @@
    c.fill();
    c.closePath(); }
   down(e) {this.e = e;}
-  move(e) {}
+  move(e) {crosshairs.adjust(e.offsetX-this.offsetX, e.offsetY-this.offsetY); this.e=e;}
   up(e) {this.e = undefined;}
+  showing() {return this.e != undefined;}
  }
  class RHS {
   x; y; w; h; e; press = 0;
@@ -170,7 +179,11 @@
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
-  draw(c,s) {this.drawLeft(c,s); this.drawRight(c,s);}
+  drawPad(c) {
+   var s = crosshairs.top();
+   var w = crosshairs.width();
+   c.drawImage(board.canvas, s.x, s.y, w, w, this.x, this.y + (this.h-this.w)/2, this.w, this.w);
+  }
   down(e){this.e = e;}
   move(e) {
    if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
@@ -279,6 +292,7 @@
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    lhs.draw(this.show);
+   rhs.drawPad(this.show);
    rhs.drawLeft(this.show, this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
    rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
   }
@@ -295,10 +309,18 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
+  bound(p) {
+   var x = p.x;
+   var y = p.y;
+   var d = this.l / Level.span;
+   if ((x-(2*d)) < 0) x = 0;
+   else if ((x+(2*d)) >= this.l) x = this.l - (4*d);
+  }
   window(w, h) {
    this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2;
    this.board.setAttribute("width", w); 
-   this.board.setAttribute("height", h);} }
+   this.board.setAttribute("height", h);
+   crosshairs.size(this.o, this.l);} }
  var level = new Level();
  var lhs = new LHS();
  var rhs = new RHS();
