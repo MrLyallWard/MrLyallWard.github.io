@@ -153,6 +153,34 @@
   top() {return new Point(Math.floor(((this.x-this.min)*Board.length)/this.l), Math.floor(((this.y-this.min)*Board.length)/this.l));}
   width() {return Board.step * 4;}
  }
+ class Side {
+  x; y; w; h;
+  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+  drawPad(c) {
+   var s = crosshairs.top();
+   var w = crosshairs.width();
+   var y = (this.y + this.w/2 + this.y + this.h)/2 - this.w/2;
+   var g = c.createLinearGradient(this.x, y, this.x+this.w, y);
+   c.drawImage(board.canvas, s.x, s.y, w, w, this.x+1, y+1, this.w-2, this.w-2);
+   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.02, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.12, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.88, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.98, "rgba(255, 255, 255, 1)");
+   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
+   c.fillStyle = g;
+   c.fillRect(this.x, y, this.w, this.w)
+   g = c.createLinearGradient(this.x, y, this.x, y+this.w);
+   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.02, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.12, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.88, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.98, "rgba(255, 255, 255, 1)");
+   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
+   c.fillStyle = g;
+   c.fillRect(this.x, y, this.w, this.w)
+  }
+ }
  class LHS {
   static #AX = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
   static #AY = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
@@ -177,49 +205,10 @@
   up(e) {this.e = undefined;}
   showing() {return this.e != undefined;}
  }
- class RHS {
-  x; y; w; h; e; press = 0;
-  constructor(){}
-  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+ class RHS extends Side {
+  e; press = 0;
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
-  drawPad(c) {
-   var s = crosshairs.top();
-   var w = crosshairs.width();
-   var y = (this.y + this.w/2 + this.y + this.h)/2 - this.w/2;
-   c.drawImage(board.canvas, s.x, s.y, w, w, this.x+1, y+1, this.w-2, this.w-2);
-   var g = c.createLinearGradient(this.x, y, this.x+this.w, y);
-   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.97, "rgba(255, 255, 255, 1)");
-   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
-   c.fillStyle = g;
-   c.fillRect(this.x, y, this.w, this.w)
-   g = c.createLinearGradient(this.x, y, this.x, y+this.w);
-   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.97, "rgba(255, 255, 255, 1)");
-   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
-   c.fillStyle = g;
-   c.fillRect(this.x, y, this.w, this.w)
-   //this.gradient(this.x, y, this.x+this.w, y, this.w);
-   //this.gradient(this.x, y, this.x, y+this.w, this.w);
-  }
-  gradient(c, x, y, X, Y, w) {
-   var g = c.createLinearGradient(x, y, X, Y);
-   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
-   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
-   g.addColorStop(0.93, "rgba(255, 255, 255, 1)");
-   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
-   c.fillStyle = g;
-   c.fillRect(x, y, w, w)
-  }
   down(e){this.e = e;}
   move(e) {
    if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
