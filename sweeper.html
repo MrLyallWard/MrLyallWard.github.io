@@ -150,7 +150,7 @@
   bound(){
    if (this.x < this.min) this.x = this.min; else if (this.x > this.max) this.x = this.max;
    if (this.y < this.min) this.y = this.min; else if (this.y > this.max) this.y = this.max;}
-  top() {return new Point(((this.x-this.min)*Board.length)/this.l, ((this.y-this.min)*Board.length)/this.l);}
+  top() {return new Point(Math.floor(((this.x-this.min)*Board.length)/this.l), Math.floor(((this.y-this.min)*Board.length)/this.l));}
   width() {return Board.step * 4;}
  }
  class LHS {
@@ -187,7 +187,38 @@
    var s = crosshairs.top();
    var w = crosshairs.width();
    var y = (this.y + this.w/2 + this.y + this.h)/2 - this.w/2;
-   c.drawImage(board.canvas, s.x, s.y, w, w, this.x, y, this.w, this.w);
+   c.drawImage(board.canvas, s.x, s.y, w, w, this.x+1, y+1, this.w-2, this.w-2);
+   var g = c.createLinearGradient(this.x, y, this.x+this.w, y);
+   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.97, "rgba(255, 255, 255, 1)");
+   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
+   c.fillStyle = g;
+   c.fillRect(this.x, y, this.w, this.w)
+   g = c.createLinearGradient(this.x, y, this.x, y+this.w);
+   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.97, "rgba(255, 255, 255, 1)");
+   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
+   c.fillStyle = g;
+   c.fillRect(this.x, y, this.w, this.w)
+   //this.gradient(this.x, y, this.x+this.w, y, this.w);
+   //this.gradient(this.x, y, this.x, y+this.w, this.w);
+  }
+  gradient(c, x, y, X, Y, w) {
+   var g = c.createLinearGradient(x, y, X, Y);
+   g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.03, "rgba(255, 255, 255, 1)");
+   g.addColorStop(0.15, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.85, "rgba(255, 255, 255, 0)");
+   g.addColorStop(0.93, "rgba(255, 255, 255, 1)");
+   g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
+   c.fillStyle = g;
+   c.fillRect(x, y, w, w)
   }
   down(e){this.e = e;}
   move(e) {
@@ -295,11 +326,11 @@
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    lhs.draw(this.show);
    rhs.drawPad(this.show);
    rhs.drawLeft(this.show, this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
    rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
+   this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
