@@ -154,12 +154,25 @@
   width() {return Board.step * 4;}
  }
  class Side {
-  x; y; w; h;
+  static #AX = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
+  static #AY = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
+  x; y; w; h; e; press;
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+  drawArrow(c) {
+   c.beginPath();
+   c.fillStyle = "#FFFFFF";
+   c.fillRect(this.x, this.y, this.w, this.h);
+   c.strokeStyle = "#F0F0F0";
+   c.fillStyle = "#E0E0E0";
+   c.moveTo(this.x+(Side.#AX[0]*this.w)/100,this.y+((Side.#AY[0]*this.h)/100));
+   for (let i=1; i<Side.#AX.length; i++) c.lineTo(this.x+(Side.#AX[i]*this.w)/100,this.y+((Side.#AY[i]*this.h)/100));
+   c.stroke();
+   c.fill();
+   c.closePath(); }
   drawPad(c) {
    var s = crosshairs.top();
    var w = crosshairs.width();
-   var y = (this.y + this.w/2 + this.y + this.h)/2 - this.w/2;
+   var y = this.y + (this.h)/2 - this.w/2;
    var g = c.createLinearGradient(this.x, y, this.x+this.w, y);
    c.drawImage(board.canvas, s.x, s.y, w, w, this.x+1, y+1, this.w-2, this.w-2);
    g.addColorStop(0.00, "rgba(255, 255, 255, 1)");
@@ -178,42 +191,17 @@
    g.addColorStop(0.98, "rgba(255, 255, 255, 1)");
    g.addColorStop(1.00, "rgba(255, 255, 255, 1)");
    c.fillStyle = g;
-   c.fillRect(this.x, y, this.w, this.w)
+   c.fillRect(this.x, y, this.w, this.w);
   }
- }
- class LHS {
-  static #AX = [50, 42, 46, 46, 18, 18, 10, 18, 18, 46, 46, 42, 50, 58, 54, 54, 82, 82, 90, 82, 82, 54, 54, 58, 50];
-  static #AY = [20, 28, 28, 46, 46, 42, 50, 58, 54, 54, 72, 72, 80, 72, 72, 54, 54, 58, 50, 42, 46, 46, 28, 28, 20];
-  x; y; w; h; e;
-  constructor() {}
-  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
-  draw(c) {
-   c.beginPath();
-   c.strokeStyle = "#F0F0F0";
-   c.fillStyle = "#E0E0E0";
-   c.moveTo((LHS.#AX[0]*this.w)/100,this.y+((LHS.#AY[0]*this.h)/100));
-   for (let i=1; i<LHS.#AX.length; i++) c.lineTo((LHS.#AX[i]*this.w)/100,this.y+((LHS.#AY[i]*this.h)/100));
-   c.stroke();
-   c.fill();
-   c.closePath(); }
-  down(e) {this.e = e;}
-  move(e) {
-   if (this.e!=undefined) {
-    crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY); this.e=e;
-   }
-  }
-  up(e) {this.e = undefined;}
-  showing() {return this.e != undefined;}
- }
- class RHS extends Side {
-  e; press = 0;
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
-  down(e){this.e = e;}
-  move(e) {
-   if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
-   }
+  draw(c, pad, button) {
+   if (!pad)this.drawArrow(c);
+   this.drawLeft(c, button);
+   if (this == rhs) this.drawRight(c, board.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
+   if (pad) this.drawPad(c);
   }
+  down(e) {this.e = e;}
   up(e){
    if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
     var l = this.x+(this.w/2);
@@ -221,10 +209,22 @@
     if ((this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
         (this.e.offsetY <= b) & (e.offsetY <= b)) {
      if ((this.e.offsetX >= l) & (e.offsetX >= l)) {
-      if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
-      else if (document.exitFullscreen) {document.exitFullscreen();}
-     } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {this.press=(this.press==0)?2:0;} } } 
-   this.e = undefined; } }
+	  if (this == rhs) {
+       if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
+       else if (document.exitFullscreen) {document.exitFullscreen();} }
+     } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {rhs.press=(rhs.press==0)?2:0;} } } 
+   this.e = undefined; } 
+  showing() {return this.e != undefined;}
+  move(e) {
+   if (this.e!=undefined) {
+    crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY); this.e=e;
+   }
+  }
+ }
+ class LHS extends Side {
+ }
+ class RHS extends Side {
+ }
  class Middle {
   e; y; moving = false;
   constructor() {}
@@ -241,7 +241,7 @@
      this.y -= zones.step;
      board.offset(-1); } } }
   up(e) {
-   if ((this.e != undefined) & (e.pointerId == this.e.pointerId) & !this.moving) {
+   if ((this.e != undefined) && (e.pointerId == this.e.pointerId) & !this.moving) {
     board.clicked(e.offsetX, e.offsetY, (e.pointerType == 'mouse') ? e.button : rhs.press);
     crosshairs.relocate(e); }
    this.e = undefined; }
@@ -252,7 +252,7 @@
    window.addEventListener("pointerdown",   function(e) {try {zones.region(e).down(e); e.preventDefault();} catch(x){}});
    window.addEventListener("pointermove",   function(e) {try {zones.region(e).move(e); e.preventDefault();} catch(x){}});
    window.addEventListener("pointerup",     function(e) {try {zones.region(e).up(e);   e.preventDefault();} catch(x){}});
-   window.addEventListener("pointercancel", function(e) {try {                                              } catch(x){}});}
+   window.addEventListener("pointercancel", function(e) {try {                                            } catch(x){}});}
   show(e, note = "") {console.log("id:"+e.pointerId+", x:"+e.offsetX+", y:"+e.offsetY+", type:"+e.type+", pointer:"+e.pointerType+", buttons:"+e.buttons+", " + note);}
   region(e) {
    if ((e.offsetX <= this.left) & (e.offsetY >= this.top)) return lhs;
@@ -315,10 +315,8 @@
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   lhs.draw(this.show);
-   rhs.drawPad(this.show);
-   rhs.drawLeft(this.show, this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
-   rhs.drawRight(this.show, this.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
+   rhs.draw(this.show, lhs.showing(), this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
+   lhs.draw(this.show, rhs.showing(), this.squares.canvases[(rhs.press != 0)?Square.mine:Square.flag]);
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
