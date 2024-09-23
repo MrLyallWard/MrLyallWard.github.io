@@ -154,10 +154,11 @@
   width() {return Board.step * 4;}
   draw(c, x, w) {
    if (lhs.showing() || rhs.showing()) {
-    c.fillStyle = 'rgba(225,225,225,0.5)';
-    c.fillRect(x, 0, this.x-this.min, w)
-    c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w)
-    //c.fillRect(x+this.x-this.min-2, 0, 40, w)
+    c.fillStyle = 'rgba(225,225,225,0.3)';
+    c.fillRect(x, 0, this.x-this.min, w);
+    c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w);
+    c.fillRect(x, 0, w, this.y-this.min);
+    c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
    }
   }
  }
