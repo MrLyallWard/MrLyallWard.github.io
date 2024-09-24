@@ -263,7 +263,7 @@
   up(e) {
    var p = super.up(e);
    if ((p != undefined) && lhs.showing()) {
-    if (rhs.press==0) level.Flag(p.x, p.y); else level.Step(p.x, p.y);
+    if (rhs.press==0) level.Step(p.x, p.y); else level.Flag(p.x, p.y);
    }
   }
  }
