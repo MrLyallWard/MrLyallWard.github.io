@@ -232,7 +232,9 @@
 	  if (this == rhs) {
        if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
        else if (document.exitFullscreen) {document.exitFullscreen();} }
-     } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {rhs.press=(rhs.press==0)?2:0;} } } 
+     } //else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {rhs.press=(rhs.press==0)?2:0;} 
+    } 
+   } 
    this.focussed &= this.same(this.start, e);
    this.e = undefined;
    if (this.focussed) return this.start;
