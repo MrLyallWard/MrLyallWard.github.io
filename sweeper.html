@@ -154,19 +154,19 @@
   width() {return Board.step * 4;}
   draw(c, x, w) {
    if (lhs.showing() || rhs.showing()) {
-    c.fillStyle = 'rgba(225,225,225,0.3)';
-    c.fillRect(x, 0, this.x-this.min, w);
-    c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w);
-    c.fillRect(x, 0, w, this.y-this.min);
-    c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
+    c.fillStyle = 'rgba( 85, 85, 85,0.3)'; c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w);
+    c.fillStyle = 'rgba(170,170,170,0.4)'; c.fillRect(x, 0, this.x-this.min, w); 
+    c.fillStyle = 'rgba(  0,  0,  0,0.2)'; c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
+    c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x, 0, w, this.y-this.min);
    }
   }
  }
  class Side {
   static #AX = [50, 40, 45, 45, 35, 35, 25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50];
   static #AY = [25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50, 40, 45, 45, 35, 35, 25];
-  x; y; w; h; e; press;
-  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+  x; y; w; h; start; e; focussed; press;
+  static one; static two;
+  size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h; this.r=Math.pow(w/Level.span,2);}
   drawArrow(c) {
    c.beginPath();
    c.fillStyle = "#FFFFFF";
@@ -210,7 +210,10 @@
    if (this == rhs) this.drawRight(c, board.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
    if (pad) this.drawPad(c);
   }
-  down(e) {this.e = e;}
+  down(e) {
+   this.start = this.e = e;
+   this.focussed = true;
+   }
   up(e){
    if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
     var l = this.x+(this.w/2);
@@ -227,7 +230,12 @@
   move(e) {
    if (this.e!=undefined) {
     crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY); this.e=e;
+	this.focussed &= (Math.pow(e.offsetX-this.start.offsetX, 2)+Math.pow(e.offsetX-this.start.offsetX, 2))<this.r;
    }
+  }
+  target(e) {
+   var x = e.offsetX; 
+   var y = e.offsetY;
   }
  }
  class LHS extends Side {
@@ -342,13 +350,6 @@
 	 case 1: level.Undo(x,y); break;
 	 case 2: level.Flag(x,y); break; }}}
   offset(y) {level.offset(y);}
-  bound(p) {
-   var x = p.x;
-   var y = p.y;
-   var d = this.l / Level.span;
-   if ((x-(2*d)) < 0) x = 0;
-   else if ((x+(2*d)) >= this.l) x = this.l - (4*d);
-  }
   window(w, h) {
    this.l = (h<w)?h:w; this.w=w; this.h=h; this.o=(w-this.l)/2;
    this.board.setAttribute("width", w); 
