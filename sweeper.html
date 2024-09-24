@@ -211,9 +211,17 @@
    if (pad) this.drawPad(c);
   }
   down(e) {
-   this.start = this.e = e;
+   this.start = this.target(e);
+   this.e = e;
    this.focussed = true;
    }
+  move(e) {
+   if (this.e!=undefined) {
+    crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY);
+	this.e=e;
+	this.focussed &= this.same(this.start, e);
+   }
+  }
   up(e){
    if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
     var l = this.x+(this.w/2);
@@ -225,22 +233,39 @@
        if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
        else if (document.exitFullscreen) {document.exitFullscreen();} }
      } else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {rhs.press=(rhs.press==0)?2:0;} } } 
-   this.e = undefined; } 
+   this.focussed &= this.same(this.start, e);
+   this.e = undefined;
+   if (this.focussed) return this.start;
+  }
   showing() {return this.e != undefined;}
-  move(e) {
-   if (this.e!=undefined) {
-    crosshairs.adjust(e.offsetX-this.e.offsetX, e.offsetY-this.e.offsetY); this.e=e;
-	this.focussed &= (Math.pow(e.offsetX-this.start.offsetX, 2)+Math.pow(e.offsetX-this.start.offsetX, 2))<this.r;
-   }
+  same(s, e) {
+   var t = this.target(e);
+   return (t.x == s.x) && (t.y == s.y);
   }
   target(e) {
-   var x = e.offsetX; 
-   var y = e.offsetY;
+   var x = Math.floor((20*crosshairs.x/crosshairs.l) + (4*(e.offsetX - this.x)/this.w)-2); 
+   var y = Math.floor((20*crosshairs.y/crosshairs.l) + (4*(e.offsetY - this.y - (this.h/2))/this.w));
+   if (x<0) x=0; else if (x>=Level.span) x=Level.span-1;
+   if (y<0) y=0; else if (y>=Level.span) y=Level.span-1;
+   console.log("local x,y = " +x+ "," +y);
+   return new Point(x,y);
   }
  }
  class LHS extends Side {
+  up(e) {
+   var p = super.up(e);
+   if ((p != undefined) && rhs.showing()) {
+    if (rhs.press==0) level.Flag(p.x, p.y); else level.Step(p.x, p.y);
+   }
+  }
  }
  class RHS extends Side {
+  up(e) {
+   var p = super.up(e);
+   if ((p != undefined) && lhs.showing()) {
+    if (rhs.press==0) level.Flag(p.x, p.y); else level.Step(p.x, p.y);
+   }
+  }
  }
  class Middle {
   e; y; moving = false;
