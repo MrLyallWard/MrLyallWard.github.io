@@ -217,7 +217,7 @@
    }
   move(e) {
    if (this.e!=undefined) {
-    var scale = (lhs.showing() && rhs.showing()) ? 4 : 1;
+    var slow = (lhs.showing() && rhs.showing()) ? 4 : 1;
     crosshairs.adjust((e.offsetX-this.e.offsetX)/slow, (e.offsetY-this.e.offsetY)/slow);
 	this.e=e;
 	this.focussed &= this.same(this.start, e);
