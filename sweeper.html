@@ -261,13 +261,11 @@
  class LHS extends Side {
   up(e) {
    var p = super.up(e);
-   if ((p != undefined) && rhs.showing()) {
-    if (rhs.press==2) level.Flag(p.x, p.y); else level.Step(p.x, p.y); } } }
+   if ((p != undefined) && rhs.showing()) level.Step(p.x, p.y); } }
  class RHS extends Side {
   up(e) {
    var p = super.up(e);
-   if ((p != undefined) && lhs.showing()) {
-    if (rhs.press==2) level.Step(p.x, p.y); else level.Flag(p.x, p.y); } } }
+   if ((p != undefined) && lhs.showing()) level.Flag(p.x, p.y); } }
  class Middle {
   e; y; moving = false;
   constructor() {}
