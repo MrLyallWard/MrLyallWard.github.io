@@ -86,11 +86,14 @@
  class Digits {
   canvases = [];
   contexts = [];
+  static #font = [ // x characters of a n by n character font for the scoreboard playfield
+   [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
+  ];
  }
  class Squares {
   static length = 0x200;
   static step = 0x20;
-  static #font = [ // 16 characters of a 16 by 16 character font for the board playfield
+  static #font = [ // 18 characters of a 16 by 16 character font for the board playfield
    [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
    [ 1,  0, [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ], "#0000FF"],  // 1
    [ 2,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ], "#008000"],  // 2
@@ -166,6 +169,7 @@
   static #AY = [25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50, 40, 45, 45, 35, 35, 25];
   x; y; w; h; start; e; focussed; press;
   static one; static two;
+  constructor() {}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h; this.r=Math.pow(w/Level.span,2);}
   drawArrow(c) {
    c.beginPath();
@@ -258,18 +262,12 @@
   up(e) {
    var p = super.up(e);
    if ((p != undefined) && rhs.showing()) {
-    if (rhs.press==0) level.Flag(p.x, p.y); else level.Step(p.x, p.y);
-   }
-  }
- }
+    if (rhs.press==2) level.Flag(p.x, p.y); else level.Step(p.x, p.y); } } }
  class RHS extends Side {
   up(e) {
    var p = super.up(e);
    if ((p != undefined) && lhs.showing()) {
-    if (rhs.press==0) level.Step(p.x, p.y); else level.Flag(p.x, p.y);
-   }
-  }
- }
+    if (rhs.press==2) level.Step(p.x, p.y); else level.Flag(p.x, p.y); } } }
  class Middle {
   e; y; moving = false;
   constructor() {}
@@ -360,8 +358,8 @@
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   rhs.draw(this.show, lhs.showing(), this.squares.canvases[(rhs.press == 0)?Square.mine:Square.flag]);
-   lhs.draw(this.show, rhs.showing(), this.squares.canvases[(rhs.press != 0)?Square.mine:Square.flag]);
+   rhs.draw(this.show, lhs.showing(), this.squares.canvases[(rhs.press == 2)?Square.mine:Square.flag]);
+   lhs.draw(this.show, rhs.showing(), this.squares.canvases[(rhs.press != 2)?Square.mine:Square.flag]);
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
   }
