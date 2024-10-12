@@ -84,11 +84,34 @@
   Score() { return "distance " + this.#distance + ", score " + this.#score; }  
  }
  class Digits {
+  static width = 416;
+  static length = 736;
+  static step = 0x20;
   canvases = [];
   contexts = [];
   static #font = [ // x characters of a n by n character font for the scoreboard playfield
-   [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
+   [ 0,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000 ], "#400000"],  // 0
   ];
+  constructor() {
+   for (let i = 0; i < 1; i++) {
+    this.canvases.push(document.createElement('canvas'));
+    this.canvases[i].setAttribute("width", Digits.length);
+    this.canvases[i].setAttribute("height", Digits.length);
+	this.contexts.push(this.canvases[i].getContext("2d")); }
+   this.Blank(this.contexts[0]);
+   this.Blank(this.contexts[11]);
+   for (let a = 0; a < Squares.#font.length; a++) { this.DrawFont(Squares.#font[a]); }
+  }
+  DrawFont(f) {
+   var c = this.contexts[f[0]];
+   c.drawImage(this.canvases[f[1]],0,0);
+   c.fillStyle=f[3];
+   for (let i = 0; i < f[2].length; i++) {
+    var pixels = f[2][i];
+    var x = i * Squares.step;
+    for (let y = 0; y < Squares.length; y += Squares.step, pixels <<= 1) {
+     if ((pixels & 0x8000) > 0) { c.fillRect(x, y, Squares.step, Squares.step); c.fill(); }}}
+  }
  }
  class Squares {
   static length = 0x200;
@@ -271,7 +294,7 @@
   constructor() {}
   down(e) {this.e = e; this.y = e.offsetY; board.click(e.offsetX, e.offsetY); this.moving=false;}
   move(e) {
-   if ((this.e != undefined) && (e.pointerId == this.e.pointerId)) {
+   if ((e.buttons != 0) && (this.e != undefined) && (e.pointerId == this.e.pointerId)) {
     board.check(e.offsetX, e.offsetY);
     if (e.offsetY >= (this.y + zones.step)) {
 	 this.moving=true;
