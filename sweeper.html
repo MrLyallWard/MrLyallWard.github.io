@@ -190,7 +190,7 @@
  class Side {
   static #AX = [50, 40, 45, 45, 35, 35, 25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50];
   static #AY = [25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50, 40, 45, 45, 35, 35, 25];
-  x; y; w; h; start; e; focussed; press;
+  x; y; w; h; start; e; focussed; press; #clicking;
   static one; static two;
   constructor() {}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h; this.r=Math.pow(w/Level.span,2);}
@@ -241,7 +241,7 @@
    this.start = this.target(e);
    this.e = e;
    this.focussed = true;
-   }
+  }
   move(e) {
    if (this.e!=undefined) {
     var slow = (lhs.showing() && rhs.showing()) ? 4 : 1;
@@ -257,7 +257,7 @@
     if ((this.e.offsetY >= this.y) & (e.offsetY >= this.y) &
         (this.e.offsetY <= b) & (e.offsetY <= b)) {
      if ((this.e.offsetX >= l) & (e.offsetX >= l)) {
-	  if (this == rhs) {
+	  if ((this == rhs) & !(lhs.showing())) {
        if (!document.fullscreenElement) {document.documentElement.requestFullscreen();}
        else if (document.exitFullscreen) {document.exitFullscreen();} }
      } //else if ((this.e.offsetX >= this.x) & (e.offsetX >= this.x)) {rhs.press=(rhs.press==0)?2:0;} 
