@@ -90,17 +90,25 @@
   canvases = [];
   contexts = [];
   static #font = [ // x characters of a n by n character font for the scoreboard playfield
-   [ 0,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000 ], "#400000"],  // 0
+   [ 0,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#550000", "#000000"],   // 0
+   [ 1,  0, [ 0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 1
+   [ 2,  0, [ 0x000000, 0x0007FC, 0x200BFA, 0x301DF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000,  0x000000 ], "#FF1800", "#00000000"], // 2
+   [ 3,  0, [ 0x000000, 0x000000, 0x200802, 0x301C06,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 3
+   [ 4,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 4
+   [ 5,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 5
+   [ 6,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 6
+   [ 7,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 7
+   [ 8,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 8
+   [ 9,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 9
+   [10,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], //
   ];
   constructor() {
-   for (let i = 0; i < 1; i++) {
+   for (let i = 0; i < 11; i++) {
     this.canvases.push(document.createElement('canvas'));
-    this.canvases[i].setAttribute("width", Digits.length);
+    this.canvases[i].setAttribute("width", Digits.width);
     this.canvases[i].setAttribute("height", Digits.length);
 	this.contexts.push(this.canvases[i].getContext("2d")); }
-   this.Blank(this.contexts[0]);
-   this.Blank(this.contexts[11]);
-   for (let a = 0; a < Squares.#font.length; a++) { this.DrawFont(Squares.#font[a]); }
+   for (let a = 0; a < Digits.#font.length; a++) { this.DrawFont(Digits.#font[a]); }
   }
   DrawFont(f) {
    var c = this.contexts[f[0]];
@@ -108,9 +116,16 @@
    c.fillStyle=f[3];
    for (let i = 0; i < f[2].length; i++) {
     var pixels = f[2][i];
-    var x = i * Squares.step;
-    for (let y = 0; y < Squares.length; y += Squares.step, pixels <<= 1) {
-     if ((pixels & 0x8000) > 0) { c.fillRect(x, y, Squares.step, Squares.step); c.fill(); }}}
+    var x = i * Digits.step;
+    for (let y = 0; y < Digits.length; y += Digits.step, pixels <<= 1) {
+     c.fillStyle=((pixels & 0x400000) > 0)?f[3]:f[4];
+     c.fillRect(x, y, Digits.step, Digits.step);
+	 c.fill(); }}}
+  print(c, t, x, y, w, h) {
+   c.drawImage(this.canvases[1], x, y, w, h);
+   c.drawImage(this.canvases[2], x+w, y, w, h);
+   c.drawImage(this.canvases[3], x+w+w, y, w, h);
+   c.drawImage(this.canvases[8], x+w+w+w, y, w, h);
   }
  }
  class Squares {
@@ -311,8 +326,9 @@
    this.e = undefined; }
  }
  class Zones {
-  length; step; left; right; top;
+  length; step; left; right; top; digits;
   constructor() {
+   this.digits = new Digits;
    window.addEventListener("pointerdown",   function(e) {try {zones.region(e).down(e); e.preventDefault();} catch(x){}});
    window.addEventListener("pointermove",   function(e) {try {zones.region(e).move(e); e.preventDefault();} catch(x){}});
    window.addEventListener("pointerup",     function(e) {try {zones.region(e).up(e);   e.preventDefault();} catch(x){}});
@@ -369,11 +385,11 @@
   constructor() {
    this.squares = new Squares;
    this.board = document.getElementById('board');
-   this.show = this.board.getContext("2d"); 
+   this.show = this.board.getContext("2d");
    this.canvas = document.createElement('canvas');
    this.canvas.setAttribute("width", Board.length); // fit Level.span=20 by 20 of 128x128
    this.canvas.setAttribute("height", Board.length);
-   this.context = this.canvas.getContext("2d"); 
+   this.context = this.canvas.getContext("2d");
   }
   work() {
    for (let y = 0; y < Level.span; y ++) {
@@ -383,6 +399,7 @@
    lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
+   zones.digits.print(this.show, " ", 128, 128, 416, 736);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
