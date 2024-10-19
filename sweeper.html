@@ -1,5 +1,6 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
+ const Digit = Object.freeze({ green:11, red:0, man:21 })
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Level {
   #c = -1;
@@ -66,7 +67,7 @@
    if (this.finished()) return;
    if (this.flagged[r][c] !=0) return;
    if ((this.mines[r][c] == 0)) {
-    this.#score++; 
+    if (this.cleared[r][c] != 1) this.#score++; 
     if (r > this.#distance) this.#distance = r;
    } else { this.#c = c; this.#r = r; };
    this.clear(c, r); }
@@ -81,7 +82,7 @@
     this.#c = -1;
     this.#r = -1; 
 	this.cleared[r][c] = 0; } }
-  Score() { return "distance " + this.#distance + ", score " + this.#score; }  
+  Score() { return this.#score; }  
  }
  class Digits {
   static width = 416;
@@ -89,21 +90,33 @@
   static step = 0x20;
   canvases = [];
   contexts = [];
-  static #font = [ // x characters of a n by n character font for the scoreboard playfield
-   [ 0,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#550000", "#000000"],   // 0
-   [ 1,  0, [ 0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x000000, 0x000000, 0x000000,  0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 1
-   [ 2,  0, [ 0x000000, 0x0007FC, 0x200BFA, 0x301DF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000,  0x000000 ], "#FF1800", "#00000000"], // 2
-   [ 3,  0, [ 0x000000, 0x000000, 0x200802, 0x301C06,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 3
-   [ 4,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 4
-   [ 5,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 5
-   [ 6,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 6
-   [ 7,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 7
-   [ 8,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 8
-   [ 9,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], // 9
-   [10,  0, [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6,  0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E,  0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC,  0x000000 ], "#FF1800", "#00000000"], //
+  static #font = [
+   [ 0,  0, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#550000", "#000000FF"], // 0
+   [ 1,  0, [ 0, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 1
+   [ 2,  0, [ 0, 0x0007FC, 0x200BFA, 0x301DF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000, 0 ], "#FF1800", "#00000000"], // 2
+   [ 3,  0, [ 0, 0x000000, 0x200802, 0x301C06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 3
+   [ 4,  0, [ 0, 0x1FF000, 0x0FE800, 0x07DC00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x07DDF0, 0x0FEBF8, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 4
+   [ 5,  0, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#FF1800", "#00000000"], // 5
+   [ 6,  0, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#FF1800", "#00000000"], // 6
+   [ 7,  0, [ 0, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 7
+   [ 8,  0, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 8
+   [ 9,  0, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 9
+   [10,  0, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], //10
+   [11, 11, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#003000", "#000000FF"], // 0
+   [12, 11, [ 0, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 1
+   [13, 11, [ 0, 0x0007FC, 0x200BFA, 0x301DF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000, 0 ], "#00FF18", "#00000000"], // 2
+   [14, 11, [ 0, 0x000000, 0x200802, 0x301C06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 3
+   [15, 11, [ 0, 0x1FF000, 0x0FE800, 0x07DC00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x07DDF0, 0x0FEBF8, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 4
+   [16, 11, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FF18", "#00000000"], // 5
+   [17, 11, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FF18", "#00000000"], // 6
+   [18, 11, [ 0, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 7
+   [19, 11, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 8
+   [20, 11, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 9
+   [21, 11, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], //10
+   [21, 21, [ 0, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0 ], "#00FF18", "#000000FF"], //man
   ];
   constructor() {
-   for (let i = 0; i < 11; i++) {
+   for (let i = 0; i < 23; i++) {
     this.canvases.push(document.createElement('canvas'));
     this.canvases[i].setAttribute("width", Digits.width);
     this.canvases[i].setAttribute("height", Digits.length);
@@ -122,11 +135,21 @@
      c.fillRect(x, y, Digits.step, Digits.step);
 	 c.fill(); }}}
   print(c, t, x, y, w, h) {
-   c.drawImage(this.canvases[1], x, y, w, h);
-   c.drawImage(this.canvases[2], x+w, y, w, h);
-   c.drawImage(this.canvases[3], x+w+w, y, w, h);
-   c.drawImage(this.canvases[8], x+w+w+w, y, w, h);
+   for (let i = 0; i < 11; i++) c.drawImage(this.canvases[i], x+=w, y, w, h);
   }
+  score(s, c, n, color, icon) {
+   var dx = s.w/7;
+   var dy = (dx*23)/13;
+   var t = s.y+s.h-dy;
+   var l = s.x+s.w-dx;
+   c.drawImage(this.canvases[icon], l, t, dx, dy);
+   for (l-=dx; Math.round(l) >= 0; l-=dx) {
+    var d = Math.floor(n%10);
+	n = Math.floor(n/10);
+	if ((d == 0) && (n != 0)) d = 10;
+	c.drawImage(this.canvases[d+color], l, t, dx, dy);
+   }
+  }  
  }
  class Squares {
   static length = 0x200;
@@ -399,7 +422,8 @@
    lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
-   zones.digits.print(this.show, " ", 128, 128, 416, 736);
+ //zones.digits.print(this.show, " ", 24, 24, 52, 92);
+   zones.digits.score(lhs, this.show, level.Score(), Digit.green, Digit.man);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
