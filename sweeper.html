@@ -69,7 +69,7 @@
    if ((this.mines[r][c] == 0)) {
     if (this.cleared[r][c] != 1) this.#score++; 
     if (r > this.#distance) this.#distance = r;
-   } else {
+   } else if (this.deaths[r][c] == 0) {
     this.deaths[r][c] = 1;
 	this.#lives--;
    }
@@ -159,7 +159,7 @@
    var dy = (dx*23)/13;
    var t = s.y+s.h-dy-(offset*dy);
    var l = s.x+s.w-dx;
-   c.drawImage(this.canvases[icon], l, t, dx, dy);
+   c.drawImage(this.canvases[(n!=0)?icon:color+10], l, t, dx, dy);
    for (l-=dx; Math.round(l) >= 0; l-=dx) {
     var d = Math.floor(n%10);
 	n = Math.floor(n/10);
