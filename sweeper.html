@@ -1,12 +1,13 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
- const Digit = Object.freeze({ green:11, red:0, man:21 })
+ const Digit = Object.freeze({ green:11, red:0, man:22, cyan:23, blank:34 })
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Level {
   #c = -1;
   #r = -1;
   #rowOffset = 0;
   #score = 0;
+  #lives = 3;
   #distance = 0;
   #shift = false;
   static span = 20;
@@ -82,7 +83,8 @@
     this.#c = -1;
     this.#r = -1; 
 	this.cleared[r][c] = 0; } }
-  Score() { return this.#score; }  
+  Score() { return this.#score; }
+  Lives() { return this.#lives; }
  }
  class Digits {
   static width = 416;
@@ -113,10 +115,23 @@
    [19, 11, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 8
    [20, 11, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 9
    [21, 11, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], //10
-   [21, 21, [ 0, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0 ], "#00FF18", "#000000FF"], //man
+   [22, 21, [ 0, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0 ], "#00FF18", "#000000FF"], //man
+   [23, 23, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#002828", "#000000FF"], // 0
+   [24, 23, [ 0, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 1
+   [25, 23, [ 0, 0x0007FC, 0x200BFA, 0x301DF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000, 0 ], "#00FFFF", "#00000000"], // 2
+   [26, 23, [ 0, 0x000000, 0x200802, 0x301C06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 3
+   [27, 23, [ 0, 0x1FF000, 0x0FE800, 0x07DC00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x07DDF0, 0x0FEBF8, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 4
+   [28, 23, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FFFF", "#00000000"], // 5
+   [29, 23, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FFFF", "#00000000"], // 6
+   [30, 23, [ 0, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 7
+   [31, 23, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 8
+   [32, 23, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], // 9
+   [33, 23, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#00FFFF", "#00000000"], //10
+   [34, 34, [ 0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0, 0x01FFE0 ], "#00FFFF", "#000000FF"], //blank
+   [34, 34, [    0x03FFE0, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000, 0x020000 ], "#008080", "#00000000"], //blank
   ];
   constructor() {
-   for (let i = 0; i < 23; i++) {
+   for (let i = 0; i < 35; i++) {
     this.canvases.push(document.createElement('canvas'));
     this.canvases[i].setAttribute("width", Digits.width);
     this.canvases[i].setAttribute("height", Digits.length);
@@ -137,16 +152,16 @@
   print(c, t, x, y, w, h) {
    for (let i = 0; i < 11; i++) c.drawImage(this.canvases[i], x+=w, y, w, h);
   }
-  score(s, c, n, color, icon) {
+  score(s, c, n, color, icon, offset = 0) {
    var dx = s.w/7;
    var dy = (dx*23)/13;
-   var t = s.y+s.h-dy;
+   var t = s.y+s.h-dy-(offset*dy);
    var l = s.x+s.w-dx;
    c.drawImage(this.canvases[icon], l, t, dx, dy);
    for (l-=dx; Math.round(l) >= 0; l-=dx) {
     var d = Math.floor(n%10);
 	n = Math.floor(n/10);
-	if ((d == 0) && (n != 0)) d = 10;
+	if ((d == 0) && (n != 0)) d += 10;
 	c.drawImage(this.canvases[d+color], l, t, dx, dy);
    }
   }  
@@ -418,12 +433,12 @@
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   rhs.draw(this.show, lhs.showing(), this.squares.canvases[Square.mine]);
-   lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
- //zones.digits.print(this.show, " ", 24, 24, 52, 92);
-   zones.digits.score(lhs, this.show, level.Score(), Digit.green, Digit.man);
+   rhs.draw(this.show, lhs.showing(), this.squares.canvases[Square.mine]);
+   lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
+   zones.digits.score(lhs, this.show, level.Score(), Digit.cyan, Digit.blank);
+   zones.digits.score(lhs, this.show, level.Lives(), Digit.green, Digit.man, 1);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
