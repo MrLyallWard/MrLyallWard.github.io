@@ -3,8 +3,6 @@
  const Digit = Object.freeze({ green:11, red:0, man:22, cyan:23, blank:34 })
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Level {
-  #c = -1;
-  #r = -1;
   #rowOffset = 0;
   #score = 0;
   #lives = 3;
@@ -17,6 +15,7 @@
   cleared = Level.array();
   flagged = Level.array();
   proximity = Level.array();
+  deaths = Level.array();
   constructor() {
    for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.span), 2+this.rand(Level.#length-2))) i++;}
    this.clear(0,0); }
@@ -47,14 +46,14 @@
    if (this.#rowOffset < 0) this.#rowOffset = 0; 
    if (this.#rowOffset > this.maxRow()) {
     this.#rowOffset = this.maxRow(); } }
-  finished() { return (this.#r >= 0) || (this.#c >= 0); }
+  finished() { return this.#lives == 0; }
   correctRow(r) {
    r = this.#rowOffset + Level.span - r - 1;
    return r; }
   Shift(shift) {this.#shift = shift; }
   At(c, r) {
    r = this.correctRow(r);
-   if ((this.#c == c) && (this.#r == r)) return Square.explosion;
+   if (this.deaths[r][c] != 0) return Square.explosion;
    var finished = this.finished();
    if (this.#shift && !finished) { /*return this.solution.At(c, r);*/ } else {
     if (this.flagged[r][c] != 0) {
@@ -62,7 +61,7 @@
 	 return Square.flag; }
     if (finished && (this.mines[r][c] != 0)) return Square.mine;
     if (this.cleared[r][c] == 0) return Square.unknown; }
-   return this.proximity[r][c]; }  
+   return this.proximity[r][c]; }
   Step(c, r) {
    r = this.correctRow(r);
    if (this.finished()) return;
@@ -70,7 +69,10 @@
    if ((this.mines[r][c] == 0)) {
     if (this.cleared[r][c] != 1) this.#score++; 
     if (r > this.#distance) this.#distance = r;
-   } else { this.#c = c; this.#r = r; };
+   } else {
+    this.deaths[r][c] = 1;
+	this.#lives--;
+   }
    this.clear(c, r); }
   Flag(c, r) {
    r = this.correctRow(r);
@@ -79,10 +81,10 @@
     this.flagged[r][c] = (this.flagged[r][c] == 1)?0:1; } }
   Undo(c, r) {
    r = this.correctRow(r);
-   if ((this.#c == c) && (this.#r == r)) {
-    this.#c = -1;
-    this.#r = -1; 
-	this.cleared[r][c] = 0; } }
+   if (this.deaths[r][c] != 0) {
+	this.deaths[r][c] = 0;
+	this.cleared[r][c] = 0;
+	this.#lives++; } }
   Score() { return this.#score; }
   Lives() { return this.#lives; }
  }
@@ -284,11 +286,11 @@
   }
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
-  draw(c, pad, button) {
-   if (!pad)this.drawArrow(c);
+  draw(c, button) {
+   this.drawArrow(c);
    this.drawLeft(c, button);
    if (this == rhs) this.drawRight(c, board.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
-   if (pad) this.drawPad(c);
+   //if (pad) this.drawPad(c);
   }
   down(e) {
    this.start = this.target(e);
@@ -323,25 +325,32 @@
   showing() {return this.e != undefined;}
   same(s, e) {
    var t = this.target(e);
-   return (t.x == s.x) && (t.y == s.y);
-  }
+   return (t.x == s.x) && (t.y == s.y); }
   target(e) {
    var x = Math.floor((20*crosshairs.x/crosshairs.l) + (4*(e.offsetX - this.x)/this.w)-2); 
    var y = Math.floor((20*crosshairs.y/crosshairs.l) + (4*(e.offsetY - this.y - (this.h/2))/this.w));
    if (x<0) x=0; else if (x>=Level.span) x=Level.span-1;
    if (y<0) y=0; else if (y>=Level.span) y=Level.span-1;
    console.log("local x,y = " +x+ "," +y);
-   return new Point(x,y);
-  }
- }
+   return new Point(x,y); } }
  class LHS extends Side {
   up(e) {
    var p = super.up(e);
-   if ((p != undefined) && rhs.showing()) level.Flag(p.x, p.y); } }
+   if ((p != undefined) && rhs.showing()) level.Flag(p.x, p.y); }
+  draw(context, showing, canvas) {
+   super.draw(context, canvas);
+   zones.digits.score(this, context, level.Lives(), Digit.green, Digit.man, 1);
+   zones.digits.score(this, context, level.Score(), Digit.cyan, Digit.blank);
+   if (showing) super.drawPad(context); } }
  class RHS extends Side {
   up(e) {
    var p = super.up(e);
-   if ((p != undefined) && lhs.showing()) level.Step(p.x, p.y); } }
+   if ((p != undefined) && lhs.showing()) level.Step(p.x, p.y); }
+ draw(context, showing, canvas) {
+   super.draw(context, canvas);
+ //zones.digits.score(this, context, level.Lives(), Digit.green, Digit.man, 1);
+ //zones.digits.score(this, context, level.Score(), Digit.cyan, Digit.blank);
+   if (showing) super.drawPad(context); } }
  class Middle {
   e; y; moving = false;
   constructor() {}
@@ -402,9 +411,7 @@
   wheel(e) {
    if (!e.ctrlKey) board.offset((e.wheelDeltaY > 0) ? 1 : (e.wheelDeltaY < 0) ? -1 : 0);
    console.log("mouse wheel"); }
-  shift(e) {
-   level.Shift(e.shiftKey);
-  }
+  shift(e) { level.Shift(e.shiftKey); }
   resize(e) {e.stopImmediatePropagation(); this.size();}
   size() {this.window((window.innerWidth)-0, (window.innerHeight)-0);}
   window(w,h) {board.window(w,h); zones.window(w,h);}
@@ -433,12 +440,10 @@
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
-   crosshairs.draw(this.show, this.o, this.l);
    rhs.draw(this.show, lhs.showing(), this.squares.canvases[Square.mine]);
    lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
-   zones.digits.score(lhs, this.show, level.Score(), Digit.cyan, Digit.blank);
-   zones.digits.score(lhs, this.show, level.Lives(), Digit.green, Digit.man, 1);
+   this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
+   crosshairs.draw(this.show, this.o, this.l);
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
