@@ -2,6 +2,15 @@
  const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
  const Digit = Object.freeze({ red:0, flag:11, green:12, man:23, cyan:24, blank:35, amber:36, mine:47 })
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
+ class Image {
+  canvas; context;
+  constructor(x, y) {
+   this.canvas = document.createElement('canvas');
+   this.canvas.setAttribute("width", x);
+   this.canvas.setAttribute("height", y);
+   this.context = this.canvas.getContext("2d");
+  }
+ }
  class Level {
   #rowOffset = 0;
   #score = 0;
@@ -207,24 +216,17 @@
    [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#000000"],  //min
    [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#000000"],  //min
   ];
-  canvases = [];
-  contexts = [];
+  images = [];
   constructor() {
-   for (let i = 0; i < 18; i++) {
-    this.canvases.push(document.createElement('canvas'));
-    this.canvases[i].setAttribute("width", Squares.length);
-    this.canvases[i].setAttribute("height", Squares.length);
-	this.contexts.push(this.canvases[i].getContext("2d")); }
-   this.Blank(this.contexts[0]);
-   this.Blank(this.contexts[11]);
+   for (let i = 0; i < 18; i++) { this.images.push(new Image(Squares.length, Squares.length)); }
+   this.Blank(this.images[0].context);
+   this.Blank(this.images[11].context);
    for (let a = 0; a < Squares.#font.length; a++) { this.DrawFont(Squares.#font[a]); } }
-  Blank(context) {
-   context.fillStyle='#BFBFBF'; //blank template
-   context.fillRect(0,0,Squares.length,Squares.length);
-   context.fill(); }
+  Canvas(i) { return  this.images[i].canvas; }
+  Blank(c) { c.fillStyle='#BFBFBF'; c.fillRect(0,0,Squares.length,Squares.length); c.fill(); }
   DrawFont(f) {
-   var c = this.contexts[f[0]];
-   c.drawImage(this.canvases[f[1]],0,0);
+   var c = this.images[f[0]].context;
+   c.drawImage(this.images[f[1]].canvas,0,0);
    c.fillStyle=f[3];
    for (let i = 0; i < f[2].length; i++) {
 	var pixels = f[2][i];
@@ -253,6 +255,10 @@
     c.fillStyle = 'rgba(  0,  0,  0,0.2)'; c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
     c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x, 0, w, this.y-this.min);
    }
+   //if (lhs.showing() && rhs.showing() {
+   //} else if (lhs.showing()) {
+   //} else if (rhs.showing()) {
+   //}
   }
  }
  class Side {
@@ -289,13 +295,19 @@
    for (let i = 0; i<Side.#blend.length;i++) g.addColorStop(Side.#blend[i][0], Side.#blend[i][1]);
    c.fillRect(this.x, y, this.w, this.w);
   }
+  drawPad2(c) {
+   var s = crosshairs.top();
+   var w = crosshairs.width();
+   var i = new Image(this.w, this.w);
+   i.context.drawImage(board.canvas, s.x, s.y, w, w, 0, 0, this.w, this.w);
+   c.drawImage(i.canvas, this.x, this.y + (this.h)/2 - this.w/2);
+  }
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
   draw(c, button) {
    this.drawArrow(c);
    this.drawLeft(c, button);
-   if (this == rhs) this.drawRight(c, board.squares.canvases[document.fullscreenElement?Square.min:Square.max]);
-   //if (pad) this.drawPad(c);
+   if (this == rhs) this.drawRight(c, board.squares.Canvas(document.fullscreenElement?Square.min:Square.max));
   }
   down(e) {
    this.start = this.target(e);
@@ -355,7 +367,7 @@
    super.draw(context, canvas);
    zones.digits.score(this, context, 12345, Digit.red, Digit.flag, 1);
    zones.digits.score(this, context, 67890, Digit.amber, Digit.mine);
-   if (showing) super.drawPad(context); } }
+   if (showing) super.drawPad2(context); } }
  class Middle {
   e; y; moving = false;
   constructor() {}
@@ -444,9 +456,9 @@
   work() {
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
-	 this.context.drawImage(this.squares.canvases[level.At(x,y)], (x * Board.step), (y * Board.step), Board.step, Board.step);}}
-   rhs.draw(this.show, lhs.showing(), this.squares.canvases[Square.mine]);
-   lhs.draw(this.show, rhs.showing(), this.squares.canvases[Square.flag]);
+	 this.context.drawImage(this.squares.Canvas(level.At(x,y)), (x * Board.step), (y * Board.step), Board.step, Board.step);}}
+   rhs.draw(this.show, lhs.showing(), this.squares.Canvas(Square.mine));
+   lhs.draw(this.show, rhs.showing(), this.squares.Canvas(Square.flag));
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
   }
