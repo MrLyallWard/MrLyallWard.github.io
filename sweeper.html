@@ -4,10 +4,10 @@
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Image {
   canvas; context;
-  constructor(x, y) {
+  constructor(w, h) {
    this.canvas = document.createElement('canvas');
-   this.canvas.setAttribute("width", x);
-   this.canvas.setAttribute("height", y);
+   this.canvas.setAttribute("width", w);
+   this.canvas.setAttribute("height", h);
    this.context = this.canvas.getContext("2d");
   }
  }
@@ -173,11 +173,11 @@
    var t = s.y+s.h-dy-(offset*dy);
    var l = s.x+s.w-dx;
    c.drawImage(this.images[(n!=0)?icon:color+10].canvas, l, t, dx, dy);
-   for (l-=dx; Math.round(l) >= 0; l-=dx) {
+   for (var i=0;i<6;i++) {
     var d = Math.floor(n%10);
 	n = Math.floor(n/10);
 	if ((d == 0) && (n != 0)) d += 10;
-	c.drawImage(this.images[d+color].canvas, l, t, dx, dy); } } }
+	c.drawImage(this.images[d+color].canvas, l-=dx, t, dx, dy); } } }
  class Squares {
   static length = 0x200;
   static step = 0x20;
@@ -201,8 +201,8 @@
    [13,  9, [ 0x0000, 0x0000, 0x2002, 0x3006,  0x180C, 0x0C18, 0x0630, 0x0360,  0x01C0, 0x0360, 0x0630, 0x0C18,  0x180C, 0x3006, 0x2002, 0x0000 ], "#FF0000"],  //cross
    [14, 11, [ 0x0000, 0x0000, 0x0000, 0x03C0,  0x0660, 0x0660, 0x0060, 0x00C0,  0x0180, 0x0180, 0x0000, 0x0180,  0x0180, 0x0000, 0x0000, 0x0000 ], "#000000"],  //?
    [15,  0, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x01E0, 0x0330, 0x0330, 0x0030,  0x0060, 0x00C0, 0x00C0, 0x0000,  0x00C0, 0x00C0, 0x0000, 0x0000 ], "#000000"],  //?
-   [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#000000"],  //min
-   [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#000000"],  //min
+   [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#808080"],  //min
+   [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#808080"],  //max
   ];
   images = [];
   constructor() {
@@ -238,10 +238,10 @@
   width() {return Board.step * 4;}
   draw(c, x, w) {
    if (lhs.showing() || rhs.showing()) {
-    c.fillStyle = 'rgba( 85, 85, 85,0.3)'; c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w);
-    c.fillStyle = 'rgba(170,170,170,0.4)'; c.fillRect(x, 0, this.x-this.min, w); 
-    c.fillStyle = 'rgba(  0,  0,  0,0.2)'; c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
-    c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x, 0, w, this.y-this.min);
+    c.fillStyle = 'rgba(  0,  0,  0,0.2)'; c.fillRect(x+this.x+this.min, 0, w-this.x-this.min, w);
+    c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(x, 0, this.x-this.min, w); 
+    c.fillStyle = 'rgba(  0,  0,  0,0.3)'; c.fillRect(x, this.y+this.min, w, w-this.y-this.min);
+    c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(x, 0, w, this.y-this.min);
    }
    //if (lhs.showing() && rhs.showing() {
    //} else if (lhs.showing()) {
@@ -252,17 +252,16 @@
  class Side {
   static #AX = [50, 40, 45, 45, 35, 35, 25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50];
   static #AY = [25, 35, 35, 45, 45, 40, 50, 60, 55, 55, 65, 65, 75, 65, 65, 55, 55, 60, 50, 40, 45, 45, 35, 35, 25];
-  static #blend = [[0, "#FFFFFFFF", ], [0.02, "#FFFFFFFF", ], [0.12, "#FFFFFF00", ], [0.88, "#FFFFFF00", ], [0.98, "#FFFFFFFF", ], [1, "#FFFFFFFF", ]]
   x; y; w; h; start; e; focussed; press; #clicking;
   static one; static two;
   constructor() {}
   size(x,y,w,h) {this.x=x; this.y=y; this.w=w; this.h=h; this.r=Math.pow(w/Level.span,2);}
   drawArrow(c) {
    c.beginPath();
-   c.fillStyle = "#FFFFFF";
+   c.fillStyle = "#000000";
    c.fillRect(this.x, this.y, this.w, this.h);
-   c.strokeStyle = "#F0F0F0";
-   c.fillStyle = "#E0E0E0";
+   c.strokeStyle = "#B0B0B0";
+   c.fillStyle = "#606060";
    c.moveTo(this.x+(Side.#AX[0]*this.w)/100,this.y+((Side.#AY[0]*this.h)/100));
    for (let i=1; i<Side.#AX.length; i++) c.lineTo(this.x+(Side.#AX[i]*this.w)/100,this.y+((Side.#AY[i]*this.h)/100));
    c.stroke();
@@ -271,24 +270,40 @@
   drawPad(c) {
    var s = crosshairs.top();
    var w = crosshairs.width();
-   var y = this.y + (this.h)/2 - this.w/2;
-   var g;
-   c.drawImage(board.canvas, s.x, s.y, w, w, this.x+1, y+1, this.w-2, this.w-2);
-   g = c.createLinearGradient(this.x, y, this.x+this.w, y);
-   c.fillStyle = g;
-   for (let i = 0; i<Side.#blend.length;i++) g.addColorStop(Side.#blend[i][0], Side.#blend[i][1]);
-   c.fillRect(this.x, y, this.w, this.w)
-   g = c.createLinearGradient(this.x, y, this.x, y+this.w);
-   c.fillStyle = g;
-   for (let i = 0; i<Side.#blend.length;i++) g.addColorStop(Side.#blend[i][0], Side.#blend[i][1]);
-   c.fillRect(this.x, y, this.w, this.w);
-  }
-  drawPad2(c) {
-   var s = crosshairs.top();
-   var w = crosshairs.width();
-   var i = new Image(this.w, this.w);
-   i.context.drawImage(board.canvas, s.x, s.y, w, w, 0, 0, this.w, this.w);
+   var length = Math.floor(this.w);
+   var i = new Image(length, length);
+   i.context.drawImage(board.canvas, s.x, s.y, w, w, 0, 0, length, length);
+   var d = i.context.getImageData(0, 0, length, length);
+   {
+    var dy = length * 4;
+    var tl = 3;
+    var br = d.data.length-1;
+    for (var a = 4; a<255; a+=8) {
+     var right = tl;
+     var down = tl;
+     var left = br;
+     var up = br;
+     for (;right<=up;right+=4,down+=dy,left-=4,up-=dy) { d.data[right]=d.data[down]=d.data[left]=d.data[up]=a; }
+     tl+=dy+4; br-=dy+4;
+    }
+   }
+   i.context.putImageData(d, 0, 0);
+   c.globalAlpha = 0.9;
    c.drawImage(i.canvas, this.x, this.y + (this.h)/2 - this.w/2);
+   c.globalAlpha = 1;
+  }
+  alpha(b) {
+   var dy = this.w * 4;
+   var tl = 3;
+   var br = b.length-1;
+   for (var a = 8; a<255; a+=16) {
+    var right = tl;
+    var down = tl;
+    var left = br;
+    var up = br;
+	for (;right<up;right+=4,down+=dy,left-=4,up-=dy) { b[right]=b[down]=b[left]=b[up]=a; }
+	tl+=dy+4; br-=dy+4;
+   }
   }
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
@@ -355,7 +370,7 @@
    super.draw(context, canvas);
    zones.digits.score(this, context, 12345, Digit.red, Digit.flag, 1);
    zones.digits.score(this, context, 67890, Digit.amber, Digit.mine);
-   if (showing) super.drawPad2(context); } }
+   if (showing) super.drawPad(context); } }
  class Middle {
   e; y; moving = false;
   constructor() {}
