@@ -101,8 +101,7 @@
   static width = 416;
   static length = 736;
   static step = 0x20;
-  canvases = [];
-  contexts = [];
+  images = [];
   static #font = [
    [ 0,  0, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#550000", "#000000FF"], // 0 red
    [ 1,  0, [ 0, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0 ], "#FF1800", "#00000000"], // 1
@@ -155,16 +154,11 @@
    [47, 47, [    0x03FFE0, 0x03F7E0, 0x034160, 0x0380E0, 0x033060, 0x033060, 0x020020, 0x030060, 0x030060, 0x0380E0, 0x034160, 0x03F7E0, 0x03FFE0 ], "#FFC000", "#000000FF"], //mine
   ];
   constructor() {
-   for (let i = 0; i < 48; i++) {
-    this.canvases.push(document.createElement('canvas'));
-    this.canvases[i].setAttribute("width", Digits.width);
-    this.canvases[i].setAttribute("height", Digits.length);
-	this.contexts.push(this.canvases[i].getContext("2d")); }
-   for (let a = 0; a < Digits.#font.length; a++) { this.DrawFont(Digits.#font[a]); }
-  }
+   for (let i = 0; i < 48; i++) { this.images.push(new Image(Digits.width, Digits.length)); }
+   for (let a = 0; a < Digits.#font.length; a++) { this.DrawFont(Digits.#font[a]); } }
   DrawFont(f) {
-   var c = this.contexts[f[0]];
-   c.drawImage(this.canvases[f[1]],0,0);
+   var c = this.images[f[0]].context;
+   c.drawImage(this.images[f[1]].canvas,0,0);
    c.fillStyle=f[3];
    for (let i = 0; i < f[2].length; i++) {
     var pixels = f[2][i];
@@ -173,23 +167,17 @@
      c.fillStyle=((pixels & 0x400000) > 0)?f[3]:f[4];
      c.fillRect(x, y, Digits.step, Digits.step);
 	 c.fill(); }}}
-  print(c, t, x, y, w, h) {
-   for (let i = 0; i < 11; i++) c.drawImage(this.canvases[i], x+=w, y, w, h);
-  }
   score(s, c, n, color, icon, offset = 0) {
    var dx = s.w/7;
    var dy = (dx*23)/13;
    var t = s.y+s.h-dy-(offset*dy);
    var l = s.x+s.w-dx;
-   c.drawImage(this.canvases[(n!=0)?icon:color+10], l, t, dx, dy);
+   c.drawImage(this.images[(n!=0)?icon:color+10].canvas, l, t, dx, dy);
    for (l-=dx; Math.round(l) >= 0; l-=dx) {
     var d = Math.floor(n%10);
 	n = Math.floor(n/10);
 	if ((d == 0) && (n != 0)) d += 10;
-	c.drawImage(this.canvases[d+color], l, t, dx, dy);
-   }
-  }  
- }
+	c.drawImage(this.images[d+color].canvas, l, t, dx, dy); } } }
  class Squares {
   static length = 0x200;
   static step = 0x20;
