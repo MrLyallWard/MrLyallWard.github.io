@@ -1,6 +1,6 @@
 <html><head><title>Sweeper</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
- const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17 })
- const Digit = Object.freeze({ red:0, flag:11, green:12, man:23, cyan:24, blank:35, amber:36, mine:47 })
+ const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17, demined:18 })
+ const Digit = Object.freeze({ red:0, flag:11, green:12, man:23, cyan:24, blank:35, amber:36, mine:47, minus:48 })
  class Point {x=0; y=0; constructor(e,y) {if (y===undefined) {this.x=e.offsetX;this.y=e.offsetY;} else {this.x=e;this.y=y;}}}
  class Image {
   canvas; context;
@@ -15,16 +15,19 @@
   #rowOffset = 0;
   #score = 0;
   #lives = 3;
+  #flags = 0;
   #distance = 0;
   #shift = false;
+  #canScroll = false;
   static span = 20;
   static #length = 5000;
-  static #density = this.#length*(10/3);
+  static #density = this.#length;//Math.floor(this.#length*3.3333333);
   mines = Level.array();
   cleared = Level.array();
   flagged = Level.array();
   proximity = Level.array();
   deaths = Level.array();
+  demined = Level.array();
   constructor() {
    for (let i = 0; i < (Level.#density);) {if (this.addMine(this.rand(Level.span), 2+this.rand(Level.#length-2))) i++;}
    this.clear(0,0); }
@@ -51,6 +54,7 @@
 	 this.clear(c-1,r  );                    this.clear(c+1,r  );
 	 this.clear(c-1,r+1); this.clear(c,r+1); this.clear(c+1,r+1); }}}
   offset(r) {
+   if ((!this.#canScroll) & (r > 0)) r=0;
    this.#rowOffset += r;
    if (this.#rowOffset < 0) this.#rowOffset = 0; 
    if (this.#rowOffset > this.maxRow()) {
@@ -62,6 +66,9 @@
   Shift(shift) {this.#shift = shift; }
   At(c, r) {
    r = this.correctRow(r);
+   this.#canScroll |= (this.cleared[r][c] != 0);
+   if (this.mines[r][c] != 0) this.#flags++;
+   if (this.flagged[r][c] != 0) this.#flags--;
    if (this.deaths[r][c] != 0) return Square.explosion;
    var finished = this.finished();
    if (this.#shift && !finished) { /*return this.solution.At(c, r);*/ } else {
@@ -94,8 +101,11 @@
 	this.deaths[r][c] = 0;
 	this.cleared[r][c] = 0;
 	this.#lives++; } }
+  FlagReset() { this.#flags = 0; this.#canScroll = false;}
   Score() { return this.#score; }
   Lives() { return this.#lives; }
+  Flags() { return this.#flags; }
+  CanScroll() {return this.#canScroll; }
  }
  class Digits {
   static width = 416;
@@ -123,7 +133,7 @@
    [17, 12, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FF18", "#00000000"], // 5
    [18, 12, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0 ], "#00FF18", "#00000000"], // 6
    [19, 12, [ 0, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 7
-   [10, 12, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 8
+   [20, 12, [ 0, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 8
    [21, 12, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], // 9
    [22, 12, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#00FF18", "#00000000"], //10
    [23, 23, [ 0, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0 ], "#00FF18", "#000000FF"], //man
@@ -152,9 +162,10 @@
    [45, 36, [ 0, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0 ], "#FFC000", "#00000000"], // 9
    [46, 36, [ 0, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0 ], "#FFC000", "#00000000"], //10
    [47, 47, [    0x03FFE0, 0x03F7E0, 0x034160, 0x0380E0, 0x033060, 0x033060, 0x020020, 0x030060, 0x030060, 0x0380E0, 0x034160, 0x03F7E0, 0x03FFE0 ], "#FFC000", "#000000FF"], //mine
+   [48,  0, [ 0, 0x000000, 0x000800, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x000800, 0x000000, 0 ], "#FF1800", "#00000000"], // -
   ];
   constructor() {
-   for (let i = 0; i < 48; i++) { this.images.push(new Image(Digits.width, Digits.length)); }
+   for (let i = 0; i < 49; i++) { this.images.push(new Image(Digits.width, Digits.length)); }
    for (let a = 0; a < Digits.#font.length; a++) { this.DrawFont(Digits.#font[a]); } }
   DrawFont(f) {
    var c = this.images[f[0]].context;
@@ -172,12 +183,19 @@
    var dy = (dx*23)/13;
    var t = s.y+s.h-dy-(offset*dy);
    var l = s.x+s.w-dx;
-   c.drawImage(this.images[(n!=0)?icon:color+10].canvas, l, t, dx, dy);
+   var z = (n == 0);
+   var m = (n < 0);
+   if (m) n = -n;
+   c.drawImage(this.images[icon].canvas, l, t, dx, dy);
    for (var i=0;i<6;i++) {
     var d = Math.floor(n%10);
+	var image = d+color;
 	n = Math.floor(n/10);
-	if ((d == 0) && (n != 0)) d += 10;
-	c.drawImage(this.images[d+color].canvas, l-=dx, t, dx, dy); } } }
+	if (d == 0) {
+	 if (n != 0) {image = color+10;}
+	 else if (z) {image = color+10; z = false;}
+	 else if (m) { image = Digit.minus; m = false; } }
+	c.drawImage(this.images[image].canvas, l-=dx, t, dx, dy); } } }
  class Squares {
   static length = 0x200;
   static step = 0x20;
@@ -203,10 +221,12 @@
    [15,  0, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x01E0, 0x0330, 0x0330, 0x0030,  0x0060, 0x00C0, 0x00C0, 0x0000,  0x00C0, 0x00C0, 0x0000, 0x0000 ], "#000000"],  //?
    [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#808080"],  //min
    [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#808080"],  //max
+   [18,  0, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#FF0000"],  //flag
+   [18, 18, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#000000"],  //cleared
   ];
   images = [];
   constructor() {
-   for (let i = 0; i < 18; i++) { this.images.push(new Image(Squares.length, Squares.length)); }
+   for (let i = 0; i < 19; i++) { this.images.push(new Image(Squares.length, Squares.length)); }
    this.Blank(this.images[0].context);
    this.Blank(this.images[11].context);
    for (let a = 0; a < Squares.#font.length; a++) { this.DrawFont(Squares.#font[a]); } }
@@ -368,7 +388,7 @@
    if ((p != undefined) && lhs.showing()) level.Step(p.x, p.y); }
  draw(context, showing, canvas) {
    super.draw(context, canvas);
-   zones.digits.score(this, context, 12345, Digit.red, Digit.flag, 1);
+   zones.digits.score(this, context, level.Flags(), Digit.red, Digit.flag, 1);
    zones.digits.score(this, context, 67890, Digit.amber, Digit.mine);
    if (showing) super.drawPad(context); } }
  class Middle {
@@ -457,11 +477,12 @@
    this.context = this.canvas.getContext("2d");
   }
   work() {
+  level.FlagReset();
    for (let y = 0; y < Level.span; y ++) {
 	for (let x = 0; x < Level.span; x ++) {
 	 this.context.drawImage(this.squares.Canvas(level.At(x,y)), (x * Board.step), (y * Board.step), Board.step, Board.step);}}
    rhs.draw(this.show, lhs.showing(), this.squares.Canvas(Square.mine));
-   lhs.draw(this.show, rhs.showing(), this.squares.Canvas(Square.flag));
+   lhs.draw(this.show, rhs.showing(), this.squares.Canvas(Square.demined));
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
   }
