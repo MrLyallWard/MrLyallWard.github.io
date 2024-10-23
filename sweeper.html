@@ -14,14 +14,16 @@
  class Level {
   #rowOffset = 0;
   #score = 0;
+  #total = 0;
   #lives = 3;
   #flags = 0;
   #distance = 0;
   #shift = false;
   #canScroll = false;
+  #canDemine = true;
   static span = 20;
   static #length = 5000;
-  static #density = this.#length;//Math.floor(this.#length*3.3333333);
+  static #density = Math.floor(this.#length*4);
   mines = Level.array();
   cleared = Level.array();
   flagged = Level.array();
@@ -70,13 +72,14 @@
    if (this.mines[r][c] != 0) this.#flags++;
    if (this.flagged[r][c] != 0) this.#flags--;
    if (this.deaths[r][c] != 0) return Square.explosion;
+   if (this.demined[r][c] != 0) return Square.demined;
    var finished = this.finished();
    if (this.#shift && !finished) { /*return this.solution.At(c, r);*/ } else {
     if (this.flagged[r][c] != 0) {
      if ((this.mines[r][c] == 0) && (finished)) return Square.error;
 	 return Square.flag; }
     if (finished && (this.mines[r][c] != 0)) return Square.mine;
-    if (this.cleared[r][c] == 0) return Square.unknown; }
+    if (this.cleared[r][c] == 0) { this.#canDemine = false; return Square.unknown; } }
    return this.proximity[r][c]; }
   Step(c, r) {
    r = this.correctRow(r);
@@ -101,10 +104,19 @@
 	this.deaths[r][c] = 0;
 	this.cleared[r][c] = 0;
 	this.#lives++; } }
-  FlagReset() { this.#flags = 0; this.#canScroll = false;}
+  FlagReset() { this.#flags = 0; this.#canScroll = false; this.#canDemine = true; }
+  Demine() {
+   if (this.#canDemine && (this.#flags==0)) {
+   for (var y = 0; y < Level.span; y++) {
+    var r = this.correctRow(y);
+    for (var c = 0; c < Level.span; c++)
+     if ((this.flagged[r][c] != 0) && (this.flagged[r][c] != 0) && (this.demined[r][c] == 0)) {
+      this.demined[r][c] = 1;
+	  this.#total++; } } } }
   Score() { return this.#score; }
   Lives() { return this.#lives; }
   Flags() { return this.#flags; }
+  Total() { return this.#total; }
   CanScroll() {return this.#canScroll; }
  }
  class Digits {
@@ -389,7 +401,7 @@
  draw(context, showing, canvas) {
    super.draw(context, canvas);
    zones.digits.score(this, context, level.Flags(), Digit.red, Digit.flag, 1);
-   zones.digits.score(this, context, 67890, Digit.amber, Digit.mine);
+   zones.digits.score(this, context, level.Total(), Digit.amber, Digit.mine);
    if (showing) super.drawPad(context); } }
  class Middle {
   e; y; moving = false;
@@ -485,6 +497,7 @@
    lhs.draw(this.show, rhs.showing(), this.squares.Canvas(Square.demined));
    this.show.drawImage(this.canvas, 0, 0, Board.length, Board.length, this.o, 0, this.l, this.l);
    crosshairs.draw(this.show, this.o, this.l);
+   level.Demine();
   }
   Y(a) {return Math.floor(((a) * Level.span) / this.l);}
   X(a) {return Math.floor(((a-this.o) * Level.span) / this.l);}
