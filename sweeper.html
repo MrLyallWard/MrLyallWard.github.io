@@ -324,19 +324,19 @@
    c.drawImage(i.canvas, this.x, this.y + (this.h)/2 - this.w/2);
    c.globalAlpha = 1;
   }
-  alpha(b) {
-   var dy = this.w * 4;
-   var tl = 3;
-   var br = b.length-1;
-   for (var a = 8; a<255; a+=16) {
-    var right = tl;
-    var down = tl;
-    var left = br;
-    var up = br;
-	for (;right<up;right+=4,down+=dy,left-=4,up-=dy) { b[right]=b[down]=b[left]=b[up]=a; }
-	tl+=dy+4; br-=dy+4;
-   }
-  }
+  //alpha(b) {
+  // var dy = this.w * 4;
+  // var tl = 3;
+  // var br = b.length-1;
+  // for (var a = 8; a<255; a+=16) {
+  //  var right = tl;
+  //  var down = tl;
+  //  var left = br;
+  //  var up = br;
+  //  for (;right<up;right+=4,down+=dy,left-=4,up-=dy) { b[right]=b[down]=b[left]=b[up]=a; }
+  //  tl+=dy+4; br-=dy+4;
+  // }
+  //}
   drawLeft(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + (this.w/8), this.y + (this.w/8), this.w/4, this.w/4);}
   drawRight(c, s) {c.drawImage(s, 0, 0, Squares.length, Squares.length, this.x + ((this.w*5)/8), this.y + (this.w/8), this.w/4, this.w/4);}
   draw(c, button) {
