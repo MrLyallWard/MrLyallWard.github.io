@@ -379,8 +379,8 @@
    if ((p != undefined) && rhs.showing()) level.Flag(p.x, p.y); }
   draw(context, showing, canvas) {
    super.draw(context, canvas);
-   zones.digits.score(this, context, level.Lives(), Digit.green, Digit.man, 1);
-   zones.digits.score(this, context, level.Score(), Digit.cyan, Digit.blank);
+   zones.digits.score(this, context, level.Flags(), Digit.red, Digit.flag, 1);
+   zones.digits.score(this, context, level.Total(), Digit.amber, Digit.mine);
    if (showing) super.drawPad(context); } }
  class RHS extends Side {
   up(e) {
@@ -388,8 +388,8 @@
    if ((p != undefined) && lhs.showing()) level.Step(p.x, p.y); }
  draw(context, showing, canvas) {
    super.draw(context, canvas);
-   zones.digits.score(this, context, level.Flags(), Digit.red, Digit.flag, 1);
-   zones.digits.score(this, context, level.Total(), Digit.amber, Digit.mine);
+   zones.digits.score(this, context, level.Lives(), Digit.green, Digit.man, 1);
+   zones.digits.score(this, context, level.Score(), Digit.cyan, Digit.blank);
    if (showing) super.drawPad(context); } }
  class Middle {
   e; y; moving = false;
