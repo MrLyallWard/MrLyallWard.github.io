@@ -65,12 +65,12 @@
   correctRow(r) {
    r = this.#rowOffset + Level.span - r - 1;
    return r; }
-  Shift(shift) {this.#shift = shift; }
+  Shift(shift) {this.#shift = shift;}
   At(c, r) {
    r = this.correctRow(r);
    this.#canScroll |= (this.cleared[r][c] != 0);
    if (this.mines[r][c] != 0) this.#flags++;
-   if (this.flagged[r][c] != 0) this.#flags--;
+   if ((this.flagged[r][c] != 0) || (this.deaths[r][c] != 0)) this.#flags--;
    if (this.deaths[r][c] != 0) return Square.explosion;
    if (this.demined[r][c] != 0) return Square.demined;
    var finished = this.finished();
