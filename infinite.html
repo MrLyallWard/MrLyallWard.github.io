@@ -1,0 +1,177 @@
+<html><head><title>Sweeper Inifite</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
+// add an icon to the <head> <link rel="icon" href="sweeper.ico" type="image/x-icon"/>
+//const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17, demined:18 })
+class Point {x=0; y=0; constructor(e) {this.x=e.offsetX;this.y=e.offsetY;}}
+class Image {
+ canvas; context;
+ constructor(w, h, c = undefined) {
+  this.canvas = (c==undefined)?document.createElement('canvas'):c;
+  this.canvas.setAttribute("width", w);
+  this.canvas.setAttribute("height", h);
+  this.context = this.canvas.getContext("2d"); } }
+class Squares {
+ static #image = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17, demined:18 })
+ static #length = 0x200;
+ static #step = 0x20;
+ static #images = [];
+ static #font = [ // 18 characters of a 16 by 16 character font for the board playfield
+  [ 0,  0, [ 0xFFFF, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000,  0x8000, 0x8000, 0x8000, 0x8000 ], "#808080"],  // 0
+  [ 1,  0, [ 0x0000, 0x0000, 0x0000, 0x00C0,  0x01C0, 0x03C0, 0x07C0, 0x01C0,  0x01C0, 0x01C0, 0x01C0, 0x07F0,  0x07F0, 0x0000, 0x0000, 0x0000 ], "#2020DF"],  // 1
+  [ 2,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x0038, 0x00F0,  0x03E0, 0x0F80, 0x1E00, 0x1FF8,  0x1FF8, 0x0000, 0x0000, 0x0000 ], "#208010"],  // 2
+  [ 3,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x03F0,  0x03F0, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ], "#DF1010"],  // 3
+  [ 4,  0, [ 0x0000, 0x0000, 0x0000, 0x0770,  0x0770, 0x0E70, 0x0E70, 0x1FF8,  0x1FF8, 0x0070, 0x0070, 0x0070,  0x0070, 0x0000, 0x0000, 0x0000 ], "#202080"],  // 4
+  [ 5,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x0038, 0x0038, 0x1FF8,  0x1FF0, 0x0000, 0x0000, 0x0000 ], "#802020"],  // 5
+  [ 6,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF0, 0x1C00, 0x1C00, 0x1FF0,  0x1FF8, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#208080"],  // 6
+  [ 7,  0, [ 0x0000, 0x0000, 0x0000, 0x1FF8,  0x1FF8, 0x0078, 0x00F0, 0x01E0,  0x01C0, 0x03C0, 0x0380, 0x0380,  0x0380, 0x0000, 0x0000, 0x0000 ], "#202020"],  // 7
+  [ 8,  0, [ 0x0000, 0x0000, 0x0000, 0x0FF0,  0x1FF8, 0x1C38, 0x1C38, 0x0FF0,  0x0FF0, 0x1C38, 0x1C38, 0x1FF8,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#808080"],  // 8
+  [ 9,  0, [ 0x0000, 0x0000, 0x0080, 0x0080,  0x0BE8, 0x07F0, 0x0FF8, 0x0FF8,  0x3FFE, 0x0FF8, 0x0FF8, 0x07F0,  0x0BE8, 0x0080, 0x0080, 0x0000 ], "#202020"],  //mine
+  [ 9,  9, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0300, 0x0300,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#DFDFDF"],  //dot
+  [10,  9, [ 0x0000, 0x7FFF, 0x7F7F, 0x7F7F,  0x7417, 0x780F, 0x7007, 0x7007,  0x4001, 0x7007, 0x7007, 0x780F,  0x7417, 0x7F7F, 0x7F7F, 0x7FFF ], "#DF2020"],  //explosion
+  [11,  0, [ 0xFFFE, 0xFFFC, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0xC000, 0xC000,  0xC000, 0xC000, 0x8000, 0x0000 ], "#DFDFDF"],  //light
+  [11, 11, [ 0x0000, 0x0001, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x0003, 0x0003,  0x0003, 0x0003, 0x3FFF, 0x7FFF ], "#808080"],  //shadow
+  [12, 11, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#DF2020"],  //flag
+  [12, 12, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#202020"],  //post
+  [13,  9, [ 0x0000, 0x0000, 0x2002, 0x3006,  0x180C, 0x0C18, 0x0630, 0x0360,  0x01C0, 0x0360, 0x0630, 0x0C18,  0x180C, 0x3006, 0x2002, 0x0000 ], "#DF2020"],  //cross
+  [14, 11, [ 0x0000, 0x0000, 0x0000, 0x03C0,  0x0660, 0x0660, 0x0060, 0x00C0,  0x0180, 0x0180, 0x0000, 0x0180,  0x0180, 0x0000, 0x0000, 0x0000 ], "#202020"],  //?
+  [15,  0, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x01E0, 0x0330, 0x0330, 0x0030,  0x0060, 0x00C0, 0x00C0, 0x0000,  0x00C0, 0x00C0, 0x0000, 0x0000 ], "#202020"],  //?
+  [16, 16, [ 0x3FFF, 0x0001, 0xFFFD, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8005, 0x8005,  0x8005, 0x8005, 0x8004, 0xFFFC ], "#DFDFDF"],  //min
+  [17, 17, [ 0xFFFF, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0x8001,  0x8001, 0x8001, 0x8001, 0xFFFF ], "#DFDFDF"],  //max
+  [18, 11, [ 0x0000, 0x0000, 0x0000, 0x0180,  0x0780, 0x0F80, 0x0780, 0x0180,  0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000 ], "#DFB020"],  //flag
+  [18, 18, [ 0x0000, 0x0000, 0x0000, 0x0000,  0x0000, 0x0000, 0x0000, 0x0000,  0x0080, 0x0080, 0x03C0, 0x0FF0,  0x0FF0, 0x0000, 0x0000, 0x0000 ], "#202020"],  //cleared
+ ];
+ static #Blank(c) { c.fillStyle='#B0B0B0'; c.fillRect(0,0,Squares.#length,Squares.#length); c.fill(); }
+ static #DrawFont(f) {
+  var c = Squares.#images[f[0]].context;
+  c.drawImage(Squares.#images[f[1]].canvas,0,0);
+  c.fillStyle=f[3];
+  for (let i = 0; i < f[2].length; i++) {
+   var pixels = f[2][i];
+   var y = i * Squares.step;
+   for (let x = 0; x < Squares.length; x += Squares.step, pixels <<= 1) {if ((pixels & 0x8000) > 0) { c.fillRect(x, y, Squares.step, Squares.step); c.fill(); }}}}
+ static Image(c) {
+  var i = Squares.#image.unknown;
+  if (c.cleared) {
+   if (c.proximity >= 0) i = c.proximiy;
+   if (c.death) i = Squares.#image.explosion;
+  } else {
+   if (c.flagged) i = Squares.#image.flag;
+   if (c.demined) i = Squares.#image.demined; }
+  return Squares.#images[i].canvas;
+ } 
+ static {
+  for (let i = 0; i < 19; i++) { Squares.#images.push(new Image(Squares.#length, Squares.#length)); }
+  Squares.#Blank(Squares.#images[0].context);
+  for (let a = 0; a < Squares.#font.length; a++) { Squares.#DrawFont(Squares.#font[a]); } }
+}
+class Cell {
+ static #density = 0.2;
+ static #bias = Cell.#density;
+ static #mines = 0;
+ static #total = 0;
+ mine = false;
+ cleared = false;
+ flagged = false;
+ demined = false;
+ death = false;
+ proximity = -1;
+ constructor() {
+  Cell.#total++;
+  if (Math.random() < Cell.#bias) { this.mine = true; Cell.#mines++; }
+  if ((Cell.#mines/Cell.#total)>Cell.#density) Cell.#bias*=0.99; else Cell.#bias*=1.01;
+ }
+ demine() { this.mine = false; }
+ step() { 
+  this.cleared = true; 
+  if (this.mine) this.death = true; 
+ }
+ flag() { if (!this.cleared) this.flagged = !this.flagged; }
+ demine() { if (!this.demined & this.flagged) this.demined = true; }
+}
+class Column {
+ height;
+ cells = [];
+ constructor(h) { for (var i=0; i<h; i++) this.insert(); }
+ insert(){this.cells.splice(0, 0, new Cell());}
+ append(){this.cells.push(new Cell());}
+}
+class Level {
+ width = 50;
+ height = 50;
+ x = 25;
+ y = 25;
+ columns = [];
+ constructor() {
+  for (var i=0; i<this.width; i++) this.columns.push(new Column(this.height)); 
+ }
+}
+class Side {
+ static side = Object.freeze({ left:0, right:1, mouse:2 })
+ static #left; 
+ static #right;
+ static #mouse;
+ #side;
+ #e;
+ #moving = true;
+ #point;
+ constructor(side) {this.#side = side;}
+ static Down(e) {
+  var side;
+  if (e.pointerType == 'mouse') side = Side.#mouse;
+  else side = (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
+  side.#e = e;
+  side.#point = new Point(e);
+  side.#moving = false;
+ }
+ static Move(e) {
+  var p = Side.#Pointer(e);
+  if (p.#e != undefined) {
+  }
+ }
+ static Up(e) {
+  var p = Side.#Pointer(e);
+  p.#e = undefined;
+ }
+ static #Pointer(e) {
+  if ((Side.#left.#e != undefined) && (Side.#left.#e.pointerId == e.pointerId)) return Side.#left;
+  if ((Side.#right.#e != undefined) && (Side.#right.#e.pointerId == e.pointerId)) return Side.#right;
+  return Side.#mouse;
+ }
+ static {
+  Side.#left  = new Side(Side.side.left );
+  Side.#right = new Side(Side.side.right);
+  Side.#mouse = new Side(Side.side.mouse);
+ }
+}
+class Control {
+ static #Size(e) { }
+ static {
+  window.addEventListener("resize",        function(e) {try {Control.#Size(e);                } catch(x){}});
+  window.addEventListener("pointerdown",   function(e) {try {Side.Down(e); e.preventDefault();} catch(x){}});
+  window.addEventListener("pointermove",   function(e) {try {Side.Move(e); e.preventDefault();} catch(x){}});
+  window.addEventListener("pointerup",     function(e) {try {Side.Up(e);   e.preventDefault();} catch(x){}});
+ }
+}
+
+var count = 0;
+var redraw = true;
+var level = new Level;
+
+function twentyfivehertz() {
+ if ((count%25) == 0) { redraw = true; }
+ if (redraw == true) { console.log('time ' + count); }
+ //board.work();
+  count++; 
+  redraw = false; 
+}
+function startup() {
+ //board = new Board();
+ setInterval(function(){try {twentyfivehertz();} catch(x){}}, 40);
+ window.scrollbars.visible = false;
+ //control.size();
+}
+window.onload = startup;
+console.log('Sweeper started');
+</script><style>
+ canvas{position: absolute; left: 0px; top: 0px;}
+ body{overscroll-behavior-y: none; touch-action: none;}
+</style></head><body><canvas id="board" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
