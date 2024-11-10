@@ -140,18 +140,18 @@ class Side {
  }
 }
 class View {
- static left;
- static top;
- static width;
- static height;
- static wide;
- static high;
+ static left;  static right;
+ static top;   static bottom;
+ static width; static height;
+ static wide;  static high;
  static size;
  static #Window() {
   View.width  = View.wide*View.size;
   View.height = View.high*View.size;
   View.left   = Math.floor((window.innerWidth -View.width)/2);
+  View.right  = View.left+(View.wide*View.size);
   View.top    = Math.floor((window.innerHeight-View.height)/2);
+  View.bottom = View.top+(View.high*View.size);
  }
  static Size() {
   View.size   = Math.floor(window.innerWidth/Math.sqrt(Level.width*(window.innerWidth/window.innerHeight)));
@@ -201,15 +201,19 @@ class Board {
  }
  static Setup() {
   View.Size();
-  Board.x = Math.floor((Level.width - View.breadth)/2);
-  Board.y = Math.floor((Level.height - View.elevation)/2);
+  Board.x = Math.floor((Level.width - View.wide)/2);
+  Board.y = Math.floor((Level.height - View.high)/2);
   Board.canvas = document.getElementById('board');
   Board.context = Board.canvas.getContext("2d");
   Board.Resize();
  }
  static Redraw() {
+  var X; var Y; var x; var y;
   Board.image.context.fillStyle='#000000';
   Board.image.context.fillRect(0, 0, window.innerWidth,window.innerHeight);
+  for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
+   for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
+    Board.image.context.drawImage(Squares.Image(Level.columns[y].cells[x]), X, Y, View.size, View.size);
   Board.context.drawImage(Board.image.canvas, 0, 0);
  }
  static Resize() {
