@@ -163,6 +163,8 @@ class View {
   View.high = Math.floor(window.innerHeight/View.size);
   View.wide = Math.floor(window.innerWidth /View.size);
   View.#Window();
+  Board.Resize();
+  redraw = true;
  }
  static In() {
   if (View.wide<View.high) {
@@ -202,15 +204,18 @@ class Board {
   Board.x = Math.floor((Level.width - View.breadth)/2);
   Board.y = Math.floor((Level.height - View.elevation)/2);
   Board.canvas = document.getElementById('board');
-  Board.canvas.setAttribute("width", window.innerWidth);
-  Board.canvas.setAttribute("height", window.innerHeight);
   Board.context = Board.canvas.getContext("2d");
-  Board.image = new Image(window.innerWidth, window.innerHeight);
+  Board.Resize();
  }
  static Redraw() {
   Board.image.context.fillStyle='#000000';
   Board.image.context.fillRect(0, 0, window.innerWidth,window.innerHeight);
   Board.context.drawImage(Board.image.canvas, 0, 0);
+ }
+ static Resize() {
+  Board.image = new Image(window.innerWidth, window.innerHeight);
+  Board.canvas.setAttribute("width", window.innerWidth);
+  Board.canvas.setAttribute("height", window.innerHeight);
  }
 }
 class Control {
