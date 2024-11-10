@@ -1,6 +1,4 @@
 <html><head><title>Sweeper Inifite</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
-// add an icon to the <head> <link rel="icon" href="sweeper.ico" type="image/x-icon"/>
-//const Square = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, mine:9, explosion:10, unknown:11, flag:12, error:13, question:14, danger:15, min:16, max:17, demined:18 })
 class Point {x=0; y=0; constructor(e) {this.x=e.offsetX;this.y=e.offsetY;}}
 class Image {
  canvas; context;
@@ -88,7 +86,6 @@ class Cell {
  demine() { if (!this.demined & this.flagged) this.demined = true; }
 }
 class Column {
- height;
  cells = [];
  constructor(h) { for (var i=0; i<h; i++) this.insert(); }
  insert(){this.cells.splice(0, 0, new Cell());}
@@ -98,9 +95,11 @@ class Level {
  static width = 64;
  static height = 64;
  static columns = [];
- static {
-  for (var i=0; i<this.width; i++) this.columns.push(new Column(this.height)); 
- }
+ static Left(x) {if (x < 3) { Level.columns.splice(0,0, new Column(Level.height)); Level.width++; return false; } return true; }
+ static Right(x) { if (x > Level.width-3) { Level.columns.push(new Column(this.height)); Level.width++; } return true;}
+ static Up(y) { if (y < 3) { columns.forEach((c) => {c.insert();}); Level.height++; return false; } return true;}
+ static Down(y) { if (y > Level.height-3) { columns.forEach((c) => {c.append();}); Level.height++; } return true;}
+ static { for (var i=0; i<Level.width; i++) Level.columns.push(new Column(Level.height)); }
 }
 class Side {
  static side = Object.freeze({ left:0, right:1, mouse:2 })
@@ -185,20 +184,33 @@ class View {
 class Board {
  static x;
  static y;
+ static canvas;
+ static context;
+ static image;
  static Wheel(e) {
   if (e.deltaX != 0) {
    redraw = true;
-   Board.x += (e.deltaX>0)?1:-1;
+   if (e.deltaX<0) { if (Level.Left()) Board.x--; } else { if (Level.Right()) Board.x++; };
   } 
   if (e.deltaY != 0) {
    redraw = true;
-   Board.y += (e.deltaY>0)?1:-1;
+   if (e.deltaY<0) { if (Level.Up()) Board.y--; } else { if (Level.Down()) Board.y++; };
   }
  }
  static Setup() {
   View.Size();
   Board.x = Math.floor((Level.width - View.breadth)/2);
   Board.y = Math.floor((Level.height - View.elevation)/2);
+  Board.canvas = document.getElementById('board');
+  Board.canvas.setAttribute("width", window.innerWidth);
+  Board.canvas.setAttribute("height", window.innerHeight);
+  Board.context = Board.canvas.getContext("2d");
+  Board.image = new Image(window.innerWidth, window.innerHeight);
+ }
+ static Redraw() {
+  Board.image.context.fillStyle='#000000';
+  Board.image.context.fillRect(0, 0, window.innerWidth,window.innerHeight);
+  Board.context.drawImage(Board.image.canvas, 0, 0);
  }
 }
 class Control {
@@ -211,16 +223,13 @@ class Control {
  }
 }
 
-var count = 0;
 var redraw = true;
-var level = new Level;
 
 function twentyfivehertz() {
- if ((count%25) == 0) { redraw = true; }
- if (redraw == true) { console.log('time ' + count); }
- //board.work();
-  count++; 
-  redraw = false; 
+ if (redraw == true) {
+  Board.Redraw();
+  redraw = false;
+ }
 }
 function startup() {
  Board.Setup();
