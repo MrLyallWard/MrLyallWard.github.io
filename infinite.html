@@ -95,12 +95,10 @@ class Column {
  append(){this.cells.push(new Cell());}
 }
 class Level {
- width = 50;
- height = 50;
- x = 25;
- y = 25;
- columns = [];
- constructor() {
+ static width = 64;
+ static height = 64;
+ static columns = [];
+ static {
   for (var i=0; i<this.width; i++) this.columns.push(new Column(this.height)); 
  }
 }
@@ -142,13 +140,74 @@ class Side {
   Side.#mouse = new Side(Side.side.mouse);
  }
 }
+class View {
+ static left;
+ static top;
+ static width;
+ static height;
+ static wide;
+ static high;
+ static size;
+ static #Window() {
+  View.width  = View.wide*View.size;
+  View.height = View.high*View.size;
+  View.left   = Math.floor((window.innerWidth -View.width)/2);
+  View.top    = Math.floor((window.innerHeight-View.height)/2);
+ }
+ static Size() {
+  View.size   = Math.floor(window.innerWidth/Math.sqrt(Level.width*(window.innerWidth/window.innerHeight)));
+  View.wide   = Math.floor(window.innerWidth /View.size);
+  View.high   = Math.floor(window.innerHeight/View.size);
+  View.#Window();
+ }
+ static Resize(e) {
+  View.high = Math.floor(window.innerHeight/View.size);
+  View.wide = Math.floor(window.innerWidth /View.size);
+  View.#Window();
+ }
+ static In() {
+  if (View.wide<View.high) {
+   if (View.wide > 3) { View.size = Math.floor(window.innerWidth /(--View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+  } else {
+   if (View.high > 3) { View.size = Math.floor(window.innerHeight/(--View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+  }
+  View.#Window();
+ }
+ static Out() {
+  if (View.wide<View.high) {
+   if (View.wide < 32) { View.size = Math.floor(window.innerWidth /(++View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+  } else {
+   if (View.high < 32) { View.size = Math.floor(window.innerHeight/(++View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+  }
+  View.#Window();
+ }
+}
+class Board {
+ static x;
+ static y;
+ static Wheel(e) {
+  if (e.deltaX != 0) {
+   redraw = true;
+   Board.x += (e.deltaX>0)?1:-1;
+  } 
+  if (e.deltaY != 0) {
+   redraw = true;
+   Board.y += (e.deltaY>0)?1:-1;
+  }
+ }
+ static Setup() {
+  View.Size();
+  Board.x = Math.floor((Level.width - View.breadth)/2);
+  Board.y = Math.floor((Level.height - View.elevation)/2);
+ }
+}
 class Control {
- static #Size(e) { }
  static {
-  window.addEventListener("resize",        function(e) {try {Control.#Size(e);                } catch(x){}});
-  window.addEventListener("pointerdown",   function(e) {try {Side.Down(e); e.preventDefault();} catch(x){}});
-  window.addEventListener("pointermove",   function(e) {try {Side.Move(e); e.preventDefault();} catch(x){}});
-  window.addEventListener("pointerup",     function(e) {try {Side.Up(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("resize",      function(e) {try {View.Resize(e);                    } catch(x){}});
+  window.addEventListener("pointerdown", function(e) {try {Side.Down(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointermove", function(e) {try {Side.Move(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointerup",   function(e) {try {Side.Up(e);     e.preventDefault();} catch(x){}});
+  window.addEventListener("wheel",       function(e) {try {Board.Wheel(e); e.preventDefault();} catch(x){}});
  }
 }
 
@@ -164,14 +223,11 @@ function twentyfivehertz() {
   redraw = false; 
 }
 function startup() {
- //board = new Board();
+ Board.Setup();
  setInterval(function(){try {twentyfivehertz();} catch(x){}}, 40);
  window.scrollbars.visible = false;
- //control.size();
 }
 window.onload = startup;
 console.log('Sweeper started');
-</script><style>
- canvas{position: absolute; left: 0px; top: 0px;}
- body{overscroll-behavior-y: none; touch-action: none;}
-</style></head><body><canvas id="board" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
+</script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
+<body><canvas id="board" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
