@@ -99,15 +99,10 @@ class Level {
  static width = 100;
  static height = 100;
  static columns = [];
- static Left(x) { if (x < 3) {Level.columns.splice(0,0, new Column(Level.height)); Level.width++; return false;} return true;}
- static Right(x) {
-  if (x > Level.width-3) {
-   Level.columns.push(new Column(this.height));
-   Level.width++;
-  }
- return true;}
- static Up(y) { if (y < 3) { columns.forEach((c) => {c.insert();}); Level.height++; return false; } return true;}
- static Down(y) { if (y > Level.height-3) { columns.forEach((c) => {c.append();}); Level.height++; } return true;}
+ static Left(x)  { if (x < 3)              { Level.columns.splice(0, 0, new Column(Level.height)); Level.width++; return false;                  } return true;}
+ static Right(x) { if (x > Level.width-3)  { Level.columns.push(new Column(this.height)); Level.width++;                                         } return true;}
+ static Up(y)    { if (y < 3)              { for (let c=0; c<Level.columns.length; c++) Level.columns[c].insert(); Level.height++; return false; } return true;}
+ static Down(y)  { if (y > Level.height-3) { for (let c=0; c<Level.columns.length; c++) Level.columns[c].append(); Level.height++;               } return true;}
  static { for (var i=0; i<Level.width; i++) Level.columns.push(new Column(Level.height)); }
 }
 class Side {
@@ -205,7 +200,7 @@ class Board {
   } 
   if (e.deltaY != 0) {
    redraw = true;
-   if (e.deltaY<0) { if (Level.Up(Board.y)) Board.y--; } else { if (Level.Down(Board.y)) Board.y++; };
+   if (e.deltaY<0) { if (Level.Up(Board.y)) Board.y--; } else { if (Level.Down(Board.y+View.high)) Board.y++; };
   }
  }
  static Setup() {
@@ -222,7 +217,7 @@ class Board {
   Board.image.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
   for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
-    Board.image.context.drawImage(Squares.Image(Level.columns[y].cells[x]), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
+    Board.image.context.drawImage(Squares.Image(Level.columns[x].cells[y]), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
  static Resize() {
