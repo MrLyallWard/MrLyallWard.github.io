@@ -157,10 +157,10 @@ class Side {
  static Move(e) {
   var p = Side.#Pointer(e);
   if (p.#e != undefined) {
-   if ((p.#point.x - e.offsetX)>=View.size) {redraw=true; p.#focussed=false; p.#point.x-=View.size; Board.IncX();}  
-   if ((e.offsetX - p.#point.x)>=View.size) {redraw=true; p.#focussed=false; p.#point.x+=View.size; Board.DecX();}  
-   if ((p.#point.y - e.offsetY)>=View.size) {redraw=true; p.#focussed=false; p.#point.y-=View.size; Board.IncY();}  
-   if ((e.offsetY - p.#point.y)>=View.size) {redraw=true; p.#focussed=false; p.#point.y+=View.size; Board.DecY();}  
+   if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.x-=View.size; Board.IncX();}  
+   if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.x+=View.size; Board.DecX();}  
+   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.y-=View.size; Board.IncY();}  
+   if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.y+=View.size; Board.DecY();}  
   }
  }
  static Up(e) {
