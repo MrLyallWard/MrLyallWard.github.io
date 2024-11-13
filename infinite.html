@@ -167,9 +167,9 @@ class Side {
   var p = Side.#Pointer(e);
   if (p.#e != undefined) {
    if (p.#focussed) {
-    if ((p==Side.right) || ((e.pointerType == 'mouse') && (e.button == 0)))
+    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
      Level.Step(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
-	if ((p==Side.left) || ((e.pointerType == 'mouse') && (e.button == 2)))
+	if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
      Level.Flag(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
    }
    p.#e = undefined;
