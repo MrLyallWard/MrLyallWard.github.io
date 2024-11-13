@@ -137,10 +137,10 @@ class Side {
  constructor(side) {this.#side = side;}
  static #Pointer(e) {
   if (e.pointerType == 'mouse') return Side.#mouse;
-  if (Side.#left.Is(e)) return Side.#left;
+  if (Side.#left.Is(e) ) return Side.#left;
   if (Side.#right.Is(e)) return Side.#right;
-  if ((Side.#right.#e!=undefined) && (Side.#right.#e.offsetX>e.offsetX)) return Side.#left;
-  if ((Side.#left.#e!=undefined) && (Side.#left.#e.offsetX<e.offsetX)) return Side.#right;
+  if (Side.#right.#e!=undefined) return Side.#left;
+  if (Side.#left.#e !=undefined) return Side.#right;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
  }
  static Down(e) {
