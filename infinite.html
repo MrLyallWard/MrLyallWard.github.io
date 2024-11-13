@@ -1,5 +1,11 @@
 <html><head><title>Sweeper Inifite</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
-class Point {x=0; y=0; constructor(e) {this.x=e.offsetX;this.y=e.offsetY;}}
+class Point {x; y; constructor(e) {this.x=e.offsetX;this.y=e.offsetY;}}
+class Coord {
+ x; y;
+ constructor(e) {
+  this.x=Math.floor((e.offsetX-View.left)/View.size);
+  this.y=Math.floor((e.offsetY-View.right)/View.size);}
+ Same(e) {return (this.x==e.x) && (this.y==e.y);} }
 class Image {
  canvas; context;
  constructor(w, h, c = undefined) {
@@ -52,7 +58,7 @@ class Squares {
  static Image(c) { 
   var i = Squares.#image.unknown;
   if (c.cleared) {
-   if (c.proximity >= 0) i = c.proximiy;
+   if (c.proximity >= 0) i = c.proximity;
    if (c.death) i = Squares.#image.explosion;
   } else {
    if (c.flagged) i = Squares.#image.flag;
@@ -66,7 +72,9 @@ class Squares {
   for (let a = 0; a < Squares.#font.length; a++) { Squares.#DrawFont(Squares.#font[a]); } }
 }
 class Cell {
- static #density = 0.2;
+ static #high = 0.26;
+ static #density = 0.25;
+ static #low = 0.24;
  static #bias = Cell.#density;
  static #mines = 0;
  static #total = 0;
@@ -79,15 +87,17 @@ class Cell {
  constructor() {
   Cell.#total++;
   if (Math.random() < Cell.#bias) { this.mine = true; Cell.#mines++; }
-  if ((Cell.#mines/Cell.#total)>Cell.#density) Cell.#bias*=0.99; else Cell.#bias*=1.01;
+  Cell.#bias = ((Cell.#mines/Cell.#total)>Cell.#density) ? Cell.#low : Cell.#high;
  }
- demine() { this.mine = false; }
- step() { 
-  this.cleared = true; 
-  if (this.mine) this.death = true; 
+ Unmine() { this.mine = false; }
+ Step() {
+  if ((!this.flagged) & (!this.demined)) {
+   this.cleared = true; 
+   if (this.mine) this.death = true; 
+  }
  }
- flag() { if (!this.cleared) this.flagged = !this.flagged; }
- demine() { if (!this.demined & this.flagged) this.demined = true; }
+ Flag() { if (!this.cleared) this.flagged = !this.flagged; }
+ Demine() { if (!this.demined & this.flagged) this.demined = true; }
 }
 class Column {
  cells = [];
@@ -99,10 +109,19 @@ class Level {
  static width = 100;
  static height = 100;
  static columns = [];
- static Left(x)  { if (x < 3)              { Level.columns.splice(0, 0, new Column(Level.height)); Level.width++; return false;                  } return true;}
- static Right(x) { if (x > Level.width-3)  { Level.columns.push(new Column(this.height)); Level.width++;                                         } return true;}
+ static Left(x)  { if (x < 3)              { Level.columns.splice(0, 0, new Column(Level.height));                 Level.width++;  return false; } return true;}
+ static Right(x) { if (x > Level.width-3)  { Level.columns.push(new Column(this.height));                          Level.width++;                } return true;}
  static Up(y)    { if (y < 3)              { for (let c=0; c<Level.columns.length; c++) Level.columns[c].insert(); Level.height++; return false; } return true;}
  static Down(y)  { if (y > Level.height-3) { for (let c=0; c<Level.columns.length; c++) Level.columns[c].append(); Level.height++;               } return true;}
+ static Step(x,y) {
+  if (Level.columns[x].cells[y].proximity == -1) {
+   Level.columns[x].cells[y].proximity  = Level.#Mine(x-1,y-1) + Level.#Mine(x  ,y-1) + Level.#Mine(x+1,y-1);
+   Level.columns[x].cells[y].proximity += Level.#Mine(x-1,y  ) + Level.#Mine(x  ,y  ) + Level.#Mine(x+1,y  );
+   Level.columns[x].cells[y].proximity += Level.#Mine(x-1,y+1) + Level.#Mine(x  ,y+1) + Level.#Mine(x+1,y+1); }
+  Level.columns[x].cells[y].Step(); }
+ static Flag(x,y) {
+  Level.columns[x].cells[y].Flag(); } 
+ static #Mine(x,y) { return Level.columns[x].cells[y].mine ? 1 : 0; }
  static { for (var i=0; i<Level.width; i++) Level.columns.push(new Column(Level.height)); }
 }
 class Side {
@@ -112,31 +131,53 @@ class Side {
  static #mouse;
  #side;
  #e;
- #moving = true;
+ #focussed = false;
  #point;
+ #coord;
  constructor(side) {this.#side = side;}
+ static #Pointer(e) {
+  if (e.pointerType == 'mouse') return Side.#mouse;
+  if (Side.#left.Is(e)) return Side.#left;
+  if (Side.#right.Is(e)) return Side.#right;
+  if ((Side.#right.#e!=undefined) && (Side.#right.#e.offsetX>e.offsetX)) return Side.#left;
+  if ((Side.#left.#e!=undefined) && (Side.#left.#e.offsetX<e.offsetX)) return Side.#right;
+  return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
+ }
  static Down(e) {
-  var side;
-  if (e.pointerType == 'mouse') side = Side.#mouse;
-  else side = (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
-  side.#e = e;
-  side.#point = new Point(e);
-  side.#moving = false;
+  var p = Side.#Pointer(e);
+  if (p != undefined) {
+   p.#e = e;
+   p.#point = new Point(e);
+   p.#focussed = true;
+   Side.#left.#focussed  = Side.#left  == p;
+   Side.#right.#focussed = Side.#right == p;
+   Side.#mouse.#focussed = Side.#mouse == p;
+  }
  }
  static Move(e) {
   var p = Side.#Pointer(e);
   if (p.#e != undefined) {
+   if ((p.#point.x - e.offsetX)>=View.size) {redraw=true; p.#focussed=false; p.#point.x-=View.size; Board.IncX();}  
+   if ((e.offsetX - p.#point.x)>=View.size) {redraw=true; p.#focussed=false; p.#point.x+=View.size; Board.DecX();}  
+   if ((p.#point.y - e.offsetY)>=View.size) {redraw=true; p.#focussed=false; p.#point.y-=View.size; Board.IncY();}  
+   if ((e.offsetY - p.#point.y)>=View.size) {redraw=true; p.#focussed=false; p.#point.y+=View.size; Board.DecY();}  
   }
  }
  static Up(e) {
   var p = Side.#Pointer(e);
-  p.#e = undefined;
+  if (p.#e != undefined) {
+   if (p.#focussed) {
+    if ((p==Side.right) || ((e.pointerType == 'mouse') && (e.button == 0)))
+     Level.Step(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
+	if ((p==Side.left) || ((e.pointerType == 'mouse') && (e.button == 2)))
+     Level.Flag(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
+   }
+   p.#e = undefined;
+   p.#focussed = false;
+   redraw = true;
+  }
  }
- static #Pointer(e) {
-  if ((Side.#left.#e != undefined) && (Side.#left.#e.pointerId == e.pointerId)) return Side.#left;
-  if ((Side.#right.#e != undefined) && (Side.#right.#e.pointerId == e.pointerId)) return Side.#right;
-  return Side.#mouse;
- }
+ Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  static {
   Side.#left  = new Side(Side.side.left );
   Side.#right = new Side(Side.side.right);
@@ -186,6 +227,8 @@ class View {
   }
   View.#Window();
  }
+ static X(x) { return Math.floor((x-View.left)/View.size); }
+ static Y(y) { return Math.floor((y-View.top)/View.size); }
 }
 class Board {
  static x;
@@ -194,15 +237,12 @@ class Board {
  static context;
  static image;
  static Wheel(e) {
-  if (e.deltaX != 0) {
-   redraw = true;
-   if (e.deltaX>0) { if (Level.Left(Board.x)) Board.x--; } else { if (Level.Right(Board.x+View.wide)) Board.x++; };
-  } 
-  if (e.deltaY != 0) {
-   redraw = true;
-   if (e.deltaY<0) { if (Level.Up(Board.y)) Board.y--; } else { if (Level.Down(Board.y+View.high)) Board.y++; };
-  }
- }
+  if (e.deltaX != 0) { redraw = true; if (e.deltaX>0) Board.DecX(); else Board.IncX(); }
+  if (e.deltaY != 0) { redraw = true; if (e.deltaY<0) Board.DecY(); else Board.IncY(); } }
+ static IncX() {if (Level.Right(Board.x+View.wide)) Board.x++;}
+ static DecX() {if (Level.Left(Board.x)) Board.x--;}
+ static IncY() {if (Level.Down(Board.y+View.high)) Board.y++;}
+ static DecY() {if (Level.Up(Board.y)) Board.y--;}
  static Setup() {
   View.Size();
   Board.x = Math.floor((Level.width - View.wide)/2);
