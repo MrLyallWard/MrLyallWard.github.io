@@ -129,55 +129,57 @@ class Side {
  static #left; 
  static #right;
  static #mouse;
+ static #pinching = false;
  #side;
  #e;
  #focussed = false;
+ #scrolling = false;
  #point;
- #coord;
  constructor(side) {this.#side = side;}
+ #Focus() { Side.#left.#focussed = Side.#right.#focussed = Side.#mouse.#focussed = false; this.#focussed = true; }
+ #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
+ #IsDown() {return this.#e!=undefined;}
  static #Pointer(e) {
   if (e.pointerType == 'mouse') return Side.#mouse;
-  if (Side.#left.Is(e) ) return Side.#left;
-  if (Side.#right.Is(e)) return Side.#right;
-  if (Side.#right.#e!=undefined) return Side.#left;
-  if (Side.#left.#e !=undefined) return Side.#right;
+  if (Side.#left.#Is(e)  || Side.#right.#IsDown()) return Side.#left;
+  if (Side.#right.#Is(e) || Side.#left.#IsDown() ) return Side.#right;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
- }
+ } 
  static Down(e) {
   var p = Side.#Pointer(e);
-  if (p != undefined) {
-   p.#e = e;
-   p.#point = new Point(e);
-   p.#focussed = true;
-   Side.#left.#focussed  = Side.#left  == p;
-   Side.#right.#focussed = Side.#right == p;
-   Side.#mouse.#focussed = Side.#mouse == p;
-  }
+  p.#Focus();
+  p.#e = e;
+  p.#point = new Point(e);
+  redraw = true;
+ }
+ #Scrollling() {
+  this.#focussed = false;
+  this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
+  // if we are NOT scrolling, we ARE pinching
+  // first pinch is fullscreen/not fullscreen
+  return this.#scrolling;
  }
  static Move(e) {
   var p = Side.#Pointer(e);
-  if (p.#e != undefined) {
-   if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.x-=View.size; Board.IncX();}  
-   if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.x+=View.size; Board.DecX();}  
-   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.y-=View.size; Board.IncY();}  
-   if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {redraw=true; p.#focussed=false; p.#point.y+=View.size; Board.DecY();}  
-  }
+  if (!p.#IsDown()) return;
+  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrollling()) {Board.IncX(); redraw=true;}}
+  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrollling()) {Board.DecX(); redraw=true;}}
+  if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrollling()) {Board.IncY(); redraw=true;}}
+  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrollling()) {Board.DecY(); redraw=true;}}
  }
  static Up(e) {
   var p = Side.#Pointer(e);
-  if (p.#e != undefined) {
-   if (p.#focussed) {
-    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
-     Level.Step(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
-	if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
-     Level.Flag(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
-   }
-   p.#e = undefined;
-   p.#focussed = false;
-   redraw = true;
+  if (p.#focussed) {
+   if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
+    Level.Step(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
+   if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
+    Level.Flag(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
   }
+  p.#e = undefined;
+  p.#focussed = false;
+  p.#scrolling = false;
+  redraw = true;
  }
- Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  static {
   Side.#left  = new Side(Side.side.left );
   Side.#right = new Side(Side.side.right);
