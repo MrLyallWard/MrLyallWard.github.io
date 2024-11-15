@@ -151,7 +151,7 @@ class Side {
   var p = Side.#Pointer(e);
   p.#Focus();
   p.#e = e;
-  p.#point = new Point(e);
+  p.#point = undefined;
   redraw = true;
  }
  #Scrollling() {
@@ -161,21 +161,33 @@ class Side {
   // first pinch is fullscreen/not fullscreen
   return this.#scrolling;
  }
+ static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#left.#point.x - Side.#left.#point.x);} 
+ static #Zoom(d) {
+  var direction = Side.#Distance - d;
+  if (d < 0) {
+   if (document.exitFullscreen) {document.exitFullscreen();} else View.In();
+  } else {
+   if (!document.fullscreenElement) {document.documentElement.requestFullscreen();} else View.Out();
+  }
+  Side.#right.#point=Side.#left.#point=undefined;
+ }
  static Move(e) {
   var p = Side.#Pointer(e);
   if (!p.#IsDown()) return;
-  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrollling()) {Board.IncX(); redraw=true;}}
-  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrollling()) {Board.DecX(); redraw=true;}}
-  if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrollling()) {Board.IncY(); redraw=true;}}
-  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrollling()) {Board.DecY(); redraw=true;}}
+  var d = Side.#Distance();
+  if (p.#point==undefined) p.#point = new Point(e);
+  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrollling()) Board.IncX(); else Side.Zoom(d); redraw=true;}
+  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrollling()) Board.DecX(); else Side.Zoom(d); redraw=true;}
+  if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrollling()) Board.IncY(); redraw=true;}
+  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrollling()) Board.DecY(); redraw=true;}
  }
  static Up(e) {
   var p = Side.#Pointer(e);
   if (p.#focussed) {
    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
-    Level.Step(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
+    Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
    if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
-    Level.Flag(Board.x+View.X(p.#point.x), Board.y+View.Y(p.#point.y));
+    Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
   }
   p.#e = undefined;
   p.#focussed = false;
