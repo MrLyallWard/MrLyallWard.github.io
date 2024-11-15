@@ -158,15 +158,14 @@ class Side {
   this.#focussed = false;
   return this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
  }
- static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);} 
+ static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
   Console.log("before = " + d + ", after = " + Side.#Distance() + ", diff = " + direction);
-  if (direction < 0) {
-   if (document.exitFullscreen) document.exitFullscreen(); else View.Out();
-  } else {
-   if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else View.In();
-  }
+  if (direction < 0)
+   View.Out();
+  else
+   View.In();
   Side.#right.#point=Side.#left.#point=undefined;
  }
  static Move(e) {
@@ -218,6 +217,7 @@ class View {
  static width; static height;
  static wide;  static high;
  static size;
+ static fullScreen = false;
  static #Window() {
   View.width  = View.wide*View.size;
   View.height = View.high*View.size;
@@ -239,19 +239,29 @@ class View {
   Board.Resize();
   redraw = true;
  }
+ static FullScreen(e) {View.fullScreen = document.fullscreenElement;}
+ static #IsFullScreen() {return document.fullscreenElement != undefined;}
+ static #GoFullScreen() {Board.canvas.requestFullscreen();}
+ static #LeaveFullScreen() {document.exitFullscreen();}
  static In() {
-  if (View.wide<View.high) {
-   if (View.wide > 3) { View.size = Math.floor(window.innerWidth /(--View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
-  } else {
-   if (View.high > 3) { View.size = Math.floor(window.innerHeight/(--View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
-  }
+  if (View.#IsFullScreen()) {
+   if (View.wide<View.high) {
+    if (View.wide > 3) { View.size = Math.floor(window.innerWidth /(--View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+   } else {
+    if (View.high > 3) { View.size = Math.floor(window.innerHeight/(--View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+   }
+  } else View.#GoFullScreen();
   View.#Window();
  }
  static Out() {
-  if (View.wide<View.high) {
-   if (View.wide < 32) { View.size = Math.floor(window.innerWidth /(++View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+  if (View.#IsFullScreen()) {
+   View.#LeaveFullScreen();
   } else {
-   if (View.high < 32) { View.size = Math.floor(window.innerHeight/(++View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+   if (View.wide<View.high) {
+    if (View.wide < 32) { View.size = Math.floor(window.innerWidth /(++View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+   } else {
+    if (View.high < 32) { View.size = Math.floor(window.innerHeight/(++View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+   }
   }
   View.#Window();
  }
@@ -275,8 +285,6 @@ class Board {
   View.Size();
   Board.x = Math.floor((Level.width - View.wide)/2);
   Board.y = Math.floor((Level.height - View.high)/2);
-  Board.canvas = document.getElementById('board');
-  Board.context = Board.canvas.getContext("2d");
   Board.Resize();
  }
  static Redraw() {
@@ -293,14 +301,19 @@ class Board {
   Board.canvas.setAttribute("width", window.innerWidth);
   Board.canvas.setAttribute("height", window.innerHeight);
  }
+ static {
+  Board.canvas = document.getElementById('board');
+  Board.context = Board.canvas.getContext("2d");
+ }
 }
 class Control {
  static {
-  window.addEventListener("resize",      function(e) {try {View.Resize(e);                    } catch(x){}});
-  window.addEventListener("pointerdown", function(e) {try {Side.Down(e);   e.preventDefault();} catch(x){}});
-  window.addEventListener("pointermove", function(e) {try {Side.Move(e);   e.preventDefault();} catch(x){}});
-  window.addEventListener("pointerup",   function(e) {try {Side.Up(e);     e.preventDefault();} catch(x){}});
-  window.addEventListener("wheel",       function(e) {try {Board.Wheel(e);                    } catch(x){}});
+  window.addEventListener("resize",            function(e) {try {View.Resize(e);                    } catch(x){}});
+  window.addEventListener("pointerdown",       function(e) {try {Side.Down(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointermove",       function(e) {try {Side.Move(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointerup",         function(e) {try {Side.Up(e);     e.preventDefault();} catch(x){}});
+  window.addEventListener("wheel",             function(e) {try {Board.Wheel(e);                    } catch(x){}});
+  window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                } catch(x){}});
  }
 }
 
