@@ -158,9 +158,10 @@ class Side {
   this.#focussed = false;
   return this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
  }
- static #Distance(d) {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);} 
+ static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);} 
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
+  Console.log("before = " + d + ", after = " + Side.#Distance() + ", diff = " + direction);
   if (direction < 0) {
    if (document.exitFullscreen) document.exitFullscreen(); else View.Out();
   } else {
