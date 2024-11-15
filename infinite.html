@@ -141,8 +141,10 @@ class Side {
  #IsDown() {return this.#e!=undefined;}
  static #Pointer(e) {
   if (e.pointerType == 'mouse') return Side.#mouse;
-  if (Side.#left.#Is(e)  || Side.#right.#IsDown()) return Side.#left;
-  if (Side.#right.#Is(e) || Side.#left.#IsDown() ) return Side.#right;
+  if (Side.#left.#Is(e)) return Side.#left;
+  if (Side.#right.#Is(e)) return Side.#right;
+  if (Side.#right.#IsDown()) return Side.#left;
+  if (Side.#left.#IsDown()) return Side.#right;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
  } 
  static Down(e) {
