@@ -158,7 +158,7 @@ class Side {
   this.#focussed = false;
   return this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
  }
- static #Distance(d) {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#left.#point.x - Side.#left.#point.x);} 
+ static #Distance(d) {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);} 
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
   if (direction < 0) {
