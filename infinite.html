@@ -156,18 +156,15 @@ class Side {
  }
  #Scrollling() {
   this.#focussed = false;
-  this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
-  // if we are NOT scrolling, we ARE pinching
-  // first pinch is fullscreen/not fullscreen
-  return this.#scrolling;
+  return this.#scrolling = this.#scrolling || !(Side.#left.#scrolling || Side.#right.#scrolling || Side.#mouse.#scrolling);
  }
- static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#left.#point.x - Side.#left.#point.x);} 
+ static #Distance(d) {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#left.#point.x - Side.#left.#point.x);} 
  static #Zoom(d) {
   var direction = Side.#Distance - d;
-  if (d < 0) {
-   if (document.exitFullscreen) {document.exitFullscreen();} else View.In();
+  if (direction < 0) {
+   if (document.exitFullscreen) document.exitFullscreen(); else View.In();
   } else {
-   if (!document.fullscreenElement) {document.documentElement.requestFullscreen();} else View.Out();
+   if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else View.Out();
   }
   Side.#right.#point=Side.#left.#point=undefined;
  }
@@ -176,8 +173,22 @@ class Side {
   if (!p.#IsDown()) return;
   var d = Side.#Distance();
   if (p.#point==undefined) p.#point = new Point(e);
-  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrollling()) Board.IncX(); else Side.Zoom(d); redraw=true;}
-  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrollling()) Board.DecX(); else Side.Zoom(d); redraw=true;}
+  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {
+   p.#point.x-=View.size; 
+   if (p.#Scrollling()) 
+    Board.IncX(); 
+   else 
+    Side.Zoom(d); 
+   redraw=true;
+   }
+  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {
+   p.#point.x+=View.size; 
+   if (p.#Scrollling()) 
+    Board.DecX(); 
+   else 
+    Side.Zoom(d); 
+   redraw=true;
+  }
   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrollling()) Board.IncY(); redraw=true;}
   if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrollling()) Board.DecY(); redraw=true;}
  }
