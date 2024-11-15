@@ -160,7 +160,7 @@ class Side {
  }
  static #Distance(d) {if ((Side.#left.#point==undefined)||(Side.#right.point==undefined)) return 0; else return Math.abs(Side.#left.#point.x - Side.#left.#point.x);} 
  static #Zoom(d) {
-  var direction = Side.#Distance - d;
+  var direction = Side.#Distance() - d;
   if (direction < 0) {
    if (document.exitFullscreen) document.exitFullscreen(); else View.In();
   } else {
