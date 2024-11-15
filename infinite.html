@@ -178,7 +178,7 @@ class Side {
    if (p.#Scrollling()) 
     Board.IncX(); 
    else 
-    Side.Zoom(d); 
+    Side.#Zoom(d); 
    redraw=true;
    }
   if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {
@@ -186,7 +186,7 @@ class Side {
    if (p.#Scrollling()) 
     Board.DecX(); 
    else 
-    Side.Zoom(d); 
+    Side.#Zoom(d); 
    redraw=true;
   }
   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrollling()) Board.IncY(); redraw=true;}
