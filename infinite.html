@@ -162,9 +162,9 @@ class Side {
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
   if (direction < 0) {
-   if (document.exitFullscreen) document.exitFullscreen(); else View.In();
+   if (document.exitFullscreen) document.exitFullscreen(); else View.Out();
   } else {
-   if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else View.Out();
+   if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else View.In();
   }
   Side.#right.#point=Side.#left.#point=undefined;
  }
