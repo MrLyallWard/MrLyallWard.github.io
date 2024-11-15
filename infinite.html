@@ -285,6 +285,7 @@ class Board {
   View.Size();
   Board.x = Math.floor((Level.width - View.wide)/2);
   Board.y = Math.floor((Level.height - View.high)/2);
+  Board.context = Board.canvas.getContext("2d");
   Board.Resize();
  }
  static Redraw() {
@@ -303,7 +304,6 @@ class Board {
  }
  static {
   Board.canvas = document.getElementById('board');
-  Board.context = Board.canvas.getContext("2d");
  }
 }
 class Control {
