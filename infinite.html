@@ -124,6 +124,27 @@ class Level {
  static #Mine(x,y) { return Level.columns[x].cells[y].mine ? 1 : 0; }
  static { for (var i=0; i<Level.width; i++) Level.columns.push(new Column(Level.height)); }
 }
+class Cursor {
+ point;
+ style;
+ constructor(s,p) {this.style=s; this.point=p;}
+ static styles = Object.freeze({ none:0, left:1, right:2, flag:3, mine:4 })
+ static #gradients = [[],
+  [[0/7, "#FF000000"],[4/7, "#FF000040"],[7/7, "#FF000010"]],
+  [[0/7, "#00FF0000"],[4/7, "#00FF0040"],[7/7, "#00FF0010"]],
+  [[0/7, "#0000FF00"],[4/7, "#0000FF40"],[7/7, "#0000FF10"]],
+  [[0/7, "#FF00FF00"],[4/7, "#FF00FF40"],[7/7, "#FF00FF10"]]];
+ static Draw(c) {
+  var s = Side.Cursor();
+  if ((s != undefined) && (s.style != Cursor.styles.none) && (s.point != undefined)) {
+   var r = Math.min(window.innerWidth, window.innerHeight) / 6;
+   var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
+   for (var i=0; i<3; i++) g.addColorStop(Cursor.#gradients[s.style][i][0], Cursor.#gradients[s.style][i][1]);
+   c.fillStyle = g;
+   c.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  }
+ }
+}
 class Side {
  static side = Object.freeze({ left:0, right:1, mouse:2 })
  static #left; 
@@ -146,12 +167,21 @@ class Side {
   if (Side.#right.#IsDown()) return Side.#left;
   if (Side.#left.#IsDown()) return Side.#right;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
- } 
+ }
+ static Cursor() {
+  if (Side.#mouse.#focussed)  return new Cursor(Cursor.styles.flag, Side.#mouse.#point);
+  if (Side.#mouse.#scrolling) return new Cursor(Cursor.styles.mine, Side.#mouse.#point);
+  if (Side.#left.#focussed)   return new Cursor(Cursor.styles.flag, Side.#left.#point);
+  if (Side.#right.#focussed)  return new Cursor(Cursor.styles.mine, Side.#right.#point);
+  if (Side.#left.#scrolling)  return new Cursor(Cursor.styles.left, Side.#right.#point);
+  if (Side.#right.#scrolling) return new Cursor(Cursor.styles.right, Side.#left.#point);
+  return undefined;
+ }
  static Down(e) {
   var p = Side.#Pointer(e);
   p.#Focus();
   p.#e = e;
-  p.#point = undefined;
+  p.#point = new Point(e);
   redraw = true;
  }
  #Scrollling() {
@@ -200,6 +230,12 @@ class Side {
   p.#focussed = false;
   p.#scrolling = false;
   redraw = true;
+ }
+ static Focussed() {
+  if (Side.#left.#focussed) return Side.#left.#point;
+  if (Side.#right.#focussed) return Side.#right.#point;
+  if (Side.#mouse.#focussed) return Side.#mouse.#point;
+  return undefined;
  }
  static {
   Side.#left  = new Side(Side.side.left );
@@ -292,6 +328,17 @@ class Board {
   for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.columns[x].cells[y]), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
+  // draw the finger Focus
+  Cursor.Draw(Board.image.context);
+  //var p = Side.Focussed();
+  //if (p != undefined) {
+  // var r = Math.min(window.innerWidth, window.innerHeight) / 6;
+  // var g = Board.image.context.createRadialGradient(p.x, p.y, r, p.x, p.y, r*2);
+  // g.addColorStop(0/7, "#FF000000"); g.addColorStop(4/7, "#FF000040"); g.addColorStop(7/7, "#FF000010");
+  // Board.image.context.fillStyle = g;
+  // Board.image.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  //}
+  // donezo
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
  static Resize() {
