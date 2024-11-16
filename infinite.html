@@ -161,11 +161,7 @@ class Side {
  static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
-  Console.log("before = " + d + ", after = " + Side.#Distance() + ", diff = " + direction);
-  if (direction < 0)
-   View.Out();
-  else
-   View.In();
+  if (direction < 0) View.Out(); else if (direction > 0) View.In();
   Side.#right.#point=Side.#left.#point=undefined;
  }
  static Move(e) {
