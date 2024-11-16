@@ -281,10 +281,11 @@ class Board {
  static DecX() {if (Level.Left(Board.x)) Board.x--;}
  static IncY() {if (Level.Down(Board.y+View.high)) Board.y++;}
  static DecY() {if (Level.Up(Board.y)) Board.y--;}
- static Setup() {
+ static Onload() {
   View.Size();
   Board.x = Math.floor((Level.width - View.wide)/2);
   Board.y = Math.floor((Level.height - View.high)/2);
+  Board.canvas = document.getElementById('board');
   Board.context = Board.canvas.getContext("2d");
   Board.Resize();
  }
@@ -302,12 +303,9 @@ class Board {
   Board.canvas.setAttribute("width", window.innerWidth);
   Board.canvas.setAttribute("height", window.innerHeight);
  }
- static {
-  Board.canvas = document.getElementById('board');
- }
 }
 class Control {
- static {
+ static Onload() {
   window.addEventListener("resize",            function(e) {try {View.Resize(e);                    } catch(x){}});
   window.addEventListener("pointerdown",       function(e) {try {Side.Down(e);   e.preventDefault();} catch(x){}});
   window.addEventListener("pointermove",       function(e) {try {Side.Move(e);   e.preventDefault();} catch(x){}});
@@ -325,12 +323,13 @@ function twentyfivehertz() {
   redraw = false;
  }
 }
-function startup() {
- Board.Setup();
+function Onload() {
+ Board.Onload();
+ Control.Onload();
  setInterval(function(){try {twentyfivehertz();} catch(x){}}, 40);
  window.scrollbars.visible = false;
 }
-window.onload = startup;
+window.onload = Onload;
 console.log('Sweeper started');
 </script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
 <body><canvas id="board" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
