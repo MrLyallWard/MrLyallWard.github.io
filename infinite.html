@@ -133,15 +133,15 @@ class Cursor {
  state;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/7, "#00FF0080"],[1/7, "#00FF0008"],[2/7, "#00FF0000"]], [[3/7, "#FF000000"],[4/7, "#FF0000C0"],[6/7, "#FF0000C0"],[7/7, "#FF000000"]]], //left
-  [[[0/7, "#FF000080"],[1/7, "#FF000008"],[2/7, "#FF000000"]], [[3/7, "#00FF0000"],[4/7, "#00FF00C0"],[6/7, "#00FF00C0"],[7/7, "#00FF0000"]]], //right
-  [[[0/7, "#0000FF80"],[1/7, "#0000FF08"],[2/7, "#0000FF00"]], [[3/7, "#00FFFF00"],[4/7, "#00FFFFC0"],[6/7, "#00FFFFC0"],[7/7, "#00FFFF00"]]]];//mouse
+  [[[0/7, "#00FF0080"],[1/7, "#00FF0020"],[2/7, "#00FF0000"]], [[2/7, "#FF000000"],[4/7, "#FF000080"],[5/7, "#FF0000C0"],[7/7, "#FF000000"]]], //left
+  [[[0/7, "#FF000080"],[1/7, "#FF000020"],[2/7, "#FF000000"]], [[2/7, "#00FF0000"],[4/7, "#00FF0080"],[5/7, "#00FF00C0"],[7/7, "#00FF0000"]]], //right
+  [[[0/7, "#0000FF80"],[1/7, "#0000FF20"],[2/7, "#0000FF00"]], [[2/7, "#00FFFF00"],[4/7, "#00FFFF80"],[5/7, "#00FFFFC0"],[7/7, "#00FFFF00"]]]];//mouse
  static Draw(c) {
   var s = Cursor.Choice();
   if (s != undefined) {
    var a = Cursor.#sides[s.style][s.state];
    if (a.length>0) {
-    var r = Math.min(window.innerWidth, window.innerHeight) / 6;
+    var r = Math.min(window.innerWidth, window.innerHeight) / 8;
     var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
     for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
     c.fillStyle = g;
