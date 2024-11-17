@@ -132,14 +132,14 @@ class Cursor {
  style;
  state;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
- static #sides = [
-  [[[0/7, "#FF000000"],[4/7, "#FF000040"],[7/7, "#FF000010"]], [[0/7, "#00FF0000"],[4/7, "#00FF0040"],[7/7, "#00FF0010"]]],
-  [[[0/7, "#0000FF00"],[4/7, "#0000FF40"],[7/7, "#0000FF10"]], [[0/7, "#FF00FF00"],[4/7, "#FF00FF40"],[7/7, "#FF00FF10"]]],
-  [[[0/7, "#0000FF00"],[4/7, "#0000FF40"],[7/7, "#0000FF10"]], [[0/7, "#FF00FF00"],[4/7, "#FF00FF40"],[7/7, "#FF00FF10"]]]];
+ static #sides = [        // focussed                                                 // scrolling  
+  [[[0/7, "#00FF0080"],[1/7, "#00FF0008"],[2/7, "#00FF0000"]], [[0/7, "#FF000000"],[4/7, "#FF000040"],[7/7, "#FF000020"]]], //left
+  [[[0/7, "#FF000080"],[1/7, "#FF000008"],[2/7, "#FF000000"]], [[0/7, "#00FF0000"],[4/7, "#00FF0040"],[7/7, "#00FF0020"]]], //right
+  [[[0/7, "#0000FF80"],[1/7, "#0000FF08"],[2/7, "#0000FF00"]], [[0/7, "#00FFFF00"],[4/7, "#00FFFF40"],[7/7, "#00FFFF20"]]]];//mouse
  static Draw(c) {
   var s = Cursor.Choice();
   if (s != undefined) {
-   var r = Math.min(window.innerWidth, window.innerHeight) / 6;
+   var r = Math.min(window.innerWidth, window.innerHeight) / 7;
    var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
    var a = Cursor.#sides[s.style][s.state];
    for (var i=0; i<3; i++) g.addColorStop(a[i][0], a[i][1]);
