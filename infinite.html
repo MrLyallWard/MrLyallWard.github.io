@@ -133,25 +133,23 @@ class Cursor {
  state;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/7, "#00FF0080"],[1/7, "#00FF0008"],[2/7, "#00FF0000"]], [[0/7, "#FF000000"],[4/7, "#FF000040"],[7/7, "#FF000020"]]], //left
-  [[[0/7, "#FF000080"],[1/7, "#FF000008"],[2/7, "#FF000000"]], [[0/7, "#00FF0000"],[4/7, "#00FF0040"],[7/7, "#00FF0020"]]], //right
-  [[[0/7, "#0000FF80"],[1/7, "#0000FF08"],[2/7, "#0000FF00"]], [[0/7, "#00FFFF00"],[4/7, "#00FFFF40"],[7/7, "#00FFFF20"]]]];//mouse
+  [[[0/7, "#00FF0080"],[1/7, "#00FF0008"],[2/7, "#00FF0000"]], [[3/7, "#FF000000"],[4/7, "#FF0000C0"],[6/7, "#FF0000C0"],[7/7, "#FF000000"]]], //left
+  [[[0/7, "#FF000080"],[1/7, "#FF000008"],[2/7, "#FF000000"]], [[3/7, "#00FF0000"],[4/7, "#00FF00C0"],[6/7, "#00FF00C0"],[7/7, "#00FF0000"]]], //right
+  [[[0/7, "#0000FF80"],[1/7, "#0000FF08"],[2/7, "#0000FF00"]], [[3/7, "#00FFFF00"],[4/7, "#00FFFFC0"],[6/7, "#00FFFFC0"],[7/7, "#00FFFF00"]]]];//mouse
  static Draw(c) {
   var s = Cursor.Choice();
   if (s != undefined) {
-   var r = Math.min(window.innerWidth, window.innerHeight) / 7;
-   var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
    var a = Cursor.#sides[s.style][s.state];
-   for (var i=0; i<3; i++) g.addColorStop(a[i][0], a[i][1]);
-   c.fillStyle = g;
-   c.fillRect(0, 0, window.innerWidth, window.innerHeight);
-  }
- }
+   if (a.length>0) {
+    var r = Math.min(window.innerWidth, window.innerHeight) / 6;
+    var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
+    for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
+    c.fillStyle = g;
+    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } } }
  static Choice() {
   for (var i=0; i<Cursor.cursors.length;i++) if (Cursor.cursors[i].Focussed() ) return Cursor.cursors[i];
   for (var i=0; i<Cursor.cursors.length;i++) if (Cursor.cursors[i].Scrolling()) return Cursor.cursors[i];
-  return undefined;
- }
+  return undefined; }
  Update(e)   {this.point.x = e.offsetX; this.point.y = e.offsetY;}
  Focus()     {this.state = Cursor.states.focussed;}
  Scroll()    {this.state = Cursor.states.scrolling;}
