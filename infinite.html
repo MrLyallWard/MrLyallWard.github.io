@@ -83,6 +83,7 @@ class Cell {
  flagged = false;
  demined = false;
  death = false;
+ solving = false;
  proximity = -1;
  constructor() {
   Cell.#total++;
@@ -108,21 +109,29 @@ class Column {
 class Level {
  static width = 100;
  static height = 100;
- static columns = [];
- static Left(x)  { if (x < 3)              { Level.columns.splice(0, 0, new Column(Level.height));                 Level.width++;  return false; } return true;}
- static Right(x) { if (x > Level.width-3)  { Level.columns.push(new Column(this.height));                          Level.width++;                } return true;}
- static Up(y)    { if (y < 3)              { for (let c=0; c<Level.columns.length; c++) Level.columns[c].insert(); Level.height++; return false; } return true;}
- static Down(y)  { if (y > Level.height-3) { for (let c=0; c<Level.columns.length; c++) Level.columns[c].append(); Level.height++;               } return true;}
+ static #columns = [];
+ static Left(x)  { if (x < 3)              { Level.#columns.splice(0, 0, new Column(Level.height));                 Level.width++;  return false; } return true;}
+ static Right(x) { if (x > Level.width-3)  { Level.#columns.push(new Column(this.height));                          Level.width++;                } return true;}
+ static Up(y)    { if (y < 3)              { for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].insert(); Level.height++; return false; } return true;}
+ static Down(y)  { if (y > Level.height-3) { for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].append(); Level.height++;               } return true;}
  static Step(x,y) {
-  if (Level.columns[x].cells[y].proximity == -1) {
-   Level.columns[x].cells[y].proximity  = Level.#Mine(x-1,y-1) + Level.#Mine(x  ,y-1) + Level.#Mine(x+1,y-1);
-   Level.columns[x].cells[y].proximity += Level.#Mine(x-1,y  ) + Level.#Mine(x  ,y  ) + Level.#Mine(x+1,y  );
-   Level.columns[x].cells[y].proximity += Level.#Mine(x-1,y+1) + Level.#Mine(x  ,y+1) + Level.#Mine(x+1,y+1); }
-  Level.columns[x].cells[y].Step(); }
- static Flag(x,y) {
-  Level.columns[x].cells[y].Flag(); } 
- static #Mine(x,y) { return Level.columns[x].cells[y].mine ? 1 : 0; }
- static { for (var i=0; i<Level.width; i++) Level.columns.push(new Column(Level.height)); }
+  if (Level.#columns[x].cells[y].proximity == -1) {
+   Level.#columns[x].cells[y].proximity  = Level.#Mine(x-1,y-1) + Level.#Mine(x,y-1) + Level.#Mine(x+1,y-1);
+   Level.#columns[x].cells[y].proximity += Level.#Mine(x-1,y  ) + Level.#Mine(x,y  ) + Level.#Mine(x+1,y  );
+   Level.#columns[x].cells[y].proximity += Level.#Mine(x-1,y+1) + Level.#Mine(x,y+1) + Level.#Mine(x+1,y+1);
+   Level.#columns[x].cells[y].solving = Level.#columns[x].cells[y].proximity == 0; }
+  Level.#columns[x].cells[y].Step(); }
+ static Flag(x,y) { Level.#columns[x].cells[y].Flag(); }
+ static Cell(x,y) {
+  if (Level.#columns[x].cells[y].solving) {
+   Level.Step(x-1,y-1) + Level.Step(x,y-1) + Level.Step(x+1,y-1);
+   Level.Step(x-1,y  ) +                     Level.Step(x+1,y  );
+   Level.Step(x-1,y+1) + Level.Step(x,y+1) + Level.Step(x+1,y+1);
+   Level.#columns[x].cells[y].solving = false; }
+  return Level.#columns[x].cells[y];
+ }
+ static #Mine(x,y) { return Level.#columns[x].cells[y].mine ? 1 : 0; }
+ static { for (var i=0; i<Level.width; i++) Level.#columns.push(new Column(Level.height)); }
 }
 class Cursor {
  static states = Object.freeze({ focussed:0, scrolling:1, nothing:2 })
@@ -133,9 +142,9 @@ class Cursor {
  state;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/7, "#00FF0080"],[1/7, "#00FF0020"],[2/7, "#00FF0000"]], [[2/7, "#FF000000"],[4/7, "#FF000080"],[5/7, "#FF0000C0"],[7/7, "#FF000000"]]], //left
-  [[[0/7, "#FF000080"],[1/7, "#FF000020"],[2/7, "#FF000000"]], [[2/7, "#00FF0000"],[4/7, "#00FF0080"],[5/7, "#00FF00C0"],[7/7, "#00FF0000"]]], //right
-  [[[0/7, "#0000FF80"],[1/7, "#0000FF20"],[2/7, "#0000FF00"]], [[2/7, "#00FFFF00"],[4/7, "#00FFFF80"],[5/7, "#00FFFFC0"],[7/7, "#00FFFF00"]]]];//mouse
+  [[[0/7, "#00FF0080"],[1/7, "#00FF0020"],[2/7, "#00FF0000"]], [[1/7, "#FF000000"],[3/7, "#FF000070"],[5/7, "#FF000070"],[7/7, "#FF000000"]]], //left
+  [[[0/7, "#FF000080"],[1/7, "#FF000020"],[2/7, "#FF000000"]], [[1/7, "#00FF0000"],[3/7, "#00FF0070"],[5/7, "#00FF0070"],[7/7, "#00FF0000"]]], //right
+  [[[0/7, "#0000FF80"],[1/7, "#0000FF20"],[2/7, "#0000FF00"]], [[1/7, "#00FFFF00"],[3/7, "#00FFFF70"],[5/7, "#00FFFF70"],[7/7, "#00FFFF00"]]]];//mouse
  static Draw(c) {
   var s = Cursor.Choice();
   if (s != undefined) {
@@ -311,7 +320,7 @@ class Board {
   Board.image.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
   for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
-    Board.image.context.drawImage(Squares.Image(Level.columns[x].cells[y]), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
+    Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
   Cursor.Draw(Board.image.context);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
