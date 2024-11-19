@@ -71,6 +71,57 @@ class Squares {
   Squares.#Blank(Squares.#images[11].context);  
   for (let a = 0; a < Squares.#font.length; a++) { Squares.#DrawFont(Squares.#font[a]); } }
 }
+class Num {
+ static #width = 416;
+ static #length = 736;
+ static #step = 32;
+ static #sets = [];
+ static #color = Object.freeze({ red:0, green:1, cyan:2, yellow:4 });
+ static #c = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, flag:10, tick:11, man:12, mine:13 });
+ static #font = [
+  [ 0x000000, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0x000000 ],   // 0
+  [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0x000000 ],   // 1
+  [ 0x000000, 0x0007FC, 0x200BFA, 0x301DF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DC06, 0x2FE802, 0x1FF000, 0x000000 ],   // 2
+  [ 0x000000, 0x000000, 0x200802, 0x301C06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0x000000 ],   // 3
+  [ 0x000000, 0x1FF000, 0x0FE800, 0x07DC00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x07DDF0, 0x0FEBF8, 0x1FF7FC, 0x000000 ],   // 4
+  [ 0x000000, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0x000000 ],   // 5
+  [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x301DF6, 0x200BFA, 0x0007FC, 0x000000 ],   // 6
+  [ 0x000000, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0x000000 ],   // 7
+  [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0x000000 ],   // 8
+  [ 0x000000, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0x000000 ],   // 9
+  [ 0x000000, 0x000000, 0x000000, 0x0080C0, 0x01C0C0, 0x01C1C0, 0x03E1C0, 0x03FFC0, 0x0001C0, 0x0000C0, 0x0000C0, 0x000000, 0x000000 ],   // flag
+  [ 0x000060, 0x000070, 0x000038, 0x00001C, 0x00000E, 0x00001E, 0x0000FC, 0x0007E0, 0x003F00, 0x01F800, 0x0FC000, 0x7E0000, 0x700000 ],   // tick
+  [ 0x000000, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0x000000 ],   // man
+  [ 0x03FFE0, 0x03F7E0, 0x034160, 0x0380E0, 0x033060, 0x033060, 0x020020, 0x030060, 0x030060, 0x0380E0, 0x034160, 0x03F7E0, 0x03FFE0 ], ];// mine
+ static #colors = [
+  [ "0xFF0000A0", "0x400000A0", "0x00000040", Num.#c.flag ], [ "0x00FF00A0", "0x004000A0", "0x00000040", Num.#c.man  ],
+  [ "0x40C0C0A0", "0x102020A0", "0x00000040", Num.#c.tick ], [ "0xFFFF00A0", "0x404000A0", "0x00000040", Num.#c.mine ] ];
+ static #DrawCharacter(c, p, f, b=undefined) {
+  for (let i = 0; i < p.length; i++) {
+   var pixels = p[i];
+   for (let y = 0; y < Num.#length; y += Num.#step, pixels <<= 1) {
+    c.fillStyle = ((pixels & 0x400000) > 0) ? f : b;
+	if (c.fillStyle != undefined) c.fillRect(i*Num.#step, y, Num.#step, Num.#step); } } }
+ static {
+  for (let i=0;i<Num.#colors.length;i++) {
+   var set = [];
+   var col = Num.#colors[i];
+   for (let j=0;j<12;j++) set.push(new Image(Num.#width, Num.#length));
+   Num.#DrawCharacter(set[10].context, Num.#font[9], col[1], col[2]);
+   Num.#DrawCharacter(set[11].context, Num.#font[col[3]], col[1], col[2]);
+   for (let k=0;k<10;k++) {
+    set[k].context.drawImage(set[10].canvas, 0, 0);
+	Num.#DrawCharacter(set[k].context, Num.#font[k], col[0]); }
+   Num.#sets.push(set); } } }
+class Score {
+ static steps = 0;
+ static lives = 3;
+ static steps;
+ static mines;
+ static Step(s) {Score.steps += s;}
+ static Death(cell) {if (cell.mine) {cell.death = true; if (Score.lives > 0) Score.lives--;} return cell.death;}
+ static RestartCounters() {Score.flags = 0; Score.mines = 0;}
+}
 class Cell {
  static #high = 0.26;
  static #density = 0.25;
@@ -91,12 +142,7 @@ class Cell {
   Cell.#bias = ((Cell.#mines/Cell.#total)>Cell.#density) ? Cell.#low : Cell.#high;
  }
  Unmine() { this.mine = false; }
- Step() {
-  if ((!this.flagged) & (!this.demined)) {
-   this.cleared = true; 
-   if (this.mine) this.death = true; 
-  }
- }
+ Step() { if ((!this.flagged) & (!this.demined) & (!this.cleared)) { this.cleared = true; if (!Score.Death(this)) return 1; } return 0; }
  Flag() { if (!this.cleared) this.flagged = !this.flagged; }
  Demine() { if (!this.demined & this.flagged) this.demined = true; }
 }
@@ -110,10 +156,10 @@ class Level {
  static width = 100;
  static height = 100;
  static #columns = [];
- static Left(x)  { if (x < 3)              { Level.#columns.splice(0, 0, new Column(Level.height));                 Level.width++;  return false; } return true;}
- static Right(x) { if (x > Level.width-3)  { Level.#columns.push(new Column(this.height));                          Level.width++;                } return true;}
- static Up(y)    { if (y < 3)              { for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].insert(); Level.height++; return false; } return true;}
- static Down(y)  { if (y > Level.height-3) { for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].append(); Level.height++;               } return true;}
+ static Left(x)  {if (x < 3)              {Level.#columns.splice(0, 0, new Column(Level.height));                  Level.width++;  return false;} return true;}
+ static Right(x) {if (x > Level.width-3)  {Level.#columns.push(new Column(this.height));                           Level.width++;               } return true;}
+ static Up(y)    {if (y < 3)              {for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].insert(); Level.height++; return false;} return true;}
+ static Down(y)  {if (y > Level.height-3) {for (let c=0; c<Level.#columns.length; c++) Level.#columns[c].append(); Level.height++;              } return true;}
  static Step(x,y) {
   if (Level.#columns[x].cells[y].proximity == -1) {
    Level.#columns[x].cells[y].proximity  = Level.#Mine(x-1,y-1) + Level.#Mine(x,y-1) + Level.#Mine(x+1,y-1);
@@ -142,16 +188,15 @@ class Cursor {
  state;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/7, "#00FF0080"],[1/7, "#00FF0020"],[2/7, "#00FF0000"]], [[1/7, "#FF000000"],[3/7, "#FF000070"],[5/7, "#FF000070"],[7/7, "#FF000000"]]], //left
-  [[[0/7, "#FF000080"],[1/7, "#FF000020"],[2/7, "#FF000000"]], [[1/7, "#00FF0000"],[3/7, "#00FF0070"],[5/7, "#00FF0070"],[7/7, "#00FF0000"]]], //right
-  [[[0/7, "#0000FF80"],[1/7, "#0000FF20"],[2/7, "#0000FF00"]], [[1/7, "#00FFFF00"],[3/7, "#00FFFF70"],[5/7, "#00FFFF70"],[7/7, "#00FFFF00"]]]];//mouse
+  [[[0/8, "#00FF0080"],[1/8, "#00FF0080"],[4/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]]], //left
+  [[[0/8, "#FF000080"],[1/8, "#FF000080"],[4/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]]], //right
+  [[[0/8, "#0030FF80"],[1/8, "#0040FF80"],[4/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]]]];//mouse
  static Draw(c) {
   var s = Cursor.Choice();
   if (s != undefined) {
    var a = Cursor.#sides[s.style][s.state];
    if (a.length>0) {
-    var r = Math.min(window.innerWidth, window.innerHeight) / 8;
-    var g = c.createRadialGradient(s.point.x, s.point.y, r, s.point.x, s.point.y, r*2);
+    var g = c.createRadialGradient(s.point.x, s.point.y, 0, s.point.x, s.point.y, Math.min(window.innerWidth, window.innerHeight) / 4);
     for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
     c.fillStyle = g;
     c.fillRect(0, 0, window.innerWidth, window.innerHeight); } } }
@@ -222,7 +267,7 @@ class Side {
   var p = Side.#Pointer(e);
   if (p.#cursor.Focussed()) {
    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
-    Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
+    Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
    if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
     Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
   }
@@ -316,11 +361,13 @@ class Board {
  }
  static Redraw() {
   var X; var Y; var x; var y;
+  Score.RestartCounters();
   Board.image.context.fillStyle='#000000';
   Board.image.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
   for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
+  //draw the scores, if the fingers are not down
   Cursor.Draw(Board.image.context);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
