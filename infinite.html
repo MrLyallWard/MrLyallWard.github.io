@@ -96,7 +96,7 @@ class Num {
  static #colors = [
   [ "0xFF0000A0", "0x400000A0", "0x00000040", Num.#c.flag ], [ "0x00FF00A0", "0x004000A0", "0x00000040", Num.#c.man  ],
   [ "0x40C0C0A0", "0x102020A0", "0x00000040", Num.#c.tick ], [ "0xFFFF00A0", "0x404000A0", "0x00000040", Num.#c.mine ] ];
- static #DrawCharacter(c, p, f, b=undefined) {
+ static #DrawPixels(c, p, f, b=undefined) {
   for (let i = 0; i < p.length; i++) {
    var pixels = p[i];
    for (let y = 0; y < Num.#length; y += Num.#step, pixels <<= 1) {
@@ -107,11 +107,11 @@ class Num {
    var set = [];
    var col = Num.#colors[i];
    for (let j=0;j<12;j++) set.push(new Image(Num.#width, Num.#length));
-   Num.#DrawCharacter(set[10].context, Num.#font[9], col[1], col[2]);
-   Num.#DrawCharacter(set[11].context, Num.#font[col[3]], col[1], col[2]);
+   Num.#DrawPixels(set[10].context, Num.#font[     8], col[1], col[2]);
+   Num.#DrawPixels(set[11].context, Num.#font[col[3]], col[0], col[2]);
    for (let k=0;k<10;k++) {
     set[k].context.drawImage(set[10].canvas, 0, 0);
-	Num.#DrawCharacter(set[k].context, Num.#font[k], col[0]); }
+	Num.#DrawPixels(set[k].context, Num.#font[k], col[0]); }
    Num.#sets.push(set); } } }
 class Score {
  static steps = 0;
@@ -123,9 +123,12 @@ class Score {
  static RestartCounters() {Score.flags = 0; Score.mines = 0;}
 }
 class Cell {
- static #high = 0.26;
- static #density = 0.25;
- static #low = 0.24;
+ //static #high = 0.26;
+ //static #density = 0.25;
+ //static #low = 0.24;
+ static #high = 0.06;
+ static #density = 0.05;
+ static #low = 0.04;
  static #bias = Cell.#density;
  static #mines = 0;
  static #total = 0;
@@ -173,7 +176,8 @@ class Level {
    Level.Step(x-1,y-1) + Level.Step(x,y-1) + Level.Step(x+1,y-1);
    Level.Step(x-1,y  ) +                     Level.Step(x+1,y  );
    Level.Step(x-1,y+1) + Level.Step(x,y+1) + Level.Step(x+1,y+1);
-   Level.#columns[x].cells[y].solving = false; }
+   Level.#columns[x].cells[y].solving = false; 
+   clearing = true; }
   return Level.#columns[x].cells[y];
  }
  static #Mine(x,y) { return Level.#columns[x].cells[y].mine ? 1 : 0; }
@@ -388,12 +392,14 @@ class Control {
  }
 }
 
-var redraw = true;
+var redraw = false;
+var clearing = false;
 
 function twentyfivehertz() {
- if (redraw == true) {
+ if (redraw || clearing) {
   Board.Redraw();
-  redraw = false;
+  redraw = clearing;
+  clearing = false;
  }
 }
 function Onload() {
