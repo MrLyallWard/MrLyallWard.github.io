@@ -222,9 +222,13 @@ class Side {
  #point;
  #cursor;
  constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor;}
- #Focus() { Side.#left.#cursor.focus = Side.#right.#cursor.focus = Side.#mouse.#cursor.focus = false; this.#cursor.Focus(); }
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
+ #Focus() {
+  if ((Side.#left == this) && Side.#right.#cursor.Focussed()) Side.#right.#cursor.Scroll();
+  if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
+  this.#cursor.Focus(); 
+  }
  #Scrolling() {
   var s = this.#cursor.Scrolling() || !(Side.#left.#cursor.Scrolling() || Side.#right.#cursor.Scrolling() || Side.#mouse.#cursor.Scrolling())
   if (s) this.#cursor.Scroll();
