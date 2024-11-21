@@ -169,42 +169,41 @@ class Level {
   Level.#columns[x].cells[y].Step(); }
  static Flag(x,y) { Level.#columns[x].cells[y].Flag(); }
  static Cell(x,y) {
-  if (Level.#columns[x].cells[y].solving) {
-   Level.Step(x-1,y-1) + Level.Step(x,y-1) + Level.Step(x+1,y-1);
-   Level.Step(x-1,y  ) +                     Level.Step(x+1,y  );
-   Level.Step(x-1,y+1) + Level.Step(x,y+1) + Level.Step(x+1,y+1);
-   Level.#columns[x].cells[y].solving = false; 
-   clearing = true; }
-  return Level.#columns[x].cells[y];
- }
+  var c = Level.#columns[x].cells[y];
+  Level.#Clearing(c,x,y);
+  Side.Boundaries(c,x,y);
+  return c; }
+ static #Clearing(c,x,y) {
+  if (c.solving) {
+   Level.Step(x-1,y-1); Level.Step(x,y-1); Level.Step(x+1,y-1); Level.Step(x-1,y); Level.Step(x+1,y); Level.Step(x-1,y+1); Level.Step(x,y+1); Level.Step(x+1,y+1);
+   c.solving = false; clearing = true; } }
  static #Mine(x,y) { return Level.#columns[x].cells[y].mine ? 1 : 0; }
- static { for (var i=0; i<Level.width; i++) Level.#columns.push(new Column(Level.height)); }
-}
+ static #FirstCells() {for (var i=0; i<Level.width; i++) Level.#columns.push(new Column(Level.height));}
+ static #FirstStep() {
+  for (let x = (Level.width-6)/2; x < (Level.width+6)/2; x++) for (let y = (Level.height-6)/2; y < (Level.height+6)/2; y++) Level.#columns[x].cells[y].mine = false;
+  Level.#columns[Level.width/2].cells[Level.height/2].cleared = true;
+  Level.Step(Level.width/2, Level.height/2); }
+ static { Level.#FirstCells(); Level.#FirstStep(); } }
 class Cursor {
  static states = Object.freeze({ focussed:0, scrolling:1, nothing:2 })
- static styles = Object.freeze({ none:0, left:1, right:2, flag:3, mine:4 })
+ //static styles = Object.freeze({ none:0, left:1, right:2, flag:3, mine:4 })
  static cursors = [];
  point;
  style;
- state;
+ state = Cursor.states.nothing;;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]]], //left
-  [[[0/8, "#FF000080"],[2/8, "#FF000080"],[5/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]]], //right
-  [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]]]];//mouse
- static Draw(c) {
-  var s = Cursor.Choice();
-  if (s != undefined) {
-   var a = Cursor.#sides[s.style][s.state];
-   if (a.length>0) {
-    var g = c.createRadialGradient(s.point.x, s.point.y, 0, s.point.x, s.point.y, Math.min(window.innerWidth, window.innerHeight) / 4);
-    for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
-    c.fillStyle = g;
-    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } } }
- static Choice() {
-  for (var i=0; i<Cursor.cursors.length;i++) if (Cursor.cursors[i].Focussed() ) return Cursor.cursors[i];
-  for (var i=0; i<Cursor.cursors.length;i++) if (Cursor.cursors[i].Scrolling()) return Cursor.cursors[i];
-  return undefined; }
+  [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]],[]], //left
+  [[[0/8, "#FF000080"],[2/8, "#FF000080"],[5/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]],[]], //right
+  [[],[],[]]];                                                                                                                                    //mouse
+//[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[]]];//mouse
+ static #Draw(c, a) {
+  if (a.length>0) {
+   var g = c.createRadialGradient(s.point.x, s.point.y, 0, s.point.x, s.point.y, Math.min(window.innerWidth, window.innerHeight) / 4);
+   for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
+   c.fillStyle = g;
+   c.fillRect(0, 0, window.innerWidth, window.innerHeight); } }
+ static Draw(c) { for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.#sides[Cursor.cursors[i].style][Cursor.cursors[i].state]); }
  Update(e)   {this.point.x = e.offsetX; this.point.y = e.offsetY;}
  Focus()     {this.state = Cursor.states.focussed;}
  Scroll()    {this.state = Cursor.states.scrolling;}
@@ -217,6 +216,10 @@ class Side {
  static #left; 
  static #right;
  static #mouse;
+ static canUp;
+ static canDown;
+ static canLeft;
+ static canRight;
  #side;
  #e;
  #point;
@@ -248,6 +251,15 @@ class Side {
   if (direction < 0) View.Out(); else if (direction > 0) View.In();
   Side.#right.#point=Side.#left.#point=undefined;
  }
+ static RestartBoundaries() { Side.canUp = Side.canDown = Side.canLeft = Side.canRight = false; }
+ static Boundaries(c,x,y) {
+  if (c.cleared) {
+   Side.canUp    |= (y==Board.y);
+   Side.canDown  |= (y==(Board.y+View.high-1));
+   Side.canLeft  |= (x==Board.x);
+   Side.canRight |= (x==(Board.x+View.wide-1));
+  }
+ }
  static Down(e) {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
@@ -263,10 +275,10 @@ class Side {
   if (!p.#IsDown()) return;
   var d = Side.#Distance();
   if (p.#point==undefined) p.#point = new Point(e);
-  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrolling()) Board.IncX(); else Side.#Zoom(d); }
-  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrolling()) Board.DecX(); else Side.#Zoom(d); }
-  if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrolling()) Board.IncY();                     }
-  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrolling()) Board.DecY();                     }
+  if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrolling() && Side.canRight) Board.IncX(); else Side.#Zoom(d); }
+  if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrolling() && Side.canLeft ) Board.DecX(); else Side.#Zoom(d); }
+  if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrolling() && Side.canDown ) Board.IncY();                     }
+  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrolling() && Side.canUp   ) Board.DecY();                     }
  }
  static Up(e) {
   var p = Side.#Pointer(e);
@@ -350,8 +362,8 @@ class Board {
  static context;
  static image;
  static Wheel(e) {
-  if (e.deltaX != 0) { redraw = true; if (e.deltaX>0) Board.DecX(); else Board.IncX(); }
-  if (e.deltaY != 0) { redraw = true; if (e.deltaY<0) Board.DecY(); else Board.IncY(); } }
+  if (e.deltaX != 0) { redraw = true; if (e.deltaX>0) {if (Side.canLeft) Board.DecX();} else {if (Side.canRight) Board.IncX();} }
+  if (e.deltaY != 0) { redraw = true; if (e.deltaY<0) {if (Side.canUp  ) Board.DecY();} else {if (Side.canDown ) Board.IncY();} } }
  static IncX() {if (Level.Right(Board.x+View.wide)) Board.x++;}
  static DecX() {if (Level.Left(Board.x)) Board.x--;}
  static IncY() {if (Level.Down(Board.y+View.high)) Board.y++;}
@@ -365,12 +377,13 @@ class Board {
   Board.Resize();
  }
  static Redraw() {
-  var X; var Y; var x; var y;
+  var X; var Y;
   Score.RestartCounters();
+  Side.RestartBoundaries();
   Board.image.context.fillStyle='#000000';
   Board.image.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
-  for (y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
-   for (x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
+  for (let y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
+   for (let x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
   //draw the scores, if the fingers are not down
   Cursor.Draw(Board.image.context);
