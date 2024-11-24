@@ -72,11 +72,13 @@ class Squares {
   for (let a = 0; a < Squares.#font.length; a++) { Squares.#DrawFont(Squares.#font[a]); } }
 }
 class Num {
- static #width = 416;
- static #length = 736;
- static #step = 32;
+ static color = Object.freeze({ red:0, green:1, cyan:2, yellow:4 });
+ static width = 208;
+ static length = 368;
+ static #step = 16;
  static #sets = [];
- static #color = Object.freeze({ red:0, green:1, cyan:2, yellow:4 });
+ static x;
+ static y;
  static #c = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, flag:10, tick:11, man:12, mine:13 });
  static #font = [
   [ 0x000000, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0x000000 ],   // 0
@@ -99,20 +101,39 @@ class Num {
  static #DrawPixels(c, p, f, b=undefined) {
   for (let i = 0; i < p.length; i++) {
    var pixels = p[i];
-   for (let y = 0; y < Num.#length; y += Num.#step, pixels <<= 1) {
+   for (let y = 0; y < Num.length; y += Num.#step, pixels <<= 1) {
     c.fillStyle = ((pixels & 0x400000) > 0) ? f : b;
 	if (c.fillStyle != undefined) c.fillRect(i*Num.#step, y, Num.#step, Num.#step); } } }
  static {
   for (let i=0;i<Num.#colors.length;i++) {
    var set = [];
    var col = Num.#colors[i];
-   for (let j=0;j<12;j++) set.push(new Image(Num.#width, Num.#length));
+   for (let j=0;j<12;j++) set.push(new Image(Num.width, Num.length));
    Num.#DrawPixels(set[10].context, Num.#font[     8], col[1], col[2]);
    Num.#DrawPixels(set[11].context, Num.#font[col[3]], col[0], col[2]);
    for (let k=0;k<10;k++) {
     set[k].context.drawImage(set[10].canvas, 0, 0);
 	Num.#DrawPixels(set[k].context, Num.#font[k], col[0]); }
-   Num.#sets.push(set); } } }
+   Num.#sets.push(set); } } 
+ static Show(c,n) {
+  var set=Num.#sets[c];
+  var s=[];
+  for (let i=0; i<6; i++) {
+   var d = n%10;
+   n = (n-d)/10;
+   s.splice(0,0,((d==0)&&(n==0))?set[10]:set[d]);
+  }
+  s.push(set[11]);
+  Num.x = Math.floor(View.width/32);
+  Num.y = (Num.x*Num.length)/Num.width;
+  switch(c) {
+   case Num.color.red    : Board.DrawRight(0,0,s); break;
+   case Num.color.green  : Board.DrawRight(0,0,s); break;
+   case Num.color.cyan   : Board.DrawRight(0,0,s); break;
+   case Num.color.yellow : Board.DrawRight(0,0,s); break;
+  }
+ }
+}
 class Score {
  static steps = 0;
  static lives = 3;
@@ -153,8 +174,8 @@ class Column {
  append(){this.cells.push(new Cell());}
 }
 class Level {
- static width = 100;
- static height = 100;
+ static width = 256;
+ static height = 256;
  static #columns = [];
  static Left(x)  {if (x < 3)              {Level.#columns.splice(0, 0, new Column(Level.height));                  Level.width++;  return false;} return true;}
  static Right(x) {if (x > Level.width-3)  {Level.#columns.push(new Column(this.height));                           Level.width++;               } return true;}
@@ -385,9 +406,15 @@ class Board {
   for (let y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (let x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
-  //draw the scores, if the fingers are not down
+  Num.Show(Num.color.red, 123789);
   Cursor.Draw(Board.image.context);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
+ }
+ static DrawRight(x,y,images) {
+  Board.image.context.fillStyle = "green";
+  for (var i=0; i<images.length; i++,x+=Num.x)
+   //Board.image.context.fillRect(x, y, Num.x, Num.y);
+   Board.image.context.drawImage(images[i].canvas, 0, 0, Num.width, Num.length, x, y, Num.x, Num.y);
  }
  static Resize() {
   Board.image = new Image(window.innerWidth, window.innerHeight);
