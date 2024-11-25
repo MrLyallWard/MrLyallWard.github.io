@@ -188,8 +188,7 @@
     var x = i * Digits.step;
     for (let y = 0; y < Digits.length; y += Digits.step, pixels <<= 1) {
      c.fillStyle=((pixels & 0x400000) > 0)?f[3]:f[4];
-     c.fillRect(x, y, Digits.step, Digits.step);
-	 c.fill(); }}}
+     c.fillRect(x, y, Digits.step, Digits.step); }}}
   score(s, c, n, color, icon, offset = 0) {
    var dx = s.w/7;
    var dy = (dx*23)/13;
