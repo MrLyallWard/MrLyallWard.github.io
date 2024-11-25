@@ -124,10 +124,10 @@ class Num {
  static Show(c,n) {
   var set=Num.#sets[c];
   var s=[];
-  for (let i=0; i<6; i++) {
+  if (n==0) s.push(set[10]); else for (let i=0; n>0; i++) {
    var d = n%10;
    n = (n-d)/10;
-   s.splice(0,0,((d==0)&&(n==0))?set[10]:set[d]);
+   s.splice(0,0,set[d]);
   }
   s.push(set[11]);
   Num.x = Math.floor(View.width/24);
@@ -143,19 +143,29 @@ class Num {
 class Score {
  static steps = 0;
  static lives = 3;
- static steps;
+ static score = 0;
+ static flags;
  static mines;
  static Step(s) {Score.steps += s;}
  static Death(cell) {if (cell.mine) {cell.death = true; if (Score.lives > 0) Score.lives--;} return cell.death;}
  static RestartCounters() {Score.flags = 0; Score.mines = 0;}
+ static AddMine()   {Score.mines++;}
+ static AddFlag()   {Score.flags++;}
+ static Unflagged() {return Score.mines-Score.flags;}
+ static Cell(c) {
+  if (!c.cleared) {
+   if (c.mine   ) Score.mines++;
+   if (c.flagged) Score.flags++;
+  }
+ }
 }
 class Cell {
- static #high = 0.26;
+ static #high    = 0.26;
  static #density = 0.25;
- static #low = 0.24;
- static #bias = Cell.#density;
- static #mines = 0;
- static #total = 0;
+ static #low     = 0.24;
+ static #bias    = Cell.#density;
+ static #mines   = 0;
+ static #total   = 0;
  mine = false;
  cleared = false;
  flagged = false;
@@ -193,12 +203,13 @@ class Level {
    Level.#columns[x].cells[y].proximity += Level.#Mine(x-1,y  ) + Level.#Mine(x,y  ) + Level.#Mine(x+1,y  );
    Level.#columns[x].cells[y].proximity += Level.#Mine(x-1,y+1) + Level.#Mine(x,y+1) + Level.#Mine(x+1,y+1);
    Level.#columns[x].cells[y].solving = Level.#columns[x].cells[y].proximity == 0; }
-  Level.#columns[x].cells[y].Step(); }
+  return Level.#columns[x].cells[y].Step(); }
  static Flag(x,y) { Level.#columns[x].cells[y].Flag(); }
  static Cell(x,y) {
   var c = Level.#columns[x].cells[y];
   Level.#Clearing(c,x,y);
   Side.Boundaries(c,x,y);
+  Score.Cell(c);
   return c; }
  static #Clearing(c,x,y) {
   if (c.solving) {
@@ -293,8 +304,7 @@ class Side {
   p.#Focus();
   p.#e = e;
   p.#point = new Point(e);
-  redraw = true;
- }
+  redraw = true; }
  static Move(e) {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
@@ -305,8 +315,7 @@ class Side {
   if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; if (p.#Scrolling() && Side.canRight) Board.IncX(); else Side.#Zoom(d); }
   if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; if (p.#Scrolling() && Side.canLeft ) Board.DecX(); else Side.#Zoom(d); }
   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; if (p.#Scrolling() && Side.canDown ) Board.IncY();                     }
-  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrolling() && Side.canUp   ) Board.DecY();                     }
- }
+  if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrolling() && Side.canUp   ) Board.DecY();                     }}
  static Up(e) {
   var p = Side.#Pointer(e);
   if (p.#cursor.Focussed()) {
@@ -317,8 +326,8 @@ class Side {
   }
   p.#cursor.Release();
   p.#e = undefined;
-  redraw = true;
- }
+  redraw = true; }
+ static IsDown() { return Side.#left.#IsDown() || Side.#right.#IsDown() || Side.#mouse.#IsDown(); }
  static {
   Side.#left  = new Side(Side.side.left,  new Cursor(Side.side.left));
   Side.#right = new Side(Side.side.right, new Cursor(Side.side.right));
@@ -412,10 +421,12 @@ class Board {
   for (let y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (let x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
-  Num.Show(Num.color.red, 1234);
-  Num.Show(Num.color.green, 6789);
-  Num.Show(Num.color.cyan, 9876);
-  Num.Show(Num.color.yellow, 54321);
+  if (Side.IsDown()) Board.image.context.globalAlpha = 0.5;
+  Num.Show(Num.color.red,    Score.Unflagged());
+  Num.Show(Num.color.green,  Score.lives);
+  Num.Show(Num.color.cyan,   Score.steps);
+  Num.Show(Num.color.yellow, Score.score);
+  Board.image.context.globalAlpha = 1.0;
   Cursor.Draw(Board.image.context);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
