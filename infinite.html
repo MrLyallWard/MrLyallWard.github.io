@@ -121,7 +121,7 @@ class Num {
  static Show(c,n) {
   var set=Num.#sets[c];
   var s=[];
-  if (n==0) s.push(set[10]); else for (let i=0; n>0; i++) {
+  if (n==0) s.push(set[0]); else for (let i=0; n>0; i++) {
    var d = n%10;
    n = (n-d)/10;
    s.splice(0,0,set[d]);
@@ -203,7 +203,7 @@ class Level {
   Score.Cell(c);
   return c; }
  static #Clearing(c,x,y) {
-  if (c.solving) {
+  if (c.solving && !clearing) {
    Level.Step(x-1,y-1); Level.Step(x,y-1); Level.Step(x+1,y-1); Level.Step(x-1,y); Level.Step(x+1,y); Level.Step(x-1,y+1); Level.Step(x,y+1); Level.Step(x+1,y+1);
    c.solving = false; clearing = true; } }
  static #Mine(x,y) { return Level.#columns[x].cells[y].mine ? 1 : 0; }
