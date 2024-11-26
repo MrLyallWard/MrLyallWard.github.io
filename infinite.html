@@ -80,7 +80,8 @@ class Num {
  static #sets = [];
  static x;
  static y;
- static #c = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, flag:10, tick:11, man:12, mine:13 });
+ static #c = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, minus:10, flag:11, tick:12, man:13, mine:14 });
+ static #char = Object.freeze({ 0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, minus:10, zero:11, icon:12, end:13 });
  static #font = [
   [ 0x000000, 0x1FF7FC, 0x2FE3FA, 0x37C1F6, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x38000E, 0x37C1F6, 0x2FE3FA, 0x1FF7FC, 0x000000 ],   // 0
   [ 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x07C1F0, 0x0FE3F8, 0x1FF7FC, 0x000000 ],   // 1
@@ -92,11 +93,12 @@ class Num {
   [ 0x000000, 0x000000, 0x200000, 0x300000, 0x380000, 0x380000, 0x380000, 0x380000, 0x380000, 0x37C1F0, 0x2FE3F8, 0x1FF7FC, 0x000000 ],   // 7
   [ 0x000000, 0x1FF7FC, 0x2FEBFA, 0x37DDF6, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0x000000 ],   // 8
   [ 0x000000, 0x1FF000, 0x2FE802, 0x37DC06, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x381C0E, 0x37DDF6, 0x2FEBFA, 0x1FF7FC, 0x000000 ],   // 9
+  [ 0x000000, 0x000000, 0x000800, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x001C00, 0x000800, 0x000000, 0x000000 ],   // minus
   [ 0x000000, 0x000000, 0x000000, 0x0080C0, 0x01C0C0, 0x01C1C0, 0x03E1C0, 0x03FFC0, 0x0001C0, 0x0000C0, 0x0000C0, 0x000000, 0x000000 ],   // flag
   [ 0x000060, 0x000070, 0x000038, 0x00001C, 0x00000E, 0x00001E, 0x0000FC, 0x0007E0, 0x003F00, 0x01F800, 0x0FC000, 0x7E0000, 0x700000 ],   // tick
   [ 0x000000, 0x00FF00, 0x01FF00, 0x01C000, 0x1DFFFE, 0x3FFFFE, 0x3FFF00, 0x3FFFFE, 0x1DFFFE, 0x01C000, 0x01FF00, 0x00FF00, 0x000000 ],   // man
   [ 0x03FFE0, 0x03F7E0, 0x034160, 0x0380E0, 0x033060, 0x033060, 0x020020, 0x030060, 0x030060, 0x0380E0, 0x034160, 0x03F7E0, 0x03FFE0 ], ];// mine
- static #colors = [
+  static #colors = [
   [ "#FF0000FF", "#40000080", "#00000080", Num.#c.flag ], [ "#00FF00FF", "#00400080", "#00000080", Num.#c.man  ],
   [ "#00F0F0FF", "#10404080", "#00000080", Num.#c.tick ], [ "#FFFF00FF", "#40400080", "#00000080", Num.#c.mine ] ];
  static #DrawPixels(c, p, f, b=undefined) {
@@ -111,25 +113,25 @@ class Num {
   for (let i=0;i<Num.#colors.length;i++) {
    var set = [];
    var col = Num.#colors[i];
-   for (let j=0;j<12;j++) set.push(new Image(Num.width, Num.length));
-   Num.#DrawPixels(set[10].context, Num.#font[     8], col[1], col[2]);
-   Num.#DrawPixels(set[11].context, Num.#font[col[3]], col[0], col[2]);
-   for (let k=0;k<10;k++) {
-    set[k].context.drawImage(set[10].canvas, 0, 0);
+   for (let j=0; j<Num.#char.end; j++) set.push(new Image(Num.width, Num.length));
+   Num.#DrawPixels(set[Num.#char.zero].context, Num.#font[     8], col[1], col[2]);
+   Num.#DrawPixels(set[Num.#char.icon].context, Num.#font[col[3]], col[0], col[2]);
+   for (let k=0;k<Num.#char.icon;k++) {
+    set[k].context.drawImage(set[Num.#char.zero].canvas, 0, 0);
     Num.#DrawPixels(set[k].context, Num.#font[k], col[0]); }
    Num.#sets.push(set); } } 
- static Show(c,n) {
-  var set=Num.#sets[c];
-  var s=[];
-  if (n==0) s.push(set[0]); else for (let i=0; n>0; i++) {
-   var d = n%10;
-   n = (n-d)/10;
-   s.splice(0,0,set[d]);
+ static Show(font, number) {
+  var set=Num.#sets[font];
+  var s = [];
+  if (number==0) s.push(set[0]); else {
+    var n = Math.abs(number);
+    for (let i=0; n>0; i++) { var d = n%10; n = (n-d)/10; s.splice(0,0,set[d]);  }
+    if (number<0) s.splice(0,0,set[Num.#char.minus]);
   }
-  s.push(set[11]);
+  s.push(set[Num.#char.icon]);
   Num.x = Math.floor(View.width/24);
   Num.y = (Num.x*Num.length)/Num.width;
-  switch(c) {
+  switch(font) {
    case Num.color.red    : Board.DrawRight(View.left,View.top,s); break;
    case Num.color.green  : Board.DrawLeft(View.right,View.top,s); break;
    case Num.color.cyan   : Board.DrawRight(View.left,View.bottom-Num.y,s); break;
@@ -415,14 +417,8 @@ class Board {
   Cursor.Draw(Board.image.context);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
- static DrawRight(x,y,images) {
-  for (var i=0; i<images.length; x+=Num.x)
-   Board.image.context.drawImage(images[i++].canvas, 0, 0, Num.width, Num.length, x, y, Num.x, Num.y);
- }
- static DrawLeft(x,y,images) {
-  for (var i=images.length; i>0;)
-   Board.image.context.drawImage(images[--i].canvas, 0, 0, Num.width, Num.length, x-=Num.x, y, Num.x, Num.y);
- }
+ static DrawRight(x,y,images) { for (var i=0; i<images.length; x+=Num.x) Board.image.context.drawImage(images[i++].canvas, 0, 0, Num.width, Num.length, x, y, Num.x, Num.y); }
+ static DrawLeft(x,y,images) { for (var i=images.length; i>0;) Board.image.context.drawImage(images[--i].canvas, 0, 0, Num.width, Num.length, x-=Num.x, y, Num.x, Num.y); }
  static Resize() {
   Board.image = new Image(window.innerWidth, window.innerHeight);
   Board.canvas.setAttribute("width", window.innerWidth);
