@@ -106,10 +106,7 @@ class Num {
    for (let y = 0; y < Num.length; y += Num.#step, pixels <<= 1) {
     var s = ((pixels & 0x400000) > 0) ? f : b;
     c.fillStyle = s;
-    if (s != undefined) c.fillRect(x, y, Num.#step, Num.#step); 
-   }
-  }
- }
+    if (s != undefined) c.fillRect(x, y, Num.#step, Num.#step); } } }
  static {
   for (let i=0;i<Num.#colors.length;i++) {
    var set = [];
@@ -136,26 +133,32 @@ class Num {
    case Num.color.red    : Board.DrawRight(View.left,View.top,s); break;
    case Num.color.green  : Board.DrawLeft(View.right,View.top,s); break;
    case Num.color.cyan   : Board.DrawRight(View.left,View.bottom-Num.y,s); break;
-   case Num.color.yellow : Board.DrawLeft(View.right,View.bottom-Num.y,s); break;
-  }
- }
-}
+   case Num.color.yellow : Board.DrawLeft(View.right,View.bottom-Num.y,s); break; } } }
 class Score {
  static steps = 0;
  static lives = 3;
  static score = 0;
  static flags;
  static mines;
+ static alpha = 1.0;
+ static #redraw = 1.0;
  static Step(s) {Score.steps += s;}
  static Death(cell) {if (cell.mine) {cell.death = true; if (Score.lives > 0) Score.lives--;} return cell.death;}
  static RestartCounters() {Score.flags = 0; Score.mines = 0;}
  static AddMine()   {Score.mines++;}
  static AddFlag()   {Score.flags++;}
  static Unflagged() {return Score.mines-Score.flags;}
- static Cell(c) {
-  if (!c.cleared) {
-   if (c.mine   ) Score.mines++;
-   if (c.flagged) Score.flags++;
+ static Cell(c) { if (!c.cleared) { if (c.mine) Score.mines++; if (c.flagged) Score.flags++; } }
+ static Alpha() {Score.#redraw = Score.alpha;}
+ static Fade() {
+  if (Side.IsDown()) {
+   Score.alpha = ((Score.alpha - 0.25) * 0.90) + 0.25;
+  } else {
+   Score.alpha = 1 - ((1 - Score.alpha) * 0.90);
+  }
+  if (Math.abs(Score.alpha-Score.#redraw) > 0.004) {
+   redraw = true;
+   Score.#redraw = Score.alpha;
   }
  }
 }
@@ -176,19 +179,16 @@ class Cell {
  constructor() {
   Cell.#total++;
   if (Math.random() < Cell.#bias) { this.mine = true; Cell.#mines++; }
-  Cell.#bias = ((Cell.#mines/Cell.#total)>Cell.#density) ? Cell.#low : Cell.#high;
- }
+  Cell.#bias = ((Cell.#mines/Cell.#total)>Cell.#density) ? Cell.#low : Cell.#high; }
  Unmine() { this.mine = false; }
  Step() { if ((!this.flagged) & (!this.demined) & (!this.cleared)) { this.cleared = true; if (!Score.Death(this)) return 1; } return 0; }
  Flag() { if (!this.cleared) this.flagged = !this.flagged; }
- Demine() { if (!this.demined & this.flagged) this.demined = true; }
-}
+ Demine() { if (!this.demined & this.flagged) this.demined = true; } }
 class Column {
  cells = [];
  constructor(h) { for (var i=0; i<h; i++) this.insert(); }
  insert(){this.cells.splice(0, 0, new Cell());}
- append(){this.cells.push(new Cell());}
-}
+ append(){this.cells.push(new Cell());} }
 class Level {
  static width = 256;
  static height = 256;
@@ -217,14 +217,11 @@ class Level {
    c.solving = false; clearing = true; } }
  static #Mine(x,y) { return Level.#columns[x].cells[y].mine ? 1 : 0; }
  static #FirstCells() {for (var i=0; i<Level.width; i++) Level.#columns.push(new Column(Level.height));}
- static #FirstStep() {
-  for (let x = (Level.width-6)/2; x < (Level.width+6)/2; x++) for (let y = (Level.height-6)/2; y < (Level.height+6)/2; y++) Level.#columns[x].cells[y].mine = false;
-  Level.#columns[Level.width/2].cells[Level.height/2].cleared = true;
-  Level.Step(Level.width/2, Level.height/2); }
- static { Level.#FirstCells(); Level.#FirstStep(); } }
+ static #Demine() {for (let x = (Level.width-6)/2; x < (Level.width+6)/2; x++) for (let y = (Level.height-6)/2; y < (Level.height+6)/2; y++) Level.#columns[x].cells[y].mine = false;}
+ static #FirstStep() {Level.Step(Level.width/2, Level.height/2);}
+ static { Level.#FirstCells(); Level.#Demine(); Level.#FirstStep(); } }
 class Cursor {
  static states = Object.freeze({ focussed:0, scrolling:1, nothing:2 })
- //static styles = Object.freeze({ none:0, left:1, right:2, flag:3, mine:4 })
  static cursors = [];
  point;
  style;
@@ -233,21 +230,22 @@ class Cursor {
  static #sides = [        // focussed                                                 // scrolling  
   [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]],[]], //left
   [[[0/8, "#FF000080"],[2/8, "#FF000080"],[5/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]],[]], //right
-  [[],[],[]]];                                                                                                                                    //mouse
-//[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[]]];//mouse
- static #Draw(c, a) {
+  [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[]]];//mouse
+//[[],[],[]]];                                                                                                                                    //mouse
+ static #Draw(c, s) {
+  var a = Cursor.#sides[s.style][s.state];
   if (a.length>0) {
    var g = c.createRadialGradient(s.point.x, s.point.y, 0, s.point.x, s.point.y, Math.min(window.innerWidth, window.innerHeight) / 4);
    for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
    c.fillStyle = g;
    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } }
- static Draw(c) { for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.#sides[Cursor.cursors[i].style][Cursor.cursors[i].state]); }
- Update(e)   {this.point.x = e.offsetX; this.point.y = e.offsetY;}
- Focus()     {this.state = Cursor.states.focussed;}
- Scroll()    {this.state = Cursor.states.scrolling;}
- Release()   {this.state = Cursor.states.nothing;}
- Focussed()  {return this.state == Cursor.states.focussed;}
- Scrolling() {return this.state == Cursor.states.scrolling;}
+ static Draw(c) {for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);}
+ Update(e)      {this.point.x       = e.offsetX; this.point.y = e.offsetY;}
+ Focus()        {this.state         = Cursor.states.focussed; }
+ Scroll()       {this.state         = Cursor.states.scrolling;}
+ Release()      {this.state         = Cursor.states.nothing;  }
+ Focussed()     {return this.state == Cursor.states.focussed; }
+ Scrolling()    {return this.state == Cursor.states.scrolling;}
 }
 class Side {
  static side = Object.freeze({ left:0, right:1, mouse:2 })
@@ -268,21 +266,18 @@ class Side {
  #Focus() {
   if ((Side.#left == this) && Side.#right.#cursor.Focussed()) Side.#right.#cursor.Scroll();
   if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
-  this.#cursor.Focus(); 
-  }
+  this.#cursor.Focus(); }
  #Scrolling() {
   var s = this.#cursor.Scrolling() || !(Side.#left.#cursor.Scrolling() || Side.#right.#cursor.Scrolling() || Side.#mouse.#cursor.Scrolling())
   if (s) this.#cursor.Scroll();
-  return s;
- }
+  return s; }
  static #Pointer(e) {
   if (e.pointerType == 'mouse') return Side.#mouse;
   if (Side.#left.#Is(e)) return Side.#left;
   if (Side.#right.#Is(e)) return Side.#right;
   if (Side.#right.#IsDown()) return Side.#left;
   if (Side.#left.#IsDown()) return Side.#right;
-  return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right;
- }
+  return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right; }
  static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
  static #Zoom(d) {
   var direction = Side.#Distance() - d;
@@ -295,9 +290,7 @@ class Side {
    Side.canUp    |= (y==Board.y);
    Side.canDown  |= (y==(Board.y+View.high-1));
    Side.canLeft  |= (x==Board.x);
-   Side.canRight |= (x==(Board.x+View.wide-1));
-  }
- }
+   Side.canRight |= (x==(Board.x+View.wide-1)); } }
  static Down(e) {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
@@ -421,7 +414,7 @@ class Board {
   for (let y=Board.y, Y = View.top; Y<View.bottom; y++, Y+=View.size) 
    for (let x=Board.x, X = View.left; X<View.right; x++, X+=View.size) 
     Board.image.context.drawImage(Squares.Image(Level.Cell(x, y)), 0, 0, Squares.size, Squares.size, X, Y, View.size, View.size);
-  if (Side.IsDown()) Board.image.context.globalAlpha = 0.5;
+  Board.image.context.globalAlpha = Score.alpha;
   Num.Show(Num.color.red,    Score.Unflagged());
   Num.Show(Num.color.green,  Score.lives);
   Num.Show(Num.color.cyan,   Score.steps);
@@ -459,6 +452,7 @@ var redraw = true;
 var clearing = false;
 
 function twentyfivehertz() {
+ Score.Fade();
  if (redraw || clearing) {
   Board.Redraw();
   redraw = clearing;
