@@ -151,17 +151,8 @@ class Score {
  static Cell(c) { if (!c.cleared) { if (c.mine) Score.mines++; if (c.flagged) Score.flags++; } }
  static Alpha() {Score.#redraw = Score.alpha;}
  static Fade() {
-  if (Side.IsDown()) {
-   Score.alpha = ((Score.alpha - 0.25) * 0.90) + 0.25;
-  } else {
-   Score.alpha = 1 - ((1 - Score.alpha) * 0.90);
-  }
-  if (Math.abs(Score.alpha-Score.#redraw) > 0.004) {
-   redraw = true;
-   Score.#redraw = Score.alpha;
-  }
- }
-}
+  if (Side.IsDown()) {Score.alpha = ((Score.alpha - 0.25) * 0.90) + 0.25;} else {Score.alpha = 1 - ((1 - Score.alpha) * 0.90);}
+  if (Math.abs(Score.alpha-Score.#redraw) > 0.004) {redraw = true; Score.#redraw = Score.alpha;} } }
 class Cell {
  static #high    = 0.26;
  static #density = 0.25;
@@ -311,7 +302,7 @@ class Side {
   if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; if (p.#Scrolling() && Side.canUp   ) Board.DecY();                     }}
  static Up(e) {
   var p = Side.#Pointer(e);
-  if (p.#cursor.Focussed()) {
+  if (p.#cursor.Focussed() && View.Is(e, p.#e)) {
    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
     Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
    if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
@@ -381,8 +372,9 @@ class View {
   }
   View.#Window();
  }
- static X(x) { return Math.floor((x-View.left)/View.size); }
- static Y(y) { return Math.floor((y-View.top)/View.size); }
+ static X(x)    { return Math.floor((x-View.left)/View.size); }
+ static Y(y)    { return Math.floor((y-View.top)/View.size);  }
+ static Is(e,f) { return (View.X(e.offsetX) == View.X(f.offsetX)) && (View.Y(e.offsetY) == View.Y(f.offsetY)); }
 }
 class Board {
  static x;
