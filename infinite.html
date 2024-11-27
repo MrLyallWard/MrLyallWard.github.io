@@ -214,17 +214,18 @@ class Level {
  static #FirstStep() {Level.Step(Level.width/2, Level.height/2);}
  static { Level.#FirstCells(); Level.#Demine(); Level.#FirstStep(); } }
 class Cursor {
- static states = Object.freeze({ focussed:0, scrolling:1, nothing:2 })
+ static states = Object.freeze({ focussed:0, scrolling:1, zooming:2, nothing:3 })
  static cursors = [];
  point;
  style;
  state = Cursor.states.nothing;;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
-  [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]],[]], //left
-  [[[0/8, "#FF000080"],[2/8, "#FF000080"],[5/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]],[]], //right
-  [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[]]];//mouse
-//[[],[],[]]];                                                                                                                                    //mouse
+  [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]],[],[]], //left
+  [[[0/8, "#FF000080"],[2/8, "#FF000080"],[5/8, "#FF000000"]], [[4/8, "#00FF0000"],[5/8, "#00FF0070"],[7/8, "#00FF0070"],[8/8, "#00FF0000"]],[],[]], //right
+  [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[],[]], //zoom
+  [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[],[]]];//mouse
+  //[[],[],[]]];                                                                                                                                     //mouse
  static #Draw(c, s) {
   var a = Cursor.#sides[s.style][s.state];
   if (a.length>0) {
@@ -241,19 +242,21 @@ class Cursor {
  Scrolling()    {return this.state == Cursor.states.scrolling;}
 }
 class Side {
- static side = Object.freeze({ left:0, right:1, mouse:2 })
+ static side = Object.freeze({ left:0, right:1, third:2, mouse:3 })
  static #left; 
  static #right;
+ static #third;
  static #mouse;
  static canUp;
  static canDown;
  static canLeft;
  static canRight;
+ static #sides = [];
  #side;
  #e;
  #point;
  #cursor;
- constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor;}
+ constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor; Side.#sides.push(this);}
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
  #Focus() {
@@ -265,11 +268,11 @@ class Side {
   if (s) this.#cursor.Scroll();
   return s; }
  static #Pointer(e) {
+  for (let i=0; i<Side.#sides.length;i++) if (Side.#sides[i].#Is(e)) return Side.#sides[i];
   if (e.pointerType == 'mouse') return Side.#mouse;
-  if (Side.#left.#Is(e)) return Side.#left;
-  if (Side.#right.#Is(e)) return Side.#right;
-  if (Side.#right.#IsDown()) return Side.#left;
-  if (Side.#left.#IsDown()) return Side.#right;
+  if (Side.#right.#IsDown() && !Side.#left.#IsDown() ) return Side.#left;
+  if (Side.#left.#IsDown()  && !Side.#right.#IsDown()) return Side.#right;
+  if (Side.#left.#IsDown()  &&  Side.#right.#IsDown()) return Side.#third;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right; }
  static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
  static #Zoom(d) {
@@ -317,6 +320,7 @@ class Side {
  static {
   Side.#left  = new Side(Side.side.left,  new Cursor(Side.side.left));
   Side.#right = new Side(Side.side.right, new Cursor(Side.side.right));
+  Side.#third = new Side(Side.side.third, new Cursor(Side.side.third));
   Side.#mouse = new Side(Side.side.mouse, new Cursor(Side.side.mouse));
  }
 }
