@@ -248,10 +248,13 @@ class Cursor {
    var ymin = Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
    var ymax = Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
    c.beginPath();
-   c.lineWidth = Math.floor(Math.min(View.width/20, View.height/20));
+   c.lineWidth = Math.floor(Math.min(View.width/20, View.height/10));
+   c.globalAlpha = 0.5;
+   c.lineCap = "round";
    c.strokeStyle = "#000000";
    c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
    c.stroke();
+   c.globalAlpha = 1;
   } else {
    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);
   }
