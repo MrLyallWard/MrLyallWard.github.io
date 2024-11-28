@@ -252,7 +252,8 @@ class Cursor {
    c.globalAlpha = 0.5;
    c.lineCap = "round";
    c.strokeStyle = "#000000";
-   c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
+   //c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
+   c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.lineTo(xmax,ymax); c.lineTo(xmin,ymax); c.lineTo(xmin,ymin);
    c.stroke();
    c.globalAlpha = 1;
   } else {
