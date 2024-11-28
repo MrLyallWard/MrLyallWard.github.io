@@ -244,26 +244,19 @@ class Cursor {
    for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
    c.fillStyle = g;
    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } }
- static Draw(c) {
+ static ZoomX() {return Math.floor(Math.min(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))-View.Size;}
+ static ZoomW() {return Math.ceil (Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))+View.Size-x;}
+ static ZoomY() {return Math.floor(Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))-View.Size;}
+ static ZoomH() {return Math.ceil (Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))+View.Size-y;}
+ static #DrawZooming() {
   if (Side.IsZooming()) {
-   var xmin = Math.min(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x);
-   var xmax = Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x);
-   var ymin = Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
-   var ymax = Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
-   c.beginPath();
-   //c.lineWidth = Math.floor(Math.min(View.width/20, View.height/10));
-   c.globalAlpha = 0.9;
-   c.strokeStyle = "#000000";
-   //c.lineCap = "round";
-   c.roundrect(xmin, ymin, xmax-xmin, ymax-ymin, [View.Size*2, View.Size*2, View.Size*2, View.Size*2]);
-   c.beginPath(); c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.stroke();
-   c.beginPath(); c.moveTo(xmax,ymin); c.lineTo(xmax,ymax); c.stroke();
-   c.beginPath(); c.moveTo(xmin,ymax); c.lineTo(xmax,ymax); c.stroke();
-   c.beginPath(); c.moveTo(xmin,ymax); c.lineTo(xmin,ymin); c.stroke();
-   c.globalAlpha = 1;
-  } else {
-   for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);
+   c.strokeStyle = "#00000080"; c.roundRect(Cursor.ZoomX(), Cursor.ZoomY(), Cursor.ZoomW(), Cursor.ZoomH(), [View.Size, View.Size, View.Size, View.Size]); c.fill();
+   c.strokeStyle = "#00000080"; c.roundRect(Side.ZoomX(),   Side.ZoomY(),   Side.ZoomW(),   Side.ZoomH(),   [View.Size, View.Size, View.Size, View.Size]); c.fill();
   }
+  return Side.IsZooming();
+ }
+ static Draw(c) {
+  if (!Cursor.#DrawZooming()) { for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]); }
  }
  Update(e)      {this.point.x       = e.offsetX; this.point.y = e.offsetY;}
  Focus()        {this.state         = Cursor.states.focussed; }
@@ -288,6 +281,10 @@ class Side {
  #point;
  #cursor;
  constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor; Side.#sides.push(this);}
+ static ZoomX() {return Math.floor(Math.min(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#third.#e.offsetX)-View.size);}
+ static ZoomY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#third.#e.offsetY)-View.size);}
+ static ZoomX() {return Math.floor(Math.min(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#third.#e.offsetX)-View.size);}
+ static ZoomY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#third.#e.offsetY)-View.size);}
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
  #Focus() {
