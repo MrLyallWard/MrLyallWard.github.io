@@ -243,10 +243,10 @@ class Cursor {
    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } }
  static Draw(c) {
   if (Side.IsZooming()) {
-   var xmin = Math.min(cursors[0].point.x, cursors[1].point.x, cursors[2].point.x);
-   var xmax = Math.max(cursors[0].point.x, cursors[1].point.x, cursors[2].point.x);
-   var ymin = Math.min(cursors[0].point.y, cursors[1].point.y, cursors[2].point.y);
-   var ymax = Math.max(cursors[0].point.y, cursors[1].point.y, cursors[2].point.y);
+   var xmin = Math.min(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x);
+   var xmax = Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x);
+   var ymin = Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
+   var ymax = Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y);
    c.beginPath();
    c.lineWidth = Math.floor(Math.min(View.width/20, View.height/20));
    c.strokeStyle = "#000000";
