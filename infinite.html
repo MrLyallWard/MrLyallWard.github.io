@@ -234,6 +234,9 @@ class Cursor {
   [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[],[]], //zoom
   [[[0/8, "#0030FF80"],[2/8, "#0040FF80"],[5/8, "#0040FF00"]], [[4/8, "#0040FF00"],[5/8, "#0040FF40"],[7/8, "#0040FF40"],[8/8, "#0040FF00"]],[],[]]];//mouse
   //[[],[],[]]];                                                                                                                                     //mouse
+ static #Line(c, x1, y1, x2, y2) {
+  c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); 
+ }
  static #Draw(c, s) {
   var a = Cursor.#sides[s.style][s.state];
   if (a.length>0) {
@@ -252,9 +255,10 @@ class Cursor {
    c.globalAlpha = 0.5;
    c.strokeStyle = "#000000";
    c.lineCap = "round";
-    //c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
-   c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.stroke(); c.lineTo(xmax,ymax); c.stroke(); c.lineTo(xmin,ymax); c.stroke(); c.lineTo(xmin,ymin); c.stroke();
-   //c.stroke();
+   cursor.#Line(c, xmin, ymin, xmax, ymin);
+   cursor.#Line(c, xmax, ymin, xmax, ymax);
+   cursor.#Line(c, xmin, ymax, xmax, ymax);
+   cursor.#Line(c, xmin, ymax, xmin, ymin);
    c.globalAlpha = 1;
   } else {
    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);
