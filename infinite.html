@@ -250,11 +250,11 @@ class Cursor {
    c.beginPath();
    c.lineWidth = Math.floor(Math.min(View.width/20, View.height/10));
    c.globalAlpha = 0.5;
-   c.lineCap = "round";
    c.strokeStyle = "#000000";
-   //c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
-   c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.lineTo(xmax,ymax); c.lineTo(xmin,ymax); c.lineTo(xmin,ymin);
-   c.stroke();
+   c.lineCap = "round";
+    //c.rect(xmin, ymin, xmax-xmin, ymax-ymin);
+   c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.stroke(); c.lineTo(xmax,ymax); c.stroke(); c.lineTo(xmin,ymax); c.stroke(); c.lineTo(xmin,ymin); c.stroke();
+   //c.stroke();
    c.globalAlpha = 1;
   } else {
    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);
