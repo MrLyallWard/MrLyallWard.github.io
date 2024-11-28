@@ -255,10 +255,10 @@ class Cursor {
    c.globalAlpha = 0.5;
    c.strokeStyle = "#000000";
    c.lineCap = "round";
-   cursor.#Line(c, xmin, ymin, xmax, ymin);
-   cursor.#Line(c, xmax, ymin, xmax, ymax);
-   cursor.#Line(c, xmin, ymax, xmax, ymax);
-   cursor.#Line(c, xmin, ymax, xmin, ymin);
+   c.beginPath(); c.moveTo(xmin,ymin); c.lineTo(xmax,ymin); c.stroke();
+   c.beginPath(); c.moveTo(xmax,ymin); c.lineTo(xmax,ymax); c.stroke();
+   c.beginPath(); c.moveTo(xmin,ymax); c.lineTo(xmax,ymax); c.stroke();
+   c.beginPath(); c.moveTo(xmin,ymax); c.lineTo(xmin,ymin); c.stroke();
    c.globalAlpha = 1;
   } else {
    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]);
