@@ -252,8 +252,9 @@ class Cursor {
   if (Side.IsZooming()) {
    c.globalAlpha = 0.5;
    c.strokeStyle = "#000000";
+   c.lineWidth = View.size;
+   c.beginPath(); c.roundRect(Side.ZoomX(),   Side.ZoomY(),   Side.ZoomW(),   Side.ZoomH(),   [View.size, View.size, View.size, View.size]); c.stroke();
    c.beginPath(); c.roundRect(Cursor.ZoomX(), Cursor.ZoomY(), Cursor.ZoomW(), Cursor.ZoomH(), [View.size, View.size, View.size, View.size]); c.fill();
-   c.beginPath(); c.roundRect(Side.ZoomX(),   Side.ZoomY(),   Side.ZoomW(),   Side.ZoomH(),   [View.size, View.size, View.size, View.size]); c.fill();
    c.globalAlpha = 1;
   }
   return Side.IsZooming();
