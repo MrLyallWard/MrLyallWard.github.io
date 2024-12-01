@@ -345,7 +345,7 @@ class Side {
   p.#point = new Point(e);
   if (p == Side.#mouse) p.#Focus();
   else if (p == Side.#zoom) p.#Zooming();
-  else if (((p == Side.#left) && Side.#right.IsDown()) || ((p == Side.#right) && Side.#left.IsDown())) p.Focus();
+  else if (((p == Side.#left) && Side.#right.#IsDown()) || ((p == Side.#right) && Side.#left.#IsDown())) p.Focus();
   else p.Scrolling();
   redraw = true; }
 
@@ -361,6 +361,7 @@ class Side {
      if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
      if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
      if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; p.#Scrolling(); if (Side.canUp   ) Board.DecY(); }}}}
+
  static Up(e) {
   var p = Side.#Pointer(e);
   if (p.#cursor.Focussed() && View.Is(e, p.#e)) {
@@ -372,6 +373,7 @@ class Side {
   p.#cursor.Release();
   p.#e = undefined;
   redraw = true; }
+
  static IsDown()      { return Side.#left.#IsDown() || Side.#right.#IsDown() || Side.#mouse.#IsDown(); }
  static IsScrolling() { return  Side.#mouse.#IsDown() || (Side.#left.#IsDown() ^ Side.#right.#IsDown()); }
  static IsNothing()   { return !(Side.#left.#IsDown() || Side.#right.#IsDown()); }
