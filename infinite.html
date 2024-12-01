@@ -346,7 +346,7 @@ class Side {
   if (p == Side.#mouse) p.#Focus();
   else if (p == Side.#zoom) p.#Zooming();
   else if (((p == Side.#left) && Side.#right.#IsDown()) || ((p == Side.#right) && Side.#left.#IsDown())) p.Focus();
-  else p.Scrolling();
+  else p.#Scrolling();
   redraw = true; }
 
  static Move(e) {
