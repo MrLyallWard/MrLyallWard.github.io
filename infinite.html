@@ -315,6 +315,7 @@ class Side {
   if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
   this.#cursor.Focus(); }
  #Scrolling() { this.#cursor.State(Cursor.states.scrolling); }
+ #Zooming() { this.#cursor.State(Cursor.states.zoom); }
  static #Pointer(e) {
   for (let i=0; i<Side.#sides.length;i++) if (Side.#sides[i].#Is(e)) return Side.#sides[i];
   if (e.pointerType == 'mouse') return Side.#mouse;
@@ -336,15 +337,18 @@ class Side {
    Side.canDown  |= (y==(Board.y+View.high-1));
    Side.canLeft  |= (x==Board.x);
    Side.canRight |= (x==(Board.x+View.wide-1)); } }
+
  static Down(e) {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
   p.#e = e;
   p.#point = new Point(e);
   if (p == Side.#mouse) p.#Focus();
-  else if (Side.IsNothing())  p.#Scrolling();
-  else if (Side.IsScrolling()) p.#Focus();
+  else if (p == Side.#zoom) p.#Zooming();
+  else if (((p == Side.#left) && Side.#right.IsDown()) || ((p == Side.#right) && Side.#left.IsDown())) p.Focus();
+  else p.Scrolling();
   redraw = true; }
+
  static Move(e) {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
