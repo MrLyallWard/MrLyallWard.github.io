@@ -270,9 +270,6 @@ class Cursor {
   c.beginPath(); c.roundRect(Side.ZoomX(),   Side.ZoomY(),   Side.ZoomW(),   Side.ZoomH(),   [View.size, View.size, View.size, View.size]); c.sfill();
   c.globalAlpha = 1;
  }
- IsFocussed() { return this.state == Cursor.states.focussed;  }
- IsZooming()  { return this.state == Cursor.states.zooming;   }
- IsSrolling() { return this.state == Cursor.states.scrolling; }
  State(s) { for (let i=0; i<Cursor.cursors.length; i++) Cursor.cursors[i].state=Cursor.states.nothing; this.state = s; }
  static Draw(c) {
   if (Side.IsZooming()) Cursor.#DrawZooming(c); 
@@ -286,6 +283,8 @@ class Cursor {
  Release()      {this.state         = Cursor.states.nothing;  }
  Focussed()     {return this.state == Cursor.states.focussed; }
  IsScrolling()  {return this.state == Cursor.states.scrolling;}
+ IsFocussed()   {return this.state == Cursor.states.focussed; }
+ IsZooming()    {return this.state == Cursor.states.zooming;  }
  Is(s)          {return this.state == s;}
 }
 class Side {
@@ -355,12 +354,11 @@ class Side {
   if (!p.#IsDown()) return;
   redraw=true;
   if (p.#point==undefined) p.#point = new Point(e);
-  if (!Side.#Zoom()) {
-    if (p.#cursor.IsScrolling()) {
-     if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; p.#Scrolling(); if (Side.canRight) Board.IncX(); }
-     if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
-     if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
-     if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; p.#Scrolling(); if (Side.canUp   ) Board.DecY(); }}}}
+  if (!Side.#Zoom()) if ((p == Side.mouse) || (p.cursor.IsScrolling())) {
+   if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; p.#Scrolling(); if (Side.canRight) Board.IncX(); }
+   if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
+   if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
+   if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; p.#Scrolling(); if (Side.canUp   ) Board.DecY(); }}}
 
  static Up(e) {
   var p = Side.#Pointer(e);
