@@ -285,7 +285,7 @@ class Cursor {
  Scroll()       {this.state         = Cursor.states.scrolling;}
  Release()      {this.state         = Cursor.states.nothing;  }
  Focussed()     {return this.state == Cursor.states.focussed; }
- Scrolling()    {return this.state == Cursor.states.scrolling;}
+ IsScrolling()  {return this.state == Cursor.states.scrolling;}
  Is(s)          {return this.state == s;}
 }
 class Side {
@@ -356,7 +356,7 @@ class Side {
   redraw=true;
   if (p.#point==undefined) p.#point = new Point(e);
   if (!Side.#Zoom()) {
-    if (Side.IsScrolling()) {
+    if (p.IsScrolling()) {
      if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; p.#Scrolling(); if (Side.canRight) Board.IncX(); }
      if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
      if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
