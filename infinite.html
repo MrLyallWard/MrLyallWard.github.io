@@ -314,7 +314,7 @@ class Side {
   if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
   this.#cursor.Focus(); }
  #Scrolling() { this.#cursor.State(Cursor.states.scrolling); }
- #Zooming() { this.#cursor.State(Cursor.states.zoom); }
+ #Zooming()   { this.#cursor.State(Cursor.states.zoom); }
  static #Pointer(e) {
   for (let i=0; i<Side.#sides.length;i++) if (Side.#sides[i].#Is(e)) return Side.#sides[i];
   if (e.pointerType == 'mouse') return Side.#mouse;
@@ -324,10 +324,13 @@ class Side {
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right; }
  static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
  static #Zoom(d) {
-  var d = Side.#Distance();
-   var direction = Side.#Distance() - d;
-  if (direction < 0) View.Out(); else if (direction > 0) View.In();
-  Side.#right.#point=Side.#left.#point=undefined;
+  if (Side.IsZooming()) {
+   var dx = Cursor.ZoomW() - Side.ZoomW();
+   var dy = Cursor.ZomeH() - Side.ZoomH();
+   if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) View.Out();
+   if ((dx < 0) && (dy < 0) && ((dx < -View.Size) || (dy < -View.Size))) View.In(); 
+  }
+  return Side.IsZooming();
  }
  static RestartBoundaries() { Side.canUp = Side.canDown = Side.canLeft = Side.canRight = false; }
  static Boundaries(c,x,y) {
