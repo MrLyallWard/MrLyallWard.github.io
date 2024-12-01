@@ -326,7 +326,7 @@ class Side {
  static #Zoom(d) {
   if (Side.IsZooming()) {
    var dx = Cursor.ZoomW() - Side.ZoomW();
-   var dy = Cursor.ZomeH() - Side.ZoomH();
+   var dy = Cursor.ZoomH() - Side.ZoomH();
    if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) View.Out();
    if ((dx < 0) && (dy < 0) && ((dx < -View.Size) || (dy < -View.Size))) View.In(); 
   }
