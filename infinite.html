@@ -350,7 +350,7 @@ class Side {
   p.#point = new Point(e);
   if (p == Side.#mouse) p.#Focus();
   else if (p == Side.#zoom) p.#Zooming();
-  else if (((p == Side.#left) && Side.#right.#IsDown()) || ((p == Side.#right) && Side.#left.#IsDown())) p.Focus();
+  else if (((p == Side.#left) && Side.#right.#IsDown()) || ((p == Side.#right) && Side.#left.#IsDown())) p.#Focus();
   else p.#Scrolling();
   redraw = true; }
 
