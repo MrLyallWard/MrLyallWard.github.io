@@ -227,7 +227,7 @@ class Cursor {
  static cursors = [];
  point;
  style;
- state = Cursor.states.nothing;;
+ state = Cursor.states.nothing;
  constructor(s) {this.style=s; this.point = new Point(); Cursor.cursors.push(this);}
  static #sides = [        // focussed                                                 // scrolling  
   [[[0/8, "#00FF0080"],[2/8, "#00FF0080"],[5/8, "#00FF0000"]], [[4/8, "#FF000000"],[5/8, "#FF000070"],[7/8, "#FF000070"],[8/8, "#FF000000"]],[],[]], //left
@@ -315,6 +315,9 @@ class Side {
   this.#cursor.Focus(); }
  #Scrolling() { this.#cursor.State(Cursor.states.scrolling); }
  #Zooming()   { this.#cursor.State(Cursor.states.zoom); }
+ #Reset() {
+  this.#cursor.state = Cursor.states.nothing; this.#e = undefined;
+ }
  static #Pointer(e) {
   for (let i=0; i<Side.#sides.length;i++) if (Side.#sides[i].#Is(e)) return Side.#sides[i];
   if (e.pointerType == 'mouse') return Side.#mouse;
@@ -327,8 +330,8 @@ class Side {
   if (Side.IsZooming()) {
    var dx = Cursor.ZoomW() - Side.ZoomW();
    var dy = Cursor.ZoomH() - Side.ZoomH();
-   if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) View.Out();
-   if ((dx < 0) && (dy < 0) && ((dx < -View.Size) || (dy < -View.Size))) View.In(); 
+   if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) {View.Out(); Side.Unzoom();}
+   if ((dx < 0) && (dy < 0) && ((dx < -View.Size) || (dy < -View.Size))) {View.In();  Side.Unzoom();}
   }
   return Side.IsZooming();
  }
@@ -379,6 +382,7 @@ class Side {
  static IsScrolling() { return  Side.#mouse.#IsDown() || (Side.#left.#IsDown() ^ Side.#right.#IsDown()); }
  static IsNothing()   { return !(Side.#left.#IsDown() || Side.#right.#IsDown()); }
  static IsZooming()   { return Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown(); }
+ static Unzoom()      { Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
  static {
   Side.#left  = new Side(Side.side.left,  new Cursor(Side.side.left));
   Side.#right = new Side(Side.side.right, new Cursor(Side.side.right));
