@@ -368,15 +368,29 @@ class Side {
 
  static Up(e) {
   var p = Side.#Pointer(e);
-  if (p.#cursor.Focussed() && View.Is(e, p.#e)) {
-   if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0)))
-    Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
-   if ((p==Side.#left) || ((e.pointerType == 'mouse') && (e.button == 2)))
-    Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
+  if (View.Is(e, p.#e)) {
+   if (p.#cursor.IsScrolling()) p = Side.#SwitchSides(p); else if (p.#cursor.Focussed()) {
+    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0))) Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
+    if ((p==Side.#left)  || ((e.pointerType == 'mouse') && (e.button == 2)))            Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
+   }
   }
   p.#cursor.Release();
   p.#e = undefined;
-  redraw = true; }
+  redraw = true;
+ }
+
+ static #SwitchSides(p) {
+  if ((p == Side.#left) || (p == Side.#right)) {
+   var o = (p==Side.#right) ? Side.#left : Side.#right;
+   if (o.#cursor.IsDown()) {
+    p.#e = o.#e;
+    p.#point = o.#point;
+    p.#cursor.point = o.#cursor.point;
+    return o;
+   }
+  }
+  return p;
+ }
 
  static IsDown()      { return Side.#left.#IsDown() || Side.#right.#IsDown() || Side.#mouse.#IsDown(); }
  static IsScrolling() { return  Side.#mouse.#IsDown() || (Side.#left.#IsDown() ^ Side.#right.#IsDown()); }
