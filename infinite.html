@@ -382,7 +382,7 @@ class Side {
  static #SwitchSides(p) {
   if ((p == Side.#left) || (p == Side.#right)) {
    var o = (p==Side.#right) ? Side.#left : Side.#right;
-   if (o.#cursor.IsDown()) {
+   if (o.#cursor.#IsDown()) {
     p.#e = o.#e;
     p.#point = o.#point;
     p.#cursor.point = o.#cursor.point;
