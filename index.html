@@ -1,11 +1,12 @@
-<html><head><title>index</title><style>p{font-size:3vw;}a{font-size:4vw;}footer{text-align:center;font-size:2vw;background-color:WhiteSmoke;color:white;}</style></head><body style="font-size:10vw">
+<html><head><title>index</title><style>p{font-size:3vw;}a{font-size:4vw;}center{font-size:2vw;}footer{text-align:center;font-size:2vw;background-color:WhiteSmoke;color:white;}</style></head><body style="font-size:10vw">
  <table style="width:100%"><tr><td bgcolor="#E0E0E0"><p>Published idle games</p></td></tr></table>
  <table style="width:100%">
   <tr>
    <td bgcolor="#CFFFD0"><p>Minefield infinite</p></td>
-   <td bgcolor="#DFFFD0"><a href="infinite.html">Find a path through the minefield</td>
+   <td bgcolor="#DFFFD0"><a href="infinite.html">Find a path out of the minefield</td>
    <td bgcolor="#EFFFD0"><p>2024</p></td>
   </tr>
+  <tr><td></td><td bgcolor="#EFEFEF"><p><center>one finger scrolling<br>two fingers stepping/flaging<br>three fingers zooming</p></center></td><td></td>
   <tr>
    <td bgcolor="#CFFFD0"><p>Minefield</p></td>
    <td bgcolor="#DFFFD0"><a href="sweeper.html">Find a path through the minefield</td>
@@ -17,69 +18,15 @@
    <td bgcolor="#EFFFD0"><p>2015</p></td>
   </tr>
   <tr>
-   <td bgcolor="#CFFFD0">Debugging</td>
-   <td bgcolor="#DFFFD0" id="width">width</td>
-   <td bgcolor="#EFFFD0" id="height">height</td>
+   <td bgcolor="#CFFFD0"><p>Scribe</p></td>
+   <td bgcolor="#EFEFEF"><center>Playable sheet music editor</center></td>
+   <td bgcolor="#EFFFD0"><p>2025</p></td>
   </tr>
   <tr>
-   <td bgcolor="#CFFFD0">Touch</td>
-   <td bgcolor="#DFFFD0" id="left"> </td>
-   <td bgcolor="#EFFFD0" id="right"> </td>
+   <td bgcolor="#CFFFD0"><p>Geography</p></td>
+   <td bgcolor="#EFEFEF"><center>Terrian idle game</center></td>
+   <td bgcolor="#EFFFD0"><p>2025</p></td>
   </tr>
  </table>
- <script>
-  var page;
-  class Page {
-   width;
-   height;
-   widthText;
-   heightText;
-   leftText;
-   rightText;
-   x;
-   y;
-   touchCount = 0;
-   constructor () {
-    this.widthText = document.getElementById("width");
-    this.heightText = document.getElementById("height");
-    this.leftText = document.getElementById("left");
-    this.rightText = document.getElementById("right");
-    window.addEventListener("wheel", function(e) {try { page.wheel(e); } catch (x) { }}); 
-    window.addEventListener("touchstart", function(e) {try { page.start(e); } catch (x) { }}); 
-    window.addEventListener("touchmove", function(e) {try { page.move(e); } catch (x) { }}); 
-    window.addEventListener("touchend", function(e) {try { page.end(e); } catch (x) { }}); 
-    window.addEventListener("touchcancel", function(e) {try { page.end(e); } catch (x) { }}); 
-    window.addEventListener("resize", function(e) {try { page.resize(e); } catch (x) { }}); 
-   }
-   wheel(e) {
-    if (e.ctrlKey) {
-     this.widthText.innerText = "mousewheel.deltaX = " + e.deltaX; 
-	}
-   }
-   start(e) {
-    e.stopImmediatePropagation();
-    this.touchCount++;
-    this.leftText.innerText = "touch " + this.touchCount;
-    this.rightText.innerText = "touch";	
-   }
-   move(e) {
-    e.stopImmediatePropagation();
-    this.rightText.innerText = "moves " + e.changedTouches.length;	
-	//t = e.changedTouches[e.changedTouches.length-1];
-    //this.rightText.innerText = "moves " + e.changedTouches.length + ", " + t.screenX + ", " + t.screenY;
-   }
-   end(e) {
-    e.stopImmediatePropagation();
-    this.touchCount--;   
-    this.leftText.innerText = (this.touchCount == 0) ? "" : ("touch " + this.touchCount);
-   }
-   resize(e) {
-    this.leftText.innerText = window.innerHeight;
-    this.rightText.innerText = window.innerWidth;
-   }
-  }  
-  function startup() { page = new Page(); }
-  window.onload = startup;
- </script>
  <footer> <p>Author: Lyall Ward<br></footer>
 </body></html>
