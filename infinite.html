@@ -249,9 +249,9 @@ class Cursor {
  static TouchW() {return Math.ceil (Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))+View.size-Cursor.TouchX();}
  static TouchY() {return Math.floor(Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))-View.size;}
  static TouchH() {return Math.ceil (Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))+View.size-Cursor.TouchY();}
- static ZoomX()  {return Side.IsMousing() ? View.size/2 : Cursor.TouchX();}
+ static ZoomX()  {return Side.IsMousing() ? 0 : Cursor.TouchX();}
  static ZoomW()  {return Side.IsMousing() ? Cursor.cursors[3].point.x : Cursor.TouchW();}
- static ZoomY()  {return Side.IsMousing() ? View.size/2 : Cursor.TouchY();}
+ static ZoomY()  {return Side.IsMousing() ? 0 : Cursor.TouchY();}
  static ZoomH()  {return Side.IsMousing() ? Cursor.cursors[3].point.y : Cursor.TouchH();}
  static #IsFocussed() { for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors.state == Cursor.states.focussed) return true; return false; }
  static #DrawCrosshair(c) {
@@ -266,19 +266,35 @@ class Cursor {
   }
   return false;
  }
- static #DrawZooming(c) {
-  c.globalAlpha = 0.5;
-  c.strokeStyle = "#000000";
-  c.lineWidth = View.size;
-  c.beginPath(); c.roundRect(Cursor.ZoomX(), Cursor.ZoomY(), Cursor.ZoomW(), Cursor.ZoomH(), [View.size, View.size, View.size, View.size]); c.stroke();
-  c.beginPath(); c.roundRect(Side.ZoomX(),   Side.ZoomY(),   Side.ZoomW(),   Side.ZoomH(),   [View.size, View.size, View.size, View.size]); c.fill();
-  c.globalAlpha = 1;
- }
+//***********************************************************************************************************************************************************************************************
+//***********************************************************************************************************************************************************************************************
+//***********************************************************************************************************************************************************************************************
+static #Outline(image, x, y, w, h) {
+ image.context.globalAlpha = 0.333;
+ image.context.strokeStyle = "#000000";
+ image.context.lineWidth = View.size;
+ image.context.beginPath();
+ image.context.roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
+ image.context.stroke();
+ image.context.globalAlpha = 1;
+}
+static #DrawZooming(image) {
+ var x1=Side.ZoomX(),   y1=Side.ZoomY(),   w1=Side.ZoomW(),   h1=Side.ZoomH();
+ var x2=Cursor.ZoomX(), y2=Cursor.ZoomY(), w2=Cursor.ZoomW(), h2=Cursor.ZoomH();
+ var slice = new Image(w1, h1);
+ slice.context.drawImage(image.canvas, x1, y1, w1, h1, 0, 0, w1, h1);
+ image.context.fillStyle = "#000000";
+ image.context.fillRect(0, 0, w1, h1);
+ image.context.drawImage(slice.canvas, x2, y2, w2, h2);
+ Cursor.#Outline(image, x2, y2, w2, h2);
+ Cursor.#Outline(image, x1, y1, w1, h1);
+}
+
  State(s) { for (let i=0; i<Cursor.cursors.length; i++) Cursor.cursors[i].state=Cursor.states.nothing; this.state = s; }
- static Draw(c) {
-  if (Side.IsZooming()) Cursor.#DrawZooming(c); 
-  else if (!Cursor.#DrawCrosshair(c)) { 
-   for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]); 
+ static Draw(image) {
+  if (Side.IsZooming()) Cursor.#DrawZooming(image); 
+  else if (!Cursor.#DrawCrosshair(image.context)) { 
+   for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(image.context, Cursor.cursors[i]); 
   }
  }
  Update(e)      {this.point.x = e.offsetX; this.point.y = e.offsetY;}
@@ -312,24 +328,20 @@ class Side {
  static TouchW() {return Math.ceil (Math.max(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)+View.size)-Side.TouchX();}
  static TouchY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)-View.size);}
  static TouchH() {return Math.ceil (Math.max(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)+View.size)-Side.TouchY();}
- static ZoomX()  {return Side.IsMousing() ? View.size/2 : Side.TouchX();}
+ static ZoomX()  {return Side.IsMousing() ? 0 : Side.TouchX();}
  static ZoomW()  {return Side.IsMousing() ? Side.#mouse.#e.offsetX : Side.TouchW();}
- static ZoomY()  {return Side.IsMousing() ? View.size/2 : Side.TouchY();}
+ static ZoomY()  {return Side.IsMousing() ? 0 : Side.TouchY();}
  static ZoomH()  {return Side.IsMousing() ? Side.#mouse.#e.offsetY : Side.TouchH();}
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
- #IsDoubleClick() {
-  return false;
- }
+ #IsDoubleClick() { return false; }
  #Focus() {
   if ((Side.#left == this) && Side.#right.#cursor.Focussed()) Side.#right.#cursor.Scroll();
   if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
   this.#cursor.Focus(); }
  #Scrolling() { this.#cursor.State(Cursor.states.scrolling); }
  #Zooming()   { this.#cursor.State(Cursor.states.zoom); }
- #Reset() {
-  this.#cursor.state = Cursor.states.nothing; this.#e = undefined;
- }
+ #Reset() { this.#cursor.state = Cursor.states.nothing; this.#e = undefined; }
  static #Pointer(e) {
   for (let i=0; i<Side.#sides.length;i++) if (Side.#sides[i].#Is(e)) return Side.#sides[i];
   if (e.pointerType == 'mouse') return Side.#mouse;
@@ -374,7 +386,7 @@ class Side {
   p.#buttons = e.buttons;
   redraw=true;
   if (p.#point==undefined) p.#point = new Point(e);
-  if (!Side.#Zoom(e)) if ((p == Side.#mouse) || (p.#cursor.IsScrolling())) {
+  if (!Side.#Zoom(e)) if (((p == Side.#mouse) && Side.#mouse.#IsDown()) || (p.#cursor.IsScrolling())) {
    if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; p.#Scrolling(); if (Side.canRight) Board.IncX(); }
    if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
    if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
@@ -409,10 +421,7 @@ class Side {
  static IsMousing()   { return Side.#mouse.#IsDown(); }
  static IsZooming(e=undefined)  {
   if (Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown()) return true;
-  if (Side.#mouse.#IsDown()) {
-   console.log("buttones = " + Side.#mouse.#buttons);
-   if (Side.#mouse.#buttons == 3) return true;
-  }
+  if (Side.#mouse.#IsDown()) {if (Side.#mouse.#buttons == 3) return true;}
   return false;
  }
  static Unzoom()      { Side.#mouse.#Reset(); Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
@@ -457,24 +466,15 @@ class View {
  static #LeaveFullScreen() {document.exitFullscreen();}
  static In() {
   if (View.#IsFullScreen()) {
-   if (View.wide<View.high) {
-    if (View.wide > 3) { View.size = Math.floor(window.innerWidth /(--View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
-   } else {
-    if (View.high > 3) { View.size = Math.floor(window.innerHeight/(--View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
-   }
-  } else View.#GoFullScreen();
+   if (View.wide<View.high) { if (View.wide > 5) { View.size = Math.floor(window.innerWidth /(--View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+   } else {                   if (View.high > 5) { View.size = Math.floor(window.innerHeight/(--View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
+   } } else View.#GoFullScreen();
   View.#Window();
  }
  static Out() {
-  if (View.#IsFullScreen()) {
-   View.#LeaveFullScreen();
-  } else {
-   if (View.wide<View.high) {
-    if (View.wide < 32) { View.size = Math.floor(window.innerWidth /(++View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
-   } else {
-    if (View.high < 32) { View.size = Math.floor(window.innerHeight/(++View.high)); View.wide = Math.floor(window.innerWidth /View.size); }
-   }
-  }
+  if (View.#IsFullScreen()) { View.#LeaveFullScreen(); } else {
+   if (View.wide<View.high) { if (View.wide < 64) { View.size = Math.floor(window.innerWidth /(++View.wide)); View.high = Math.floor(window.innerHeight/View.size); }
+   } else {                   if (View.high < 64) { View.size = Math.floor(window.innerHeight/(++View.high)); View.wide = Math.floor(window.innerWidth /View.size); } } }
   View.#Window();
  }
  static X(x)    { return Math.floor((x-View.left)/View.size); }
@@ -517,7 +517,7 @@ class Board {
   Num.Show(Num.color.cyan,   Score.steps);
   Num.Show(Num.color.yellow, Score.score);
   Board.image.context.globalAlpha = 1.0;
-  Cursor.Draw(Board.image.context);
+  Cursor.Draw(Board.image);
   Board.context.drawImage(Board.image.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
  }
  static DrawRight(x,y,images) { for (var i=0; i<images.length; x+=Num.x) Board.image.context.drawImage(images[i++].canvas, 0, 0, Num.width, Num.length, x, y, Num.x, Num.y); }
