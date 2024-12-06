@@ -245,10 +245,14 @@ class Cursor {
    for (var i=0; i<a.length; i++) g.addColorStop(a[i][0], a[i][1]);
    c.fillStyle = g;
    c.fillRect(0, 0, window.innerWidth, window.innerHeight); } }
- static ZoomX() {return Math.floor(Math.min(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))-View.size;}
- static ZoomW() {return Math.ceil (Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))+View.size-Cursor.ZoomX();}
- static ZoomY() {return Math.floor(Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))-View.size;}
- static ZoomH() {return Math.ceil (Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))+View.size-Cursor.ZoomY();}
+ static TouchX() {return Math.floor(Math.min(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))-View.size;}
+ static TouchW() {return Math.ceil (Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))+View.size-Cursor.TouchX();}
+ static TouchY() {return Math.floor(Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))-View.size;}
+ static TouchH() {return Math.ceil (Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))+View.size-Cursor.TouchY();}
+ static ZoomX()  {return Side.IsMousing() ? 0 : Cursor.TouchX();}
+ static ZoomW()  {return Side.IsMousing() ? Cursor.cursors[3].point.x : Cursor.TouchW();}
+ static ZoomY()  {return Side.IsMousing() ? 0 : Cursor.TouchY();}
+ static ZoomH()  {return Side.IsMousing() ? Cursor.cursors[3].point.y : Cursor.TouchH();}
  static #IsFocussed() { for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors.state == Cursor.states.focussed) return true; return false; }
  static #DrawCrosshair(c) {
   for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors[i].state == Cursor.states.focussed) {
@@ -277,7 +281,7 @@ class Cursor {
    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(c, Cursor.cursors[i]); 
   }
  }
- Update(e)      {this.point.x       = e.offsetX; this.point.y = e.offsetY;}
+ Update(e)      {this.point.x = e.offsetX; this.point.y = e.offsetY;}
  Focus()        {this.state         = Cursor.states.focussed; }
  Scroll()       {this.state         = Cursor.states.scrolling;}
  Release()      {this.state         = Cursor.states.nothing;  }
@@ -300,15 +304,23 @@ class Side {
  static #sides = [];
  #side;
  #e;
+ #buttons;
  #point;
  #cursor;
  constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor; Side.#sides.push(this);}
- static ZoomX() {return Math.floor(Math.min(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)-View.size);}
- static ZoomW() {return Math.ceil (Math.max(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)+View.size)-Side.ZoomX();}
- static ZoomY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)-View.size);}
- static ZoomH() {return Math.ceil (Math.max(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)+View.size)-Side.ZoomY();}
+ static TouchX() {return Math.floor(Math.min(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)-View.size);}
+ static TouchW() {return Math.ceil (Math.max(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)+View.size)-Side.TouchX();}
+ static TouchY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)-View.size);}
+ static TouchH() {return Math.ceil (Math.max(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)+View.size)-Side.TouchY();}
+ static ZoomX()  {return Side.IsMousing() ? 0 : Side.TouchX();}
+ static ZoomW()  {return Side.IsMousing() ? Side.#mouse.#e.offsetX : Side.TouchW();}
+ static ZoomY()  {return Side.IsMousing() ? 0 : Side.TouchY();}
+ static ZoomH()  {return Side.IsMousing() ? Side.#mouse.#e.offsetY : Side.TouchH();}
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
+ #IsDoubleClick() {
+  return false;
+ }
  #Focus() {
   if ((Side.#left == this) && Side.#right.#cursor.Focussed()) Side.#right.#cursor.Scroll();
   if ((Side.#right == this) && Side.#left.#cursor.Focussed()) Side.#left.#cursor.Scroll();
@@ -326,8 +338,8 @@ class Side {
   if (Side.#left.#IsDown()  &&  Side.#right.#IsDown()) return Side.#zoom;
   return (e.offsetX < (window.innerWidth/2)) ? Side.#left : Side.#right; }
  static #Distance() {if ((Side.#left.#point==undefined)||(Side.#right.#point==undefined)) return 0; else return Math.abs(Side.#right.#point.x - Side.#left.#point.x);}
- static #Zoom(d) {
-  if (Side.IsZooming()) {
+ static #Zoom(e) {
+  if (Side.IsZooming(e)) {
    var dx = Cursor.ZoomW() - Side.ZoomW();
    var dy = Cursor.ZoomH() - Side.ZoomH();
    if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) {View.Out(); Side.Unzoom();}
@@ -358,9 +370,10 @@ class Side {
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
   if (!p.#IsDown()) return;
+  p.#buttons = e.buttons;
   redraw=true;
   if (p.#point==undefined) p.#point = new Point(e);
-  if (!Side.#Zoom()) if ((p == Side.#mouse) || (p.#cursor.IsScrolling())) {
+  if (!Side.#Zoom(e)) if ((p == Side.#mouse) || (p.#cursor.IsScrolling())) {
    if ((p.#point.x - e.offsetX)>=(0.75*View.size)) {p.#point.x-=View.size; p.#Scrolling(); if (Side.canRight) Board.IncX(); }
    if ((e.offsetX - p.#point.x)>=(0.75*View.size)) {p.#point.x+=View.size; p.#Scrolling(); if (Side.canLeft ) Board.DecX(); }
    if ((p.#point.y - e.offsetY)>=(0.75*View.size)) {p.#point.y-=View.size; p.#Scrolling(); if (Side.canDown ) Board.IncY(); }
@@ -380,22 +393,37 @@ class Side {
  }
 
  static #SwitchSides(p) {
-  if ((p == Side.#left) || (p == Side.#right)) {
-   var o = (p==Side.#right) ? Side.#left : Side.#right;
-   if (o.#cursor.#IsDown()) {
-    p.#e = o.#e;
-    p.#point = o.#point;
-    p.#cursor.point = o.#cursor.point;
-    return o;
-   }
-  }
-  return p;
+  if ((p != Side.#left) && (p != Side.#right)) return p;
+  var o = (p==Side.#right) ? Side.#left : Side.#right;
+  if (!o.#IsDown()) return p;
+  p.#e = o.#e;
+  p.#point = o.#point;
+  p.#cursor.point = o.#cursor.point;
+  return o;
  }
 
  static IsDown()      { return Side.#left.#IsDown() || Side.#right.#IsDown() || Side.#mouse.#IsDown(); }
  static IsScrolling() { return  Side.#mouse.#IsDown() || (Side.#left.#IsDown() ^ Side.#right.#IsDown()); }
  static IsNothing()   { return !(Side.#left.#IsDown() || Side.#right.#IsDown()); }
- static IsZooming()   { return Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown(); }
+ static IsMousing()   { return Side.#mouse.#IsDown(); }
+ static IsZooming(e=undefined)  {
+  if (Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown()) return true;
+  if (Side.#mouse.#IsDown()) {
+   console.log("buttones = " + Side.#mouse.#buttons);
+   if (Side.#mouse.#buttons == 3) return true;
+  }  //if (e != undefined) {
+  //  if (e.pointerType == 'mouse') {
+  //    if (e.buttons == 3) {
+  //      return true;
+  //    }
+  //  }
+  //}
+  return false;
+  // return (Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown())
+  //     || ((e != undefined) 
+  //     && (e.pointerType == 'mouse') 
+  //     && (e.buttons == 3)); 
+ }
  static Unzoom()      { Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
  static {
   Side.#left  = new Side(Side.side.left,  new Cursor(Side.side.left));
