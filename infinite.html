@@ -249,9 +249,9 @@ class Cursor {
  static TouchW() {return Math.ceil (Math.max(Cursor.cursors[0].point.x, Cursor.cursors[1].point.x, Cursor.cursors[2].point.x))+View.size-Cursor.TouchX();}
  static TouchY() {return Math.floor(Math.min(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))-View.size;}
  static TouchH() {return Math.ceil (Math.max(Cursor.cursors[0].point.y, Cursor.cursors[1].point.y, Cursor.cursors[2].point.y))+View.size-Cursor.TouchY();}
- static ZoomX()  {return Side.IsMousing() ? 0 : Cursor.TouchX();}
+ static ZoomX()  {return Side.IsMousing() ? View.size/2 : Cursor.TouchX();}
  static ZoomW()  {return Side.IsMousing() ? Cursor.cursors[3].point.x : Cursor.TouchW();}
- static ZoomY()  {return Side.IsMousing() ? 0 : Cursor.TouchY();}
+ static ZoomY()  {return Side.IsMousing() ? View.size/2 : Cursor.TouchY();}
  static ZoomH()  {return Side.IsMousing() ? Cursor.cursors[3].point.y : Cursor.TouchH();}
  static #IsFocussed() { for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors.state == Cursor.states.focussed) return true; return false; }
  static #DrawCrosshair(c) {
@@ -312,9 +312,9 @@ class Side {
  static TouchW() {return Math.ceil (Math.max(Side.#left.#e.offsetX, Side.#right.#e.offsetX, Side.#zoom.#e.offsetX)+View.size)-Side.TouchX();}
  static TouchY() {return Math.floor(Math.min(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)-View.size);}
  static TouchH() {return Math.ceil (Math.max(Side.#left.#e.offsetY, Side.#right.#e.offsetY, Side.#zoom.#e.offsetY)+View.size)-Side.TouchY();}
- static ZoomX()  {return Side.IsMousing() ? 0 : Side.TouchX();}
+ static ZoomX()  {return Side.IsMousing() ? View.size/2 : Side.TouchX();}
  static ZoomW()  {return Side.IsMousing() ? Side.#mouse.#e.offsetX : Side.TouchW();}
- static ZoomY()  {return Side.IsMousing() ? 0 : Side.TouchY();}
+ static ZoomY()  {return Side.IsMousing() ? View.size/2 : Side.TouchY();}
  static ZoomH()  {return Side.IsMousing() ? Side.#mouse.#e.offsetY : Side.TouchH();}
  #Is(e) {return (this.#e!=undefined) && (this.#e.pointerId==e.pointerId);}
  #IsDown() {return this.#e!=undefined;}
@@ -342,8 +342,9 @@ class Side {
   if (Side.IsZooming(e)) {
    var dx = Cursor.ZoomW() - Side.ZoomW();
    var dy = Cursor.ZoomH() - Side.ZoomH();
-   if ((dx > 0) && (dy > 0) && ((dx >  View.Size) || (dy >  View.Size))) {View.Out(); Side.Unzoom();}
-   if ((dx < 0) && (dy < 0) && ((dx < -View.Size) || (dy < -View.Size))) {View.In();  Side.Unzoom();}
+   console.log("zooming dx = " + dx + ", dy = " +dy);
+   if ((dx >  View.size) && (dy >  View.size)) {View.In();  Side.Unzoom();}
+   if ((dx < -View.size) && (dy < -View.size)) {View.Out(); Side.Unzoom();}
   }
   return Side.IsZooming();
  }
@@ -411,20 +412,10 @@ class Side {
   if (Side.#mouse.#IsDown()) {
    console.log("buttones = " + Side.#mouse.#buttons);
    if (Side.#mouse.#buttons == 3) return true;
-  }  //if (e != undefined) {
-  //  if (e.pointerType == 'mouse') {
-  //    if (e.buttons == 3) {
-  //      return true;
-  //    }
-  //  }
-  //}
+  }
   return false;
-  // return (Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown())
-  //     || ((e != undefined) 
-  //     && (e.pointerType == 'mouse') 
-  //     && (e.buttons == 3)); 
  }
- static Unzoom()      { Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
+ static Unzoom()      { Side.#mouse.#Reset(); Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
  static {
   Side.#left  = new Side(Side.side.left,  new Cursor(Side.side.left));
   Side.#right = new Side(Side.side.right, new Cursor(Side.side.right));
@@ -488,7 +479,7 @@ class View {
  }
  static X(x)    { return Math.floor((x-View.left)/View.size); }
  static Y(y)    { return Math.floor((y-View.top)/View.size);  }
- static Is(e,f) { return (View.X(e.offsetX) == View.X(f.offsetX)) && (View.Y(e.offsetY) == View.Y(f.offsetY)); }
+ static Is(e,f) { return (f != undefined) && (View.X(e.offsetX) == View.X(f.offsetX)) && (View.Y(e.offsetY) == View.Y(f.offsetY)); }
 }
 class Board {
  static x;
