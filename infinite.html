@@ -334,7 +334,7 @@ class Side {
  static #sides = [];
  #side;
  #e;
- #buttons;
+ #buttons = 0;
  #point;
  #cursor;
  constructor(side, cursor=undefined) {this.#side = side; this.#cursor = cursor; Side.#sides.push(this);}
@@ -382,6 +382,7 @@ class Side {
    Side.canRight |= (x==(Board.x+View.wide-1)); } }
 
  static Down(e) {
+  if (e.pointerType == 'mouse') { Side.#mouse.#buttons |= e.buttons; console.log("down: " + e.buttons + " : " + Side.#mouse.#buttons);}
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
   p.#e = e;
@@ -393,7 +394,7 @@ class Side {
   redraw = true; }
 
  static Move(e) {
-  if (e.pointerType == 'mouse') Side.#mouse.#buttons = e.buttons;
+  if (e.pointerType == 'mouse') { Side.#mouse.#buttons |= e.buttons; console.log("move: " + e.buttons + " : " + Side.#mouse.#buttons);}
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
   if (!p.#IsDown()) return;
@@ -406,8 +407,9 @@ class Side {
    if ((e.offsetY - p.#point.y)>=(0.75*View.size)) {p.#point.y+=View.size; p.#Scrolling(); if (Side.canUp   ) Board.DecY(); }}}
 
  static Up(e) {
+  if (e.pointerType == 'mouse') {Side.#mouse.#buttons = 0; console.log("  up: " + e.buttons + " : " + Side.#mouse.#buttons);}
   var p = Side.#Pointer(e);
-   if (View.Is(e, p.#e)) {
+  if (View.Is(e, p.#e)) {
    if (p.#cursor.IsScrolling()) p = Side.#SwitchSides(p); else if (p.#cursor.Focussed()) {
    if (Side.IsStepping(e)) Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
     if (Side.IsFlagging(e)) Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
@@ -416,6 +418,10 @@ class Side {
   p.#cursor.Release();
   p.#e = undefined;
   redraw = true;
+ }
+
+ static Cancel(e) {
+  if (e.pointerType == 'mouse') { Side.#mouse.#buttons = 0; console.log("kill: " + e.buttons + " : " + Side.#mouse.#buttons);}
  }
 
  static IsStepping(e=undefined) {
@@ -561,6 +567,7 @@ class Control {
   window.addEventListener("pointerdown",       function(e) {try {Side.Down(e);   e.preventDefault();} catch(x){}});
   window.addEventListener("pointermove",       function(e) {try {Side.Move(e);   e.preventDefault();} catch(x){}});
   window.addEventListener("pointerup",         function(e) {try {Side.Up(e);     e.preventDefault();} catch(x){}});
+  window.addEventListener("pointercancel",     function(e) {try {Side.Cancel(e); e.preventDefault();} catch(x){}});
   window.addEventListener("wheel",             function(e) {try {Board.Wheel(e);                    } catch(x){}});
   window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                } catch(x){}});
  }
