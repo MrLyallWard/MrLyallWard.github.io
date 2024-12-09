@@ -256,11 +256,26 @@ class Cursor {
  static #IsFocussed() { for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors.state == Cursor.states.focussed) return true; return false; }
  static #DrawCrosshair(c) {
   for (let i=0; i<Cursor.cursors.length; i++) if (Cursor.cursors[i].state == Cursor.states.focussed) {
-   var x = View.left + (View.X(Cursor.cursors[i].point.x) * View.size);
-   var y = View.top  + (View.Y(Cursor.cursors[i].point.y) * View.size);
-   c.globalAlpha = 0.2; c.lineWidth = 1; c.strokeStyle = "#000000";
-   c.beginPath(); c.rect(x, 0, View.size, window.innerHeight); c.fill();
-   c.beginPath(); c.rect(0, y, window.innerWidth, View.size ); c.fill();
+   var x  = View.left + (View.X(Cursor.cursors[i].point.x) * View.size);
+   var y  = View.top  + (View.Y(Cursor.cursors[i].point.y) * View.size);
+   var Y  = y+View.size,         X = x+View.size;
+   var y1 = (3*View.top  + y)/4, Y3 = (3*View.bottom + Y)/4;
+   var x1 = (3*View.left + x)/4, X3 = (3*View.right  + X)/4; 
+   c.globalAlpha = 0.7; c.lineWidth = View.size; c.strokeStyle = "#000000";
+   Cursor.#Line(c, Cursor.cursors[i].point.x, View.top,                  Cursor.cursors[i].point.x, y1                       );
+   Cursor.#Line(c, Cursor.cursors[i].point.x, View.bottom,               Cursor.cursors[i].point.x, Y3                       );
+   Cursor.#Line(c, View.left,                 Cursor.cursors[i].point.y, x1,                        Cursor.cursors[i].point.y);
+   Cursor.#Line(c, X3,                        Cursor.cursors[i].point.y, View.right,                Cursor.cursors[i].point.y);
+   c.globalAlpha = 0.3; c.lineWidth = View.size; c.strokeStyle = Side.IsStepping() ? "#FF0000" : "#00FF00";
+   Cursor.#Line(c, x+View.size/2, y1,            x+View.size/2, y            );
+   Cursor.#Line(c, x+View.size/2, Y,             x+View.size/2, Y3           );
+   Cursor.#Line(c ,x1,            y+View.size/2, x,             y+View.size/2);
+   Cursor.#Line(c, X,             y+View.size/2, X3,            y+View.size/2);
+   c.globalAlpha = 1; c.lineWidth = View.size/16;
+   Cursor.#Line(c, Cursor.cursors[i].point.x, View.top,                  Cursor.cursors[i].point.x, y                        );
+   Cursor.#Line(c, Cursor.cursors[i].point.x, Y,                         Cursor.cursors[i].point.x, View.bottom              );
+   Cursor.#Line(c, View.left,                 Cursor.cursors[i].point.y, x,                         Cursor.cursors[i].point.y);
+   Cursor.#Line(c, X,                         Cursor.cursors[i].point.y, View.right,                Cursor.cursors[i].point.y);
    c.globalAlpha = 1;
    return true;
   }
@@ -269,27 +284,26 @@ class Cursor {
 //***********************************************************************************************************************************************************************************************
 //***********************************************************************************************************************************************************************************************
 //***********************************************************************************************************************************************************************************************
-static #Outline(image, x, y, w, h) {
- image.context.globalAlpha = 0.333;
- image.context.strokeStyle = "#000000";
- image.context.lineWidth = View.size;
- image.context.beginPath();
- image.context.roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
- image.context.stroke();
- image.context.globalAlpha = 1;
+ static #Outline(image, x, y, w, h) {
+  image.context.globalAlpha = 0.333;
+  image.context.strokeStyle = "#000000";
+  image.context.lineWidth = View.size;
+  image.context.beginPath();
+  image.context.roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
+  image.context.stroke();
+  image.context.globalAlpha = 1;
 }
-static #DrawZooming(image) {
- var x1=Side.ZoomX(),   y1=Side.ZoomY(),   w1=Side.ZoomW(),   h1=Side.ZoomH();
- var x2=Cursor.ZoomX(), y2=Cursor.ZoomY(), w2=Cursor.ZoomW(), h2=Cursor.ZoomH();
- var slice = new Image(w1, h1);
- slice.context.drawImage(image.canvas, x1, y1, w1, h1, 0, 0, w1, h1);
- image.context.fillStyle = "#000000";
- image.context.fillRect(0, 0, w1, h1);
- image.context.drawImage(slice.canvas, x2, y2, w2, h2);
- Cursor.#Outline(image, x2, y2, w2, h2);
- Cursor.#Outline(image, x1, y1, w1, h1);
-}
-
+ static #DrawZooming(image) {
+  var x1=Side.ZoomX(),   y1=Side.ZoomY(),   w1=Side.ZoomW(),   h1=Side.ZoomH();
+  var x2=Cursor.ZoomX(), y2=Cursor.ZoomY(), w2=Cursor.ZoomW(), h2=Cursor.ZoomH();
+  var slice = new Image(w1, h1);
+  slice.context.drawImage(image.canvas, x1, y1, w1, h1, 0, 0, w1, h1);
+  image.context.fillStyle = "#000000";
+  image.context.fillRect(0, 0, w1, h1);
+  image.context.drawImage(slice.canvas, x2, y2, w2, h2);
+  Cursor.#Outline(image, x2, y2, w2, h2);
+  Cursor.#Outline(image, x1, y1, w1, h1);
+ }
  State(s) { for (let i=0; i<Cursor.cursors.length; i++) Cursor.cursors[i].state=Cursor.states.nothing; this.state = s; }
  static Draw(image) {
   if (Side.IsZooming()) Cursor.#DrawZooming(image); 
@@ -354,7 +368,6 @@ class Side {
   if (Side.IsZooming(e)) {
    var dx = Cursor.ZoomW() - Side.ZoomW();
    var dy = Cursor.ZoomH() - Side.ZoomH();
-   console.log("zooming dx = " + dx + ", dy = " +dy);
    if ((dx >  View.size) && (dy >  View.size)) {View.In();  Side.Unzoom();}
    if ((dx < -View.size) && (dy < -View.size)) {View.Out(); Side.Unzoom();}
   }
@@ -380,10 +393,10 @@ class Side {
   redraw = true; }
 
  static Move(e) {
+  if (e.pointerType == 'mouse') Side.#mouse.#buttons = e.buttons;
   var p = Side.#Pointer(e);
   p.#cursor.Update(e);
   if (!p.#IsDown()) return;
-  p.#buttons = e.buttons;
   redraw=true;
   if (p.#point==undefined) p.#point = new Point(e);
   if (!Side.#Zoom(e)) if (((p == Side.#mouse) && Side.#mouse.#IsDown()) || (p.#cursor.IsScrolling())) {
@@ -394,16 +407,30 @@ class Side {
 
  static Up(e) {
   var p = Side.#Pointer(e);
-  if (View.Is(e, p.#e)) {
+   if (View.Is(e, p.#e)) {
    if (p.#cursor.IsScrolling()) p = Side.#SwitchSides(p); else if (p.#cursor.Focussed()) {
-    if ((p==Side.#right) || ((e.pointerType == 'mouse') && (e.button == 0))) Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
-    if ((p==Side.#left)  || ((e.pointerType == 'mouse') && (e.button == 2)))            Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
-   }
+   if (Side.IsStepping(e)) Score.Step(Level.Step(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY)));
+    if (Side.IsFlagging(e)) Level.Flag(Board.x+View.X(e.offsetX), Board.y+View.Y(e.offsetY));
+    }
   }
   p.#cursor.Release();
   p.#e = undefined;
   redraw = true;
  }
+
+ static IsStepping(e=undefined) {
+  if (Side.#right.#IsDown()) return true;
+  if ((e != undefined) && ((e.pointerType == 'mouse') && (e.button == 0))) return true;
+  if (Side.#mouse.#IsDown() && (Side.#mouse.#buttons == 1)) return true;
+  return false;
+ }
+
+static IsFlagging(e=undefined) {
+ if (Side.#left.#IsDown()) return true;
+ if ((e != undefined) && (e.pointerType == 'mouse') && (e.button == 2)) return true;
+ if (Side.#mouse.#IsDown() && (Side.#mouse.#buttons == 2)) return true;
+  return false;
+}
 
  static #SwitchSides(p) {
   if ((p != Side.#left) && (p != Side.#right)) return p;
@@ -421,7 +448,7 @@ class Side {
  static IsMousing()   { return Side.#mouse.#IsDown(); }
  static IsZooming(e=undefined)  {
   if (Side.#left.#IsDown() && Side.#right.#IsDown() && Side.#zoom.#IsDown()) return true;
-  if (Side.#mouse.#IsDown()) {if (Side.#mouse.#buttons == 3) return true;}
+  if (Side.#mouse.#IsDown())  if (Side.#mouse.#buttons == 3) return true;
   return false;
  }
  static Unzoom()      { Side.#mouse.#Reset(); Side.#zoom.#Reset(); Side.#left.#Reset(); Side.#right.#Reset(); }
