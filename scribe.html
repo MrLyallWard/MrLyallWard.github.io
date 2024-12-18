@@ -234,7 +234,6 @@ class View {
  static Resize(e) {
   View.Size();
   Display.Resize();
-  Display.redraw = true;
  }
  static FullScreen(e) {View.fullScreen = document.fullscreenElement;}
  static #IsFullScreen() {return document.fullscreenElement != undefined;}
@@ -255,18 +254,22 @@ class Display {
   Display.Resize();
  }
  static Redraw(composition) {
-  Display.sheet.context.fillStyle='#FFFFFF';
-  Display.sheet.context.globalAlpha = 1.0;
-  Display.sheet.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
-  Display.#y = View.top;
-  composition.Draw();
-  Display.display.context.drawImage(Display.sheet.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
+  if (Display.redraw) {
+   Display.sheet.context.fillStyle='#FFFFFF';
+   Display.sheet.context.globalAlpha = 1.0;
+   Display.sheet.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
+   Display.#y = View.top;
+   composition.Draw();
+   Display.display.context.drawImage(Display.sheet.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
+   Display.redraw = false;
+  }
  }
  static Resize() {
   Display.sheet.canvas.setAttribute("width", window.innerWidth);
   Display.sheet.canvas.setAttribute("height", window.innerHeight);
   Display.display.canvas.setAttribute("width", window.innerWidth);
   Display.display.canvas.setAttribute("height", window.innerHeight);
+  Display.redraw = true;
  }
  static Context() { return Display.sheet.context; }
  static y() { return Display.#y; }
