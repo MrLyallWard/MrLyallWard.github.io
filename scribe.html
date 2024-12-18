@@ -115,11 +115,12 @@ class Time {
 //  static sixth = Math.pow(2, 1/6);
 //} 
 
-//class Key {
-// static fifths = Object.freeze(["♭♭♭♭♭♭♭", "♭♭♭♭♭♭", "♭♭♭♭♭", "♭♭♭♭", "♭♭♭", "♭♭", "♭", "", "♯", "♯♯", "♯♯♯", "♯♯♯♯", "♯♯♯♯♯", "♯♯♯♯♯♯", "♯♯♯♯♯♯♯"]);
-// // signature
-//}
-//
+class Key {
+ static fifths = Object.freeze(["♭♭♭♭♭♭♭", "♭♭♭♭♭♭", "♭♭♭♭♭", "♭♭♭♭", "♭♭♭", "♭♭", "♭", "", "♯", "♯♯", "♯♯♯", "♯♯♯♯", "♯♯♯♯♯", "♯♯♯♯♯♯", "♯♯♯♯♯♯♯"]);
+ // signature
+ 
+}
+
 //class Octave {
 // static notes = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]; 
 // static flats = ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]; 
@@ -151,6 +152,7 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
  instrument;
  clef;
  time;
+ key;
  y;
  h;
  x;
@@ -161,6 +163,11 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
   this.volume = new Volume(parts[1]);
   this.clef = new Clef(parts[2]);
   this.time = new Time(parts[3]);
+  for (let i = 4; i < parts.length; i++) {
+   switch (parts[i][0]) {
+    case "♯": case "♭": case "𝄪": this.key = new Key(parts[i]); break;
+   } 
+  }
  }
  static #Line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1, y2); c.stroke(); }
  Draw() {
@@ -181,12 +188,10 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
 
 class Ensemble {
  staves = [];
- tempo;
  parts;
  constructor(s) {
   var parts = s.split("{");
   this.parts = parts;
-  this.tempo = new Tempo(parts[0]);
   for (let i=1; i<parts.length; i++) this.staves.push(new Staff(parts[i]));
  }
  Draw() {
@@ -228,6 +233,7 @@ class View {
  }
  static Resize(e) {
   View.Size();
+  Display.Resize();
   Display.redraw = true;
  }
  static FullScreen(e) {View.fullScreen = document.fullscreenElement;}
@@ -269,13 +275,13 @@ class Display {
 
 class Control {
  static Onload() {
-  window.addEventListener("resize",            function(e) {try {View.Resize(e);                       } catch(x){}});
-  window.addEventListener("pointerdown",       function(e) {try {Control.Down(e);   e.preventDefault();} catch(x){}});
-  window.addEventListener("pointermove",       function(e) {try {Control.Move(e);   e.preventDefault();} catch(x){}});
-  window.addEventListener("pointerup",         function(e) {try {Control.Up(e);     e.preventDefault();} catch(x){}});
-  window.addEventListener("pointercancel",     function(e) {try {Control.Cancel(e); e.preventDefault();} catch(x){}});
-  window.addEventListener("wheel",             function(e) {try {Display.Wheel(e);                     } catch(x){}});
-  window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                   } catch(x){}});
+  window.addEventListener("resize",            function(e) {try {View.Resize(e);                       } catch(x){console.log("resize "    +x)}});
+  window.addEventListener("pointerdown",       function(e) {try {Control.Down(e);   e.preventDefault();} catch(x){console.log("down "      +x)}});
+  window.addEventListener("pointermove",       function(e) {try {Control.Move(e);   e.preventDefault();} catch(x){console.log("move "      +x)}});
+  window.addEventListener("pointerup",         function(e) {try {Control.Up(e);     e.preventDefault();} catch(x){console.log("up "        +x)}});
+  window.addEventListener("pointercancel",     function(e) {try {Control.Cancel(e); e.preventDefault();} catch(x){console.log("cancel "    +x)}});
+  window.addEventListener("wheel",             function(e) {try {Display.Wheel(e);                     } catch(x){console.log("wheel "     +x)}});
+  window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                   } catch(x){console.log("fullscreen "+x)}});
  }
  static Move(e) {}
  static Up(e) {
@@ -285,7 +291,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = " 120 {∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {∿ mf 𝄡 4/4 𝅝E3 | 𝅝E3 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3 ; 120 {∿ mp 𝄞 4/4 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3;"
+var score = "{∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {∿ mf 𝄡 4/4 𝅝E3 | 𝅝E3 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3; {∿ mp 𝄞 4/4 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3;"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
@@ -294,9 +300,9 @@ function Onload() {
  window.scrollbars.visible = false;
  Display.Onload();
  Control.Onload();
- setInterval(function(){try {twentyfivehertz();} catch(x){}}, 40);
+ setInterval(function(){try {twentyfivehertz();} catch(x){console.log("time " + x)}}, 40);
 }
 window.onload = Onload;
-console.log('Sweeper started with a github change from vscode.dev');
+console.log('Scribe started.dev');
 </script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
 <body><canvas id="display" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
