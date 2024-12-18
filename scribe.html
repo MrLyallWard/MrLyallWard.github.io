@@ -1,0 +1,302 @@
+<html><head><title>Insouciant scribe</title><meta name="copyright" content="Copyright Lyall Ward 2024"><script>
+ // where are we going with all of this?
+ // add performers exprsssion - beaming, slurs, staccato and ties
+class Point {x; y; constructor(e=undefined) {this.x=(e==undefined)?0:e.offsetX;this.y=(e==undefined)?0:e.offsetY;}}
+class Coord {
+ x; y;
+ constructor(e) {
+  this.x=Math.floor((e.offsetX-View.left)/View.size);
+  this.y=Math.floor((e.offsetY-View.right)/View.size);}
+ Same(e) {return (this.x==e.x) && (this.y==e.y);} }
+class Image {
+ canvas; context;
+ constructor(w, h, c = undefined) {
+  this.canvas = (c==undefined)?document.createElement('canvas'):c;
+  this.canvas.setAttribute("width", w);
+  this.canvas.setAttribute("height", h);
+  this.context = this.canvas.getContext("2d"); } }
+
+class Audio {
+ static player;
+ static angle;
+ static Play() {
+  Audio.player = new (window.AudioContext || window.webkitAudioContext);
+  Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
+ }
+ static Stop() {
+ }
+
+}
+
+//class Stero {
+// static left = "🖜";
+// static right = "🖝";
+// static center = "🕪";
+//}
+//
+//class File {
+//  static play = "▶";
+//  static stop = "⏹";
+//  static pause = "⏸︎";
+//  static loop = "⟳";
+//  static save = "⤓🖫";
+//  static load = "🖪⤒";
+//  static put = "⤓🖳";
+//  static get = "🖳⤒";
+//  static maximise = "🗖";
+//}
+
+class Tempo {
+ bpm = 100;
+ static tempos = Object.freeze([ "larghissimo", "grave", "largo", "lento", "larghetto", "adagio", "adagietto", "andante moderato", "andante", 
+     "andantino", "moderato", "allegretto", "allegro moderato", "allegro", "vivace", "vivacissimo", "allegrissimo", "presto", "prestissimo" ]);
+ constructor(s) { this.bpm = parseInt(s); }
+ Precipitando() { if (this.bpm < 200) this.bpm = Math.ceil((this.bpm+1)/10)*10; }
+ Accelerando()  { if (this.bpm < 200) this.bpm++; }
+ Ritardando()   { if (this.bpm >  20) this.bpm--; }
+ Slow()         { if (this.bpm >  20) this.bpm = Math.floor((this.bpm-1)/10)*10; }
+ Beat()         { return this.bpm/60; }
+}
+
+class Instrument {
+ static instruments = [ "guitar", "piano", "beep", "ring" ];
+ static icons = [ "🎸", "🎹", "∿", "🕭"];
+ instrument;
+ constructor(s) {
+  for (this.instrument=0; this.instrument<Instrument.icons.length;this.instrument++) if (Instrument.icons[this.instrument] == s) return;
+ }
+}
+
+class Volume {
+ static words = Object.freeze([ "pianissimo", "molto piano", "piano", "mezzo piano", "mezzo forte", "forte", "molto forte", "fortissimo" ]);
+ static marks = Object.freeze([ "ppp",        "pp",          "p",      "mp",         "mf",          "f",     "ff",          "fff"        ]);
+ static levels = [];
+ level;
+ static {
+  for (let i = 0; i < 8; i++) Volume.levels.push(1/Math.pow(2,(7-i)/2));
+  Volume.levels = Object.freeze(Volume.levels);
+ }
+ constructor(s) {
+  for (this.level=0; this.level<Volume.marks.length;this.level++) if (Volume.marks[this.level] == s) return;
+ }
+}
+
+class Clef {
+ static clefs = Object.freeze([ "𝄞", "𝄡", "𝄢"]);
+ static #h = [7, 5.25, 5];
+ static #y = [-3, -1.25, -1.75];
+ clef;
+ constructor(s) {
+  for (this.clef=0; this.clef<Clef.clefs.length;this.clef++) if (Clef.clefs[this.clef] == s) return;
+ }
+ Draw(x, y) {
+  var c = Display.Context();
+  var h = View.space * Clef.#h[this.clef];
+  c.font=h+"px Impact";
+  c.fillStyle="#000000";
+  c.fillText(Clef.clefs[this.clef], x + View.space, y + h + (Clef.#y[this.clef] * View.space));
+ }
+}
+
+class Time {
+ static signatures = Object.freeze([[2,4], [3,4], [4,4], [6,8], [4,8]]);
+ time; beats; notes;
+ constructor(s) {
+  var parts = s.split('/');
+  this.beats = parseInt(parts[0]);
+  this.notes = parseInt(parts[1]);
+  for (this.time = 0; this.time < Time.signatures.length; this.time++) if ((Time.signatures[this.time][0]==this.beats) && (Time.signatures[this.time][0]==this.notes)) return;
+ }
+}
+
+//class Scale {
+//  static A4 = 440;
+//  static twelfth = Math.pow(2, 1/12);
+//  static sixth = Math.pow(2, 1/6);
+//} 
+
+//class Key {
+// static fifths = Object.freeze(["♭♭♭♭♭♭♭", "♭♭♭♭♭♭", "♭♭♭♭♭", "♭♭♭♭", "♭♭♭", "♭♭", "♭", "", "♯", "♯♯", "♯♯♯", "♯♯♯♯", "♯♯♯♯♯", "♯♯♯♯♯♯", "♯♯♯♯♯♯♯"]);
+// // signature
+//}
+//
+//class Octave {
+// static notes = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]; 
+// static flats = ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]; 
+//
+//}
+//
+//class Notes {
+// 
+//}
+//
+//class Note {
+// static notes = "𝅝𝅗𝅥𝅘𝅥𝅘𝅥𝅮𝅘𝅥𝅯𝅘𝅥𝅰𝅘𝅥𝅱𝅘𝅥𝅲";
+//
+// Beat() {return 1;}
+//}
+//
+//class Rest {
+// static rests = "𝄻𝄼𝄽𝄾𝄿𝅀";
+//}
+
+class Sharp       { static character = "♯"; }
+class DoubleSharp { static character = "𝄪"; }
+class Flat        { static character = "♭"; }
+class Bar         { static character = "|"; }
+
+class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 
+ lines = 5;
+ volume;
+ instrument;
+ clef;
+ time;
+ y;
+ h;
+ x;
+ w;
+ constructor(s) {
+  var parts = s.split(" ");
+  this.instrument = new Instrument(parts[0]);
+  this.volume = new Volume(parts[1]);
+  this.clef = new Clef(parts[2]);
+  this.time = new Time(parts[3]);
+ }
+ static #Line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1, y2); c.stroke(); }
+ Draw() {
+  var c = Display.Context();
+  this.h = View.space * (this.lines + 2);
+  this.y = Display.y() + this.h;
+  this.x = View.left;
+  var y = this.y;
+  c.lineWidth = View.stroke;
+  c.strokeStyle = "#000000";
+  c.globalAlpha = 1.0;
+  for (let i = 0; i < this.lines; i++, y+=View.space) { c.beginPath(); c.moveTo(this.x, y); c.lineTo(View.right, y); c.stroke(); }
+  this.clef.Draw(this.x, this.y);
+  Staff.#Line(c, this.x, this.y, this.x, y-View.space);
+  Display.Advance(y);
+ }
+}
+
+class Ensemble {
+ staves = [];
+ tempo;
+ parts;
+ constructor(s) {
+  var parts = s.split("{");
+  this.parts = parts;
+  this.tempo = new Tempo(parts[0]);
+  for (let i=1; i<parts.length; i++) this.staves.push(new Staff(parts[i]));
+ }
+ Draw() {
+  for (let i=0; i<this.staves.length; i++) {
+   this.staves[i].Draw();
+  }
+ }
+}
+
+class Composition {
+ ensembles = []; 
+ constructor(s) {
+  var parts = s.split(";");
+  for (var i=0; i < parts.length; i++) this.ensembles.push(new Ensemble(parts[i]));
+ }
+ Draw() {
+  for (let i=0; i<this.ensembles.length; i++) {
+   this.ensembles[i].Draw();
+  }
+ }
+}
+
+class View {
+ static left;  static right;
+ static top;   static bottom;
+ static space;
+ static stroke;
+ static fullScreen = false;
+ static #Window() {
+  View.left   = Math.floor(window.innerWidth*0.05);
+  View.right  = Math.ceil(window.innerWidth*0.95);
+  View.top    = Math.floor(window.innerHeight*0.10);
+  View.bottom = Math.ceil(window.innerHeight*0.95);
+  View.space  = Math.floor(1+window.innerHeight*0.01);
+  View.stroke = Math.ceil(1+window.innerHeight*0.001);
+ }
+ static Size() {
+  View.#Window();
+ }
+ static Resize(e) {
+  View.Size();
+  Display.redraw = true;
+ }
+ static FullScreen(e) {View.fullScreen = document.fullscreenElement;}
+ static #IsFullScreen() {return document.fullscreenElement != undefined;}
+ static #GoFullScreen() {Board.canvas.requestFullscreen();}
+ static #LeaveFullScreen() {document.exitFullscreen();}
+}
+
+class Display {
+ static display;
+ static sheet;
+ static #y;
+ static redraw = false;
+ static Wheel(e) { }
+ static Onload() {
+  View.Size();
+  Display.display = new Image(window.innerWidth, window.innerHeight, document.getElementById('display'));
+  Display.sheet = new Image(window.innerWidth, window.innerHeight);
+  Display.Resize();
+ }
+ static Redraw(composition) {
+  Display.sheet.context.fillStyle='#FFFFFF';
+  Display.sheet.context.globalAlpha = 1.0;
+  Display.sheet.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  Display.#y = View.top;
+  composition.Draw();
+  Display.display.context.drawImage(Display.sheet.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
+ }
+ static Resize() {
+  Display.sheet.canvas.setAttribute("width", window.innerWidth);
+  Display.sheet.canvas.setAttribute("height", window.innerHeight);
+  Display.display.canvas.setAttribute("width", window.innerWidth);
+  Display.display.canvas.setAttribute("height", window.innerHeight);
+ }
+ static Context() { return Display.sheet.context; }
+ static y() { return Display.#y; }
+ static Advance(y=undefined) { Display.#y = (y==undefined) ? View.top : y; }
+}
+
+class Control {
+ static Onload() {
+  window.addEventListener("resize",            function(e) {try {View.Resize(e);                       } catch(x){}});
+  window.addEventListener("pointerdown",       function(e) {try {Control.Down(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointermove",       function(e) {try {Control.Move(e);   e.preventDefault();} catch(x){}});
+  window.addEventListener("pointerup",         function(e) {try {Control.Up(e);     e.preventDefault();} catch(x){}});
+  window.addEventListener("pointercancel",     function(e) {try {Control.Cancel(e); e.preventDefault();} catch(x){}});
+  window.addEventListener("wheel",             function(e) {try {Display.Wheel(e);                     } catch(x){}});
+  window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                   } catch(x){}});
+ }
+ static Move(e) {}
+ static Up(e) {
+  Audio.Play();
+ }
+ static Down(e) {}
+ static Cancel(e) {}
+}
+
+var score = " 120 {∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {∿ mf 𝄡 4/4 𝅝E3 | 𝅝E3 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3 ; 120 {∿ mp 𝄞 4/4 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3;"
+var composition = new Composition(score);
+function twentyfivehertz() {
+ Display.Redraw(composition);
+}
+function Onload() {
+ window.scrollbars.visible = false;
+ Display.Onload();
+ Control.Onload();
+ setInterval(function(){try {twentyfivehertz();} catch(x){}}, 40);
+}
+window.onload = Onload;
+console.log('Sweeper started with a github change from vscode.dev');
+</script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
+<body><canvas id="display" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
