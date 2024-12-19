@@ -16,18 +16,6 @@ class Image {
   this.canvas.setAttribute("height", h);
   this.context = this.canvas.getContext("2d"); } }
 
-class Audio {
- static player;
- static angle;
- static Play() {
-  Audio.player = new (window.AudioContext || window.webkitAudioContext);
-  Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
- }
- static Stop() {
- }
-
-}
-
 //class Stero {
 // static left = "🖜";
 // static right = "🖝";
@@ -46,16 +34,31 @@ class Audio {
 //  static maximise = "🗖";
 //}
 
+class Audio {
+ static player;
+ static samples = 44100;
+ static angle;
+ static beat = 44100 * 0.6;
+ static Start() {
+  Audio.player = new (window.AudioContext || window.webkitAudioContext);
+  Audio.samples = Audio.player.sampleRate;
+  Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
+ }
+ static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
+}
+
 class Tempo {
+ static beat=0.6;
  bpm = 100;
  static tempos = Object.freeze([ "larghissimo", "grave", "largo", "lento", "larghetto", "adagio", "adagietto", "andante moderato", "andante", 
      "andantino", "moderato", "allegretto", "allegro moderato", "allegro", "vivace", "vivacissimo", "allegrissimo", "presto", "prestissimo" ]);
  constructor(s) { this.bpm = parseInt(s); }
- Precipitando() { if (this.bpm < 200) this.bpm = Math.ceil((this.bpm+1)/10)*10; }
- Accelerando()  { if (this.bpm < 200) this.bpm++; }
- Ritardando()   { if (this.bpm >  20) this.bpm--; }
- Slow()         { if (this.bpm >  20) this.bpm = Math.floor((this.bpm-1)/10)*10; }
- Beat()         { return this.bpm/60; }
+ static Use(b) { Tempo.beat = 60/b.bpm; }
+ //Precipitando() { if (this.bpm < 200) this.bpm = Math.ceil((this.bpm+1)/10)*10; }
+ //Accelerando()  { if (this.bpm < 200) this.bpm++; }
+ //Ritardando()   { if (this.bpm >  20) this.bpm--; }
+ //Slow()         { if (this.bpm >  20) this.bpm = Math.floor((this.bpm-1)/10)*10; }
+ //Beat()         { return this.bpm/60; }
 }
 
 class Instrument {
@@ -153,19 +156,21 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
  clef;
  time;
  key;
+ tempo;
  y;
  h;
  x;
  w;
  constructor(s) {
   var parts = s.split(" ");
-  this.instrument = new Instrument(parts[0]);
-  this.volume = new Volume(parts[1]);
-  this.clef = new Clef(parts[2]);
-  this.time = new Time(parts[3]);
-  for (let i = 4; i < parts.length; i++) {
+  for (let i = 0; i < parts.length; i++) {
    switch (parts[i][0]) {
-    case "♯": case "♭": case "𝄪": this.key = new Key(parts[i]); break;
+    case "b": this.tempo      = new Tempo     (parts[i].replace("b", "")); break;
+    case "i": this.instrument = new Instrument(parts[i].replace("i", "")); break;
+    case "k": this.key        = new Key       (parts[i].replace("k", "")); break;
+    case "c": this.clef       = new Clef      (parts[i].replace("c", "")); break;
+    case "v": this.volume     = new Volume    (parts[i].replace("v", "")); break;
+    case "t": this.time       = new Time      (parts[i].replace("t", "")); break;
    } 
   }
  }
@@ -294,7 +299,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {∿ mf 𝄡 4/4 𝅝E3 | 𝅝E3 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3; {∿ mp 𝄞 4/4 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {∿ mf 𝄢 4/4 𝅝E3 | 𝅝E3;"
+var score = "{i∿ vmp c𝄞 t4/4 b120 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ vmf c𝄡 𝅝E3 | 𝅝E3 {i∿ vmf c𝄢 4/4 𝅝E3 | 𝅝E3; {i∿ vmp c𝄞 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ vmf c𝄡 4/4 𝅝E3 | 𝅝E3 {i∿ vmf c𝄢 4/4 𝅝E3 | 𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
