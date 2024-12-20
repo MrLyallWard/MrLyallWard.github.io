@@ -88,16 +88,18 @@ class Clef {
  static clefs = Object.freeze([ "𝄞", "𝄡", "𝄢"]);
  static #h = [7, 5.25, 5];
  static #y = [-3, -1.25, -1.75];
- clef;
+ clef; x; y; px;
  constructor(s) {
   for (this.clef=0; this.clef<Clef.clefs.length;this.clef++) if (Clef.clefs[this.clef] == s) return;
  }
  Draw(x, y) {
+  this.x  = x + (View.space/2);
+  this.px = View.space * Clef.#h[this.clef];
+  this.y  = y + this.px + (View.space * Clef.#y[this.clef]);
   var c = Display.Context();
-  var h = View.space * Clef.#h[this.clef];
-  c.font=h+"px Impact";
-  c.fillStyle="#000000";
-  c.fillText(Clef.clefs[this.clef], x + View.space, y + h + (Clef.#y[this.clef] * View.space));
+  c.font = this.px+"px Impact";
+  c.fillStyle = "#000000";
+  c.fillText(Clef.clefs[this.clef], this.x, this.y);
  }
 }
 
@@ -150,48 +152,68 @@ class Flat        { static character = "♭"; }
 class Bar         { static character = "|"; }
 
 class Measure {
- 
-}
-
-class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 
- lines = 5;
- volume;
  instrument;
+ volume;
+ tempo;
  clef;
  time;
  key;
- tempo;
  y;
  h;
  x;
  w;
- constructor(s) {
-  var parts = s.split(" ");
-  for (let i = 0; i < parts.length; i++) {
-   switch (parts[i][0]) {
-    case "b": this.tempo      = new Tempo     (parts[i].replace("b", "")); break;
-    case "i": this.instrument = new Instrument(parts[i].replace("i", "")); break;
-    case "k": this.key        = new Key       (parts[i].replace("k", "")); break;
-    case "c": this.clef       = new Clef      (parts[i].replace("c", "")); break;
-    case "v": this.volume     = new Volume    (parts[i].replace("v", "")); break;
-    case "t": this.time       = new Time      (parts[i].replace("t", "")); break;
-   } 
+ constructor(m = undefined) {
+  if (m != undefined) {
+   this.instrument = m.instrument;
+   this.volume     = m.volume;
+   this.tempo      = m.tempo;
+   this.clef       = m.clef;
+   this.time       = m.time;
+   this.key        = m.key;
   }
  }
- static #Line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1, y2); c.stroke(); }
- Draw() {
-  var c = Display.Context();
-  this.h = View.space * (this.lines + 2);
+ Draw(x, y) {
+  if (this.clef != undefined) this.clef.Draw(x, y);
+ }
+}
+
+class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 
+ lines = 5;
+ y; h; x; w;
+ measures = [];
+ constructor(s) {
+  var parts = s.split(" ");
+  var m = new Measure();
+  for (let i = 0; i < parts.length; i++) {
+   switch (parts[i][0]) {
+    case "i": m.instrument = new Instrument(parts[i].replace("i", "")); break;
+    case "v": m.volume     = new Volume    (parts[i].replace("v", "")); break;
+    case "b": m.tempo      = new Tempo     (parts[i].replace("b", "")); break;
+    case "c": m.clef       = new Clef      (parts[i].replace("c", "")); break;
+    case "t": m.time       = new Time      (parts[i].replace("t", "")); break;
+    case "k": m.key        = new Key       (parts[i].replace("k", "")); break;
+    case "|": this.measures.push(m); m = new Measure(); break;
+   } 
+  }
+  this.measures.push(m);
+ }
+ static Line(c, x1, y1, x2, y2) { 
+  c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1, y2); c.stroke(); 
+ }
+ Lines() {
+  this.h = View.space * (this.lines-1);
   this.y = Display.y() + this.h;
   this.x = View.left;
+  var c = Display.Context();
   var y = this.y;
-  c.lineWidth = View.stroke;
+  c.lineWidth   = View.stroke;
   c.strokeStyle = "#000000";
   c.globalAlpha = 1.0;
   for (let i = 0; i < this.lines; i++, y+=View.space) { c.beginPath(); c.moveTo(this.x, y); c.lineTo(View.right, y); c.stroke(); }
-  this.clef.Draw(this.x, this.y);
-  Staff.#Line(c, this.x, this.y, this.x, y-View.space);
   Display.Advance(y);
+ }
+ Draw() {
+  for (let i = 0; i < this.measures.length; i++) this.measures[i].Draw(this.x, this.y);
  }
 }
 
@@ -204,10 +226,10 @@ class Ensemble {
   for (let i=1; i<parts.length; i++) this.staves.push(new Staff(parts[i]));
  }
  Draw() {
-  for (let i=0; i<this.staves.length; i++) {
-   this.staves[i].Draw();
-  }
- }
+  for (let i=0; i<this.staves.length; i++) this.staves[i].Lines();
+  Staff.Line(Display.Context(), View.left,  this.staves[0].y, View.left,  this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
+  Staff.Line(Display.Context(), View.right, this.staves[0].y, View.right, this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
+  for (let i=0; i<this.staves.length; i++) this.staves[i].Draw(); }
 }
 
 class Composition {
