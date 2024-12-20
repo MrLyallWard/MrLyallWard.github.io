@@ -59,6 +59,15 @@ class Tempo {
  //Ritardando()   { if (this.bpm >  20) this.bpm--; }
  //Slow()         { if (this.bpm >  20) this.bpm = Math.floor((this.bpm-1)/10)*10; }
  //Beat()         { return this.bpm/60; }
+ Draw(x, y) {
+  this.x  = x + (View.space*5);
+  this.px = View.space * 2.2;
+  this.y  = y - View.space;
+  var c = Display.Context();
+  c.font = "bold " + this.px + "px Times New Roman";
+  c.fillStyle = "#000000";
+  c.fillText(" 𝅘𝅥 = " + this.bpm, this.x, this.y);
+ }
 }
 
 class Instrument {
@@ -81,6 +90,9 @@ class Volume {
  }
  constructor(s) {
   for (this.level=0; this.level<Volume.marks.length;this.level++) if (Volume.marks[this.level] == s) return;
+ }
+ Draw(x, y) {
+
  }
 }
 
@@ -111,6 +123,9 @@ class Time {
   this.beats = parseInt(parts[0]);
   this.notes = parseInt(parts[1]);
   for (this.time = 0; this.time < Time.signatures.length; this.time++) if ((Time.signatures[this.time][0]==this.beats) && (Time.signatures[this.time][0]==this.notes)) return;
+ }
+ Draw(x, y) {
+  
  }
 }
 
@@ -173,7 +188,10 @@ class Measure {
   }
  }
  Draw(x, y) {
-  if (this.clef != undefined) this.clef.Draw(x, y);
+  if (this.clef   != undefined) this.clef.Draw(x, y);
+  if (this.volume != undefined) this.volume.Draw(x, y);
+  if (this.tempo  != undefined) this.tempo.Draw(x, y);
+  if (this.time   != undefined) this.time.Draw(x, y);
  }
 }
 
