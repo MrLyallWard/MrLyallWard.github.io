@@ -66,7 +66,7 @@ class Tempo {
   var c = Display.Context();
   c.font = "bold " + this.px + "px Times New Roman";
   c.fillStyle = "#000000";
-  c.fillText(" 𝅘𝅥 = " + this.bpm, this.x, this.y);
+  c.fillText(" 𝅘𝅥=" + this.bpm, this.x, this.y);
  }
 }
 
@@ -92,7 +92,13 @@ class Volume {
   for (this.level=0; this.level<Volume.marks.length;this.level++) if (Volume.marks[this.level] == s) return;
  }
  Draw(x, y) {
-
+  this.x  = x + (View.space*5);
+  this.px = View.space * 1.5;
+  this.y  = y + (View.space*5.5);
+  var c = Display.Context();
+  c.font = "bold " + this.px + "px Times New Roman";
+  c.fillStyle = "#000000";
+  c.fillText(Volume.marks[this.level], this.x, this.y);
  }
 }
 
@@ -125,7 +131,15 @@ class Time {
   for (this.time = 0; this.time < Time.signatures.length; this.time++) if ((Time.signatures[this.time][0]==this.beats) && (Time.signatures[this.time][0]==this.notes)) return;
  }
  Draw(x, y) {
-  
+  this.x  = x + (View.space*5);
+  this.px = View.space * 3;
+  this.y1  = y + this.px - View.space;
+  this.y2  = y + this.px + this.px- View.space- View.space;
+  var c = Display.Context();
+  c.font = "bold " + this.px + "px Times New Roman";
+  c.fillStyle = "#000000";
+  c.fillText(this.beats, this.x, this.y1); 
+  c.fillText(this.notes, this.x, this.y2); 
  }
 }
 
@@ -147,10 +161,10 @@ class Key {
 //
 //}
 //
-//class Notes {
-// 
-//}
-//
+class Notes {
+ 
+}
+
 //class Note {
 // static notes = "𝅝𝅗𝅥𝅘𝅥𝅘𝅥𝅮𝅘𝅥𝅯𝅘𝅥𝅰𝅘𝅥𝅱𝅘𝅥𝅲";
 //
@@ -210,6 +224,7 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
     case "c": m.clef       = new Clef      (parts[i].replace("c", "")); break;
     case "t": m.time       = new Time      (parts[i].replace("t", "")); break;
     case "k": m.key        = new Key       (parts[i].replace("k", "")); break;
+    case "n": m.notes      = new Notes     (parts[i].replace("n", "")); break;
     case "|": this.measures.push(m); m = new Measure(); break;
    } 
   }
@@ -343,7 +358,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ | vmp c𝄞 t4/4 b120 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ | vmf c𝄡 𝅝E3 | 𝅝E3 {i∿ | vmf c𝄢 4/4 𝅝E3 | 𝅝E3; {i∿ | vmp c𝄞 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ | vmf c𝄡 4/4 𝅝E3 | 𝅝E3 {i∿ | vmf c𝄢 4/4 𝅝E3 | 𝅝E3"
+var score = "{i∿ | vmp c𝄞 t3/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ | vmf c𝄡 n𝅝E3 | n𝅝E3 {i∿ | vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ | vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ | vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ | vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
