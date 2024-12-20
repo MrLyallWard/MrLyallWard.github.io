@@ -149,6 +149,10 @@ class DoubleSharp { static character = "𝄪"; }
 class Flat        { static character = "♭"; }
 class Bar         { static character = "|"; }
 
+class Measure {
+ 
+}
+
 class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 
  lines = 5;
  volume;
@@ -299,7 +303,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ vmp c𝄞 t4/4 b120 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ vmf c𝄡 𝅝E3 | 𝅝E3 {i∿ vmf c𝄢 4/4 𝅝E3 | 𝅝E3; {i∿ vmp c𝄞 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ vmf c𝄡 4/4 𝅝E3 | 𝅝E3 {i∿ vmf c𝄢 4/4 𝅝E3 | 𝅝E3"
+var score = "{i∿ | vmp c𝄞 t4/4 b120 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ | vmf c𝄡 𝅝E3 | 𝅝E3 {i∿ | vmf c𝄢 4/4 𝅝E3 | 𝅝E3; {i∿ | vmp c𝄞 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | 𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ | vmf c𝄡 4/4 𝅝E3 | 𝅝E3 {i∿ | vmf c𝄢 4/4 𝅝E3 | 𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
