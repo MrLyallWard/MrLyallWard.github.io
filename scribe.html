@@ -110,31 +110,24 @@ class Clef {
  constructor(s) {
   for (this.clef=0; this.clef<Clef.clefs.length;this.clef++) if (Clef.clefs[this.clef] == s) return;
  }
+ #Measure(c, h) { c.font = h + "px Arial"; return c.measureText(Clef.clefs[this.clef]); }
  #Size(c, y) {
   var h = Math.ceil(View.space * Clef.#h[this.clef]);
   this.px = h;
   this.y  = y + this.px + (View.space * Clef.#y[this.clef]); 
   c.font = h + "px Arial"; 
-  let m = c.measureText(Clef.clefs[this.clef]);
-  if      ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px)         { do {
-    c.font = (++h) + "px Arial";
-    m = c.measureText(Clef.clefs[this.clef]);
-  } while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px); } else { do {
-    c.font = (--h) + "px Arial";
-    m = c.measureText(Clef.clefs[this.clef]);
-  } while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px); }
+  let m = this.#Measure(c, h); // c.measureText(Clef.clefs[this.clef]);
+  if ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px)
+       do m = this.#Measure(c, ++h); while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px);
+  else do m = this.#Measure(c, --h); while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px);
+  if (m.actualBoundingBoxDescent < 0) this.y -= m.actualBoundingBoxDescent;
  }
  Draw(x, y) {
   this.x = x + (View.space/2);
   var c = Display.Context();
   c.fillStyle = "#000000";
   this.#Size(c, y);
- // c.fillText(Clef.clefs[this.clef], this.x, this.y);
- // let s = Clef.clefs[this.clef] + " " + (View.space*4) + " " + this.px + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
   c.fillText(Clef.clefs[this.clef], this.x, this.y);
-  //let metrics = ctx.measureText(text);
-  //let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
-  //let actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
  }
 }
 
