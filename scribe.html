@@ -104,23 +104,34 @@ class Volume {
 
 class Clef {
  static clefs = Object.freeze([ "𝄞", "𝄡", "𝄢"]);
- static #h = [7, 5.25, 5];
- static #y = [-3, -1.25, -1.75];
+ static #h = [8, 4, 3];
+ static #y = [-4, 0, 0];
  clef; x; y; px;
  constructor(s) {
   for (this.clef=0; this.clef<Clef.clefs.length;this.clef++) if (Clef.clefs[this.clef] == s) return;
  }
- Draw(x, y) {
-  this.x  = x + (View.space/2);
-  this.px = Math.ceil(View.space * Clef.#h[this.clef]);
-  this.y  = y + this.px + (View.space * Clef.#y[this.clef]);
-  var c = Display.Context();
-  c.font = this.px+"px Arial";
-  c.fillStyle = "#000000";
- // c.fillText(Clef.clefs[this.clef], this.x, this.y);
+ #Size(c, y) {
+  var h = Math.ceil(View.space * Clef.#h[this.clef]);
+  this.px = h;
+  this.y  = y + this.px + (View.space * Clef.#y[this.clef]); 
+  c.font = h + "px Arial"; 
   let m = c.measureText(Clef.clefs[this.clef]);
-  let s = " " + Clef.clefs[this.clef] + "   " + View.space + " " + this.px + " " + m.fontBoundingBoxAscent + " " + m.fontBoundingBoxDescent + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
-  c.fillText(s, this.x, this.y);
+  if      ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px)         { do {
+    c.font = (++h) + "px Arial";
+    m = c.measureText(Clef.clefs[this.clef]);
+  } while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px); } else { do {
+    c.font = (--h) + "px Arial";
+    m = c.measureText(Clef.clefs[this.clef]);
+  } while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px); }
+ }
+ Draw(x, y) {
+  this.x = x + (View.space/2);
+  var c = Display.Context();
+  c.fillStyle = "#000000";
+  this.#Size(c, y);
+ // c.fillText(Clef.clefs[this.clef], this.x, this.y);
+ // let s = Clef.clefs[this.clef] + " " + (View.space*4) + " " + this.px + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
+  c.fillText(Clef.clefs[this.clef], this.x, this.y);
   //let metrics = ctx.measureText(text);
   //let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
   //let actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
