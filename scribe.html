@@ -117,7 +117,6 @@ class Clef {
   var h = Math.ceil(View.space * Clef.#h[this.clef]);
   this.px = h;
   this.y  = y + this.px + (View.space * Clef.#y[this.clef]); 
-  c.font = h + "px Arial"; 
   let m = this.#Measure(c, h);
   while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px) m = this.#Measure(c, --h);
   while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px) m = this.#Measure(c, ++h);
@@ -368,7 +367,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ | vmp c𝄞 t3/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ | vmf c𝄡 n𝅝E3 | n𝅝E3 {i∿ | vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ | vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ | vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ | vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
+var score = "{i∿ k vmp c𝄞 t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ k vmf c𝄡 n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k2♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
