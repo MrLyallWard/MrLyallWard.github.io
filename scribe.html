@@ -115,9 +115,15 @@ class Clef {
   this.px = View.space * Clef.#h[this.clef];
   this.y  = y + this.px + (View.space * Clef.#y[this.clef]);
   var c = Display.Context();
-  c.font = this.px+"px Impact";
+  c.font = this.px+"px Arial";
   c.fillStyle = "#000000";
-  c.fillText(Clef.clefs[this.clef], this.x, this.y);
+ // c.fillText(Clef.clefs[this.clef], this.x, this.y);
+  let m = c.measureText(Clef.clefs[this.clef]);
+  let s = Clef.clefs[this.clef] + " " + m.fontBoundingBoxAscent + " " + m.fontBoundingBoxDescent + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
+  c.fillText(s, this.x, this.y);
+  //let metrics = ctx.measureText(text);
+  //let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+  //let actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
  }
 }
 
@@ -152,7 +158,9 @@ class Time {
 class Key {
  static fifths = Object.freeze(["♭♭♭♭♭♭♭", "♭♭♭♭♭♭", "♭♭♭♭♭", "♭♭♭♭", "♭♭♭", "♭♭", "♭", "", "♯", "♯♯", "♯♯♯", "♯♯♯♯", "♯♯♯♯♯", "♯♯♯♯♯♯", "♯♯♯♯♯♯♯"]);
  // signature
- 
+ constructor(s) {
+
+ }
 }
 
 //class Octave {
@@ -162,7 +170,9 @@ class Key {
 //}
 //
 class Notes {
- 
+ constructor(s) {
+
+ }
 }
 
 //class Note {
@@ -371,5 +381,6 @@ function Onload() {
 }
 window.onload = Onload;
 console.log('Scribe started.dev');
+console.log(navigator.appVersion);
 </script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
 <body><canvas id="display" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
