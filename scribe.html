@@ -112,14 +112,14 @@ class Clef {
  }
  Draw(x, y) {
   this.x  = x + (View.space/2);
-  this.px = View.space * Clef.#h[this.clef];
+  this.px = Math.ceil(View.space * Clef.#h[this.clef]);
   this.y  = y + this.px + (View.space * Clef.#y[this.clef]);
   var c = Display.Context();
   c.font = this.px+"px Arial";
   c.fillStyle = "#000000";
  // c.fillText(Clef.clefs[this.clef], this.x, this.y);
   let m = c.measureText(Clef.clefs[this.clef]);
-  let s = Clef.clefs[this.clef] + " " + m.fontBoundingBoxAscent + " " + m.fontBoundingBoxDescent + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
+  let s = Clef.clefs[this.clef] + " " + this.px + " " + m.fontBoundingBoxAscent + " " + m.fontBoundingBoxDescent + " " + m.actualBoundingBoxAscent + " " + m.actualBoundingBoxDescent;
   c.fillText(s, this.x, this.y);
   //let metrics = ctx.measureText(text);
   //let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
