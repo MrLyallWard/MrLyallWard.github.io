@@ -171,8 +171,8 @@ class Time {
 //} 
 
 class Key {
- static sharps = Object.freeze([[ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]]);
- static flats  = Object.freeze([[ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ 1.5, 0, 2, 0.5, 2.5, 1, 3]]);
+ static sharps = Object.freeze([[ -1.25, 0.25, -1.75, -0.25, 1.25, -0.75, 0.75, 2.25], [ -1.25, 0.5, -1.5, 0, 1.5, -0.5, 1, 2.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]]);
+ static flats  = Object.freeze([[ 0.5, -1, 1, -0.5, 1.5, 0, 2], [ 1, -0.5, 1.5, 0, 2, 0.5, 2.5], [ 1.5, 0, 2, 0.5, 2.5, 1, 3]]);
  signature = 0;
  sharps = 0;
  flats = 0;
@@ -188,7 +188,7 @@ class Key {
  }
  Draw(x, y, clef) {
   if (this.signature == 0) return;
-  var char = new Char((this.signature < 0) ? "♭" : "♯", View.space*((this.signature < 0) ? 2 : 3));
+  var char = new Char((this.signature < 0) ? "♭" : "♯", View.space*2);
   var num = Math.abs(this.signature);
   var Y = (this.signature >=0) ? Key.sharps[clef] : Key.flats[clef];
   var c = Display.Context();
@@ -412,7 +412,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ k vmp c𝄞 k3♯ t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ c𝄡 k♯ vmf n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k7♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
+var score = "{i∿ k vmp c𝄞 k7♯ t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ c𝄡 k7♯ vmf n𝅝E3 | n𝅝E3 {i∿ k7♯ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k7♭ vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k7♭ vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k7♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
