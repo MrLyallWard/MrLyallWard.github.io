@@ -15,6 +15,26 @@ class Image {
   this.canvas.setAttribute("width", w);
   this.canvas.setAttribute("height", h);
   this.context = this.canvas.getContext("2d"); } }
+class Char {
+ char; px; h; w;
+ constructor (char, h) {
+  this.char = char;
+  this.h = this.px = h;
+  var c = Display.Context();
+  var m = Char.#Measure(c, char, h);
+  while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > h) m = Char.#Measure(c, char, --this.px);
+  while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < h) m = Char.#Measure(c, char, ++this.px);
+  this.w = m.width;
+ } 
+ static #Measure(c, char, px) { c.font = px + "px Arial"; return c.measureText(char); }
+ Draw(x, y) {
+  var c = Display.Context();
+  c.font = this.px + "px Arial";
+  c.fillStyle = "#000000";
+  c.fillText(this.char, x, y + this.h);
+ }
+}
+
 
 //class Stero {
 // static left = "🖜";
@@ -106,23 +126,26 @@ class Clef {
  static clefs = Object.freeze([ "𝄞", "𝄡", "𝄢"]);
  static #h = [8, 4, 3];
  static #y = [-4, 0, 0];
- clef; x; y; px;
+ clef; x; y;
  constructor(s) {
   for (this.clef=0; this.clef<Clef.clefs.length;this.clef++) if (Clef.clefs[this.clef] == s) return;
  }
  #Measure(c, h) { c.font = h + "px Arial"; return c.measureText(Clef.clefs[this.clef]); }
  Draw(x, y) {
+  //var h = Math.ceil(View.space * Clef.#h[this.clef]);
+  //this.px = h;
+  var char = new Char(Clef.clefs[this.clef], Math.ceil(View.space * Clef.#h[this.clef]))
   this.x = x + (View.space/2);
-  var c = Display.Context();
-  var h = Math.ceil(View.space * Clef.#h[this.clef]);
-  this.px = h;
-  this.y  = y + this.px + (View.space * Clef.#y[this.clef]); 
-  let m = this.#Measure(c, h);
-  while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px) m = this.#Measure(c, --h);
-  while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px) m = this.#Measure(c, ++h);
-  if (m.actualBoundingBoxDescent < 0) this.y -= m.actualBoundingBoxDescent/2;
-  c.fillStyle = "#000000";
-  c.fillText(Clef.clefs[this.clef], this.x, this.y);
+  this.y = y + (View.space * Clef.#y[this.clef]);
+  char.Draw(this.x, this.y);
+  //var c = Display.Context();
+  //let m = this.#Measure(c, h);
+  //while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px) m = this.#Measure(c, --h);
+  //while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px) m = this.#Measure(c, ++h);
+  //if (m.actualBoundingBoxDescent < 0) this.y -= m.actualBoundingBoxDescent/2;
+  //c.fillStyle = "#000000";
+  //c.fillText(Clef.clefs[this.clef], this.x, this.y);
+  return this.x + char.w;
  }
 }
 
@@ -145,6 +168,7 @@ class Time {
   c.fillStyle = "#000000";
   c.fillText(this.beats, this.x, this.y1); 
   c.fillText(this.notes, this.x, this.y2); 
+  return this.x;
  }
 }
 
@@ -155,9 +179,26 @@ class Time {
 //} 
 
 class Key {
- static fifths = Object.freeze(["♭♭♭♭♭♭♭", "♭♭♭♭♭♭", "♭♭♭♭♭", "♭♭♭♭", "♭♭♭", "♭♭", "♭", "", "♯", "♯♯", "♯♯♯", "♯♯♯♯", "♯♯♯♯♯", "♯♯♯♯♯♯", "♯♯♯♯♯♯♯"]);
- // signature
- constructor(s) {
+ static sharps = Object.freeze([ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]);
+ static flats  = Object.freeze([ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]);
+ signature = 0;
+ sharps = 0;
+ flats = 0;
+ key = 1;
+ constructor(k) {
+  var s = k.split("♯");
+  var f = k.split("♭");
+  var sharps = parseInt(s[0]); 
+  var flats  = parseInt(f[0]); 
+  if (s.length > f.length) this.signature = (sharps > 0) ? sharps : s.length-1;
+  else                     this.signature = (flats  > 0) ? -flats : 1-f.length;
+  this.key = Math.pow(2, (5*this.signature)/12);
+ }
+ Draw(x, y) {
+  if (this.signature == 0) return;
+  var char = new Char((this.signature < 0) ? "♭" : "♯", View.space*3);
+  var num = Math.abs(this.signature);
+  var c = Display.Context();
 
  }
 }
@@ -211,10 +252,11 @@ class Measure {
   }
  }
  Draw(x, y) {
-  if (this.clef   != undefined) this.clef.Draw(x, y);
-  if (this.volume != undefined) this.volume.Draw(x, y);
   if (this.tempo  != undefined) this.tempo.Draw(x, y);
+  if (this.volume != undefined) this.volume.Draw(x, y);
+  if (this.clef   != undefined) this.clef.Draw(x, y);
   if (this.time   != undefined) this.time.Draw(x, y);
+  if (this.key    != undefined) this.key.Draw(x, y);
  }
 }
 
@@ -252,7 +294,7 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
   c.strokeStyle = "#000000";
   c.globalAlpha = 1.0;
   for (let i = 0; i < this.lines; i++, y+=View.space) { c.beginPath(); c.moveTo(this.x, y); c.lineTo(View.right, y); c.stroke(); }
-  Display.Advance(y);
+  Display.AdvanceDown(y);
  }
  Draw() {
   for (let i = 0; i < this.measures.length; i++) this.measures[i].Draw(this.x, this.y);
@@ -262,16 +304,19 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
 class Ensemble {
  staves = [];
  parts;
+ x;
  constructor(s) {
   var parts = s.split("{");
   this.parts = parts;
   for (let i=1; i<parts.length; i++) this.staves.push(new Staff(parts[i]));
  }
  Draw() {
+  this.x = View.left;
   for (let i=0; i<this.staves.length; i++) this.staves[i].Lines();
   Staff.Line(Display.Context(), View.left,  this.staves[0].y, View.left,  this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
   Staff.Line(Display.Context(), View.right, this.staves[0].y, View.right, this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
   for (let i=0; i<this.staves.length; i++) this.staves[i].Draw(); }
+ AdvanceTo(x) { if (x > this.x) this.x = x; }
 }
 
 class Composition {
@@ -317,7 +362,8 @@ class View {
 class Display {
  static display;
  static sheet;
- static #y;
+ static #y; 
+ static #x;
  static redraw = false;
  static Wheel(e) { }
  static Onload() {
@@ -332,6 +378,7 @@ class Display {
    Display.sheet.context.globalAlpha = 1.0;
    Display.sheet.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
    Display.#y = View.top;
+   Display.#x = View.left;
    composition.Draw();
    Display.display.context.drawImage(Display.sheet.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
    Display.redraw = false;
@@ -346,7 +393,9 @@ class Display {
  }
  static Context() { return Display.sheet.context; }
  static y() { return Display.#y; }
- static Advance(y=undefined) { Display.#y = (y==undefined) ? View.top : y; }
+ static x() { return Display.#x; }
+ static AdvanceDown(y=undefined) { Display.#y = (y==undefined) ? View.top : y; }
+ static AdvanceAcross(x=undefined) { Display.#x = x; }
 }
 
 class Control {
@@ -367,7 +416,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ k vmp c𝄞 t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ k vmf c𝄡 n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k2♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
+var score = "{i∿ k vmp c𝄞 k♯ t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ c𝄡 k♯ vmf n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k2♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
