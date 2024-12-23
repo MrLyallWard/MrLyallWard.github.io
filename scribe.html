@@ -82,7 +82,7 @@ class Tempo {
  Draw(x, y) {
   this.x  = x + (View.space*5);
   this.px = View.space * 2.2;
-  this.y  = y - View.space;
+  this.y  = y - View.space*3;
   var c = Display.Context();
   c.font = "bold " + this.px + "px Times New Roman";
   c.fillStyle = "#000000";
@@ -132,19 +132,11 @@ class Clef {
  }
  #Measure(c, h) { c.font = h + "px Arial"; return c.measureText(Clef.clefs[this.clef]); }
  Draw(x, y) {
-  //var h = Math.ceil(View.space * Clef.#h[this.clef]);
-  //this.px = h;
   var char = new Char(Clef.clefs[this.clef], Math.ceil(View.space * Clef.#h[this.clef]))
   this.x = x + (View.space/2);
   this.y = y + (View.space * Clef.#y[this.clef]);
   char.Draw(this.x, this.y);
-  //var c = Display.Context();
-  //let m = this.#Measure(c, h);
-  //while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) > this.px) m = this.#Measure(c, --h);
-  //while ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) < this.px) m = this.#Measure(c, ++h);
-  //if (m.actualBoundingBoxDescent < 0) this.y -= m.actualBoundingBoxDescent/2;
-  //c.fillStyle = "#000000";
-  //c.fillText(Clef.clefs[this.clef], this.x, this.y);
+  Display.AdvanceTo(this.x + char.w);
   return this.x + char.w;
  }
 }
@@ -159,7 +151,7 @@ class Time {
   for (this.time = 0; this.time < Time.signatures.length; this.time++) if ((Time.signatures[this.time][0]==this.beats) && (Time.signatures[this.time][0]==this.notes)) return;
  }
  Draw(x, y) {
-  this.x  = x + (View.space*5);
+  this.x  = x + View.space;
   this.px = View.space * 3;
   this.y1  = y + this.px - View.space;
   this.y2  = y + this.px + this.px- View.space- View.space;
@@ -179,8 +171,8 @@ class Time {
 //} 
 
 class Key {
- static sharps = Object.freeze([ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]);
- static flats  = Object.freeze([ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]);
+ static sharps = Object.freeze([[ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]]);
+ static flats  = Object.freeze([[ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,], [ -2, -0.5, -2.5, -1, +0.5, -1.5, 0, 1.5,]]);
  signature = 0;
  sharps = 0;
  flats = 0;
@@ -194,12 +186,17 @@ class Key {
   else                     this.signature = (flats  > 0) ? -flats : 1-f.length;
   this.key = Math.pow(2, (5*this.signature)/12);
  }
- Draw(x, y) {
+ Draw(x, y, clef) {
   if (this.signature == 0) return;
   var char = new Char((this.signature < 0) ? "♭" : "♯", View.space*3);
   var num = Math.abs(this.signature);
+  var Y = (this.signature >=0) ? Key.sharps[clef] : Key.flats[clef];
   var c = Display.Context();
-
+  for (let i = 0; i < num; i++) {
+   char.Draw(x, y + (Y[i] * View.space));
+   x += char.w - (View.space/4);
+  }
+  return x;
  }
 }
 
@@ -254,9 +251,9 @@ class Measure {
  Draw(x, y) {
   if (this.tempo  != undefined) this.tempo.Draw(x, y);
   if (this.volume != undefined) this.volume.Draw(x, y);
-  if (this.clef   != undefined) this.clef.Draw(x, y);
+  if (this.clef   != undefined) x = this.clef.Draw(x, y);
+  if ((this.key != undefined) && (this.clef != undefined)) x = this.key.Draw(x, y, this.clef.clef);
   if (this.time   != undefined) this.time.Draw(x, y);
-  if (this.key    != undefined) this.key.Draw(x, y);
  }
 }
 
@@ -304,19 +301,17 @@ class Staff { //∿ mp 𝄞 4/4 𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | 𝅘𝅥G4B4,�
 class Ensemble {
  staves = [];
  parts;
- x;
  constructor(s) {
   var parts = s.split("{");
   this.parts = parts;
   for (let i=1; i<parts.length; i++) this.staves.push(new Staff(parts[i]));
  }
  Draw() {
-  this.x = View.left;
+  Display.AdvanceTo();
   for (let i=0; i<this.staves.length; i++) this.staves[i].Lines();
   Staff.Line(Display.Context(), View.left,  this.staves[0].y, View.left,  this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
   Staff.Line(Display.Context(), View.right, this.staves[0].y, View.right, this.staves[this.staves.length-1].y + this.staves[this.staves.length-1].h);
   for (let i=0; i<this.staves.length; i++) this.staves[i].Draw(); }
- AdvanceTo(x) { if (x > this.x) this.x = x; }
 }
 
 class Composition {
@@ -395,7 +390,7 @@ class Display {
  static y() { return Display.#y; }
  static x() { return Display.#x; }
  static AdvanceDown(y=undefined) { Display.#y = (y==undefined) ? View.top : y; }
- static AdvanceAcross(x=undefined) { Display.#x = x; }
+ static AdvanceTo(x=undefined) { Display.#x = (x==undefined) ? View.left : ((x > Display.#x) ? x : Display.#x); }
 }
 
 class Control {
@@ -416,7 +411,7 @@ class Control {
  static Cancel(e) {}
 }
 
-var score = "{i∿ k vmp c𝄞 k♯ t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ c𝄡 k♯ vmf n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k2♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
+var score = "{i∿ k vmp c𝄞 k3♯ t4/4 b120 n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 | n𝅘𝅥G4B4,𝅘𝅥B4C5,𝅘𝅥G4B4,𝅘𝅥C5E5 {i∿ c𝄡 k♯ vmf n𝅝E3 | n𝅝E3 {i∿ k♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3; {i∿ k vmp c𝄞 n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 | n𝅘𝅥G4,𝅘𝅥B4,𝅘𝅥G4,𝅘𝅥C5 {i∿ k vmf c𝄡 4/4 n𝅝E3 | n𝅝E3 {i∿ k2♭ vp c𝄢 4/4 n𝅝E3 | n𝅝E3"
 var composition = new Composition(score);
 function twentyfivehertz() {
  Display.Redraw(composition);
@@ -429,6 +424,5 @@ function Onload() {
 }
 window.onload = Onload;
 console.log('Scribe started.dev');
-console.log(navigator.appVersion);
 </script><style> canvas{position: absolute; left: 0px; top: 0px;} body{overscroll-behavior-y: none; touch-action: none;} </style></head>
 <body><canvas id="display" width="320" height="180" oncontextmenu="return false;"></canvas></body></html>
