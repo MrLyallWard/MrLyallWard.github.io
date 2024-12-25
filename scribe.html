@@ -86,7 +86,7 @@ class Tempo {
   var c = Display.Context();
   c.font = "bold " + this.px + "px Times New Roman";
   c.fillStyle = "#000000";
-  c.fillText(" 𝅘𝅥=" + this.bpm, this.x, this.y);
+  c.fillText("𝅘𝅥=" + this.bpm, this.x, this.y);
  }
 }
 
@@ -171,8 +171,7 @@ class Time {
 //} 
 
 class Key {
- static sharps = Object.freeze([[ -1.25, 0.25, -1.75, -0.25, 1.25, -0.75, 0.75, 2.25], [ -0.75, 0.75, -1.25, 0.25, 1.75, -0.25, 1.25], [ -0.25, 1.25, -0.75,  0.75, 2.25, 0.25, 1.75]]);
- static flats  = Object.freeze([[ 0.5, -1, 1, -0.5, 1.5, 0, 2], [ 1, -0.5, 1.5, 0, 2, 0.5, 2.5], [ 1.5, 0, 2, 0.5, 2.5, 1, 3]]);
+ static sharpsflats = Object.freeze([[-1.25, 0.25, -1.75, -0.25, 1.25, -0.75, 0.75, 2.25], [ 0.5, -1, 1, -0.5, 1.5, 0, 2]]);
  signature = 0;
  sharps = 0;
  flats = 0;
@@ -190,12 +189,9 @@ class Key {
   if (this.signature == 0) return;
   var char = new Char((this.signature < 0) ? "♭" : "♯", View.space*2);
   var num = Math.abs(this.signature);
-  var Y = (this.signature >=0) ? Key.sharps[clef] : Key.flats[clef];
+  var Y = Key.sharpsflats[(this.signature < 0) ? 1 : 0];
   var c = Display.Context();
-  for (let i = 0; i < num; i++) {
-   char.Draw(x, y + (Y[i] * View.space));
-   x += char.w - (View.space/4);
-  }
+  for (let i = 0; i < num; i++, x += char.w - (View.space/2)) char.Draw(x, y + ((Y[i] + (clef/2)) * View.space));
   return x;
  }
 }
@@ -206,12 +202,6 @@ class Key {
 //
 //}
 //
-class Notes {
- constructor(s) {
-
- }
-}
-
 //class Note {
 // static notes = "𝅝𝅗𝅥𝅘𝅥𝅘𝅥𝅮𝅘𝅥𝅯𝅘𝅥𝅰𝅘𝅥𝅱𝅘𝅥𝅲";
 //
@@ -221,6 +211,25 @@ class Notes {
 //class Rest {
 // static rests = "𝄻𝄼𝄽𝄾𝄿𝅀";
 //}
+
+class Notes {
+ flat = false; sharp = false; natural = false;
+ constructor(s) {
+  if (s.length == 0) return;
+  var groups = s.split(',');
+  for (let g = 0; g<groups.length; g++) {
+   s = groups[g];
+   switch (s[0]) {
+    case '♯': this.sharp = true;   s.replace('♯', ''); break;
+    case '♮': this.natural = true; s.replace('♮', ''); break;
+    case '♭': this.flat = true;    s.replace('♭', ''); break;
+   }
+   switch (s[0]) {
+    case '𝅝':break;
+   }
+  }
+ }
+}
 
 class Sharp       { static character = "♯"; }
 class DoubleSharp { static character = "𝄪"; }
