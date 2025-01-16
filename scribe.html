@@ -60,11 +60,9 @@ class Tool {
  static #Stop() { console.log("Tool stop button"); }
  static #Pause() { console.log("Tool pause button"); }
  static #Download() { console.log("Tool download button"); }
+ static #Load() { console.log("Tool load button"); }
  static #Store() { console.log("Tool store button"); }
- static #Maximise() { 
-  if (document.fullscreenElement != undefined) document.exitFullscreen();
-  else Display.display.canvas.requestFullscreen();
-  console.log("Tool maximise button"); }
+ static #Maximise() { if (document.fullscreenElement != undefined) document.exitFullscreen(); else Display.display.canvas.requestFullscreen(); }
  constructor(c, f) {
   this.c = c; 
   this.f = f; 
@@ -74,6 +72,7 @@ class Tool {
   new Tool("▶", Tool.#Play );
   new Tool("⏸", Tool.#Pause );
   new Tool("⏹", Tool.#Stop );
+  new Tool("🗀", Tool.#Load );
   new Tool("🖫", Tool.#Download );
   new Tool("🖳", Tool.#Store );
   new Tool("🗖", Tool.#Maximise );
