@@ -27,7 +27,7 @@ function sound_system() {
   //s.connect(v);
   //v.connect(this.context.destination);
   //v.gain.value = 0.001;//this.volume;
-  s.start();
+  s.start(); // this.context.currentTime + 10);
  }
  
  sound_system.prototype.gen = function() {  

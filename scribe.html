@@ -34,25 +34,60 @@ class Char {
   c.fillText(this.char, x, y + this.h);
  }
 }
+//class Stero { static chars = "🖜🖝🕪"; }
 
-
-//class Stero {
-// static left = "🖜";
-// static right = "🖝";
-// static center = "🕪";
-//}
-//
-//class File {
-//  static play = "▶";
-//  static stop = "⏹";
-//  static pause = "⏸︎";
-//  static loop = "⟳";
-//  static save = "⤓🖫";
-//  static load = "🖪⤒";
-//  static put = "⤓🖳";
-//  static get = "🖳⤒";
-//  static maximise = "🗖";
-//}
+class Tool {
+ char; c; f; x = 0; y; w;
+ static tools = [];
+ static Up(e) {
+  if (e.offsetY <= (View.space * 3)) {
+   for (let i = 0; i < Tool.tools.length; i++) {
+    if (e.offsetX < Tool.tools[i].r) {
+     Tool.tools[i].f();
+     return true;
+    }
+   }
+  }
+  return false;
+ }
+ #Size()      { this.char = new Char(this.c, Math.ceil(View.space*2)); this.r = this.w = this.char.w + View.space; }
+ #Stack(left) { this.x = left.r; this.r += this.x; }
+ #Draw(c) {
+  c.font = this.char.px + "px Arial";
+  c.fillText(this.char.char, this.x + View.space/2, View.space * 3);
+ }
+ static #Play() { console.log("Tool play button"); }
+ static #Stop() { console.log("Tool stop button"); }
+ static #Pause() { console.log("Tool pause button"); }
+ static #Download() { console.log("Tool download button"); }
+ static #Store() { console.log("Tool store button"); }
+ static #Maximise() { 
+  if (document.fullscreenElement != undefined) document.exitFullscreen();
+  else Display.display.canvas.requestFullscreen();
+  console.log("Tool maximise button"); }
+ constructor(c, f) {
+  this.c = c; 
+  this.f = f; 
+  Tool.tools.push(this); 
+ }
+ static { // ▶️▶ ⏸️⏸ ⏹️⏹ 🔁⟳ 📂📁 💾🖫 🔽⤓ 🔼⤒ 💻🖳 🗖
+  new Tool("▶", Tool.#Play );
+  new Tool("⏸", Tool.#Pause );
+  new Tool("⏹", Tool.#Stop );
+  new Tool("🖫", Tool.#Download );
+  new Tool("🖳", Tool.#Store );
+  new Tool("🗖", Tool.#Maximise );
+ }
+ static Resize() {
+  for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Size();
+  for (let i = 1; i < Tool.tools.length; i++) Tool.tools[i].#Stack(Tool.tools[i-1]);
+ }
+ static Draw() {
+  var c = Display.Context();
+  c.fillStyle = "#004000";
+  for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Draw(c);
+ }
+}
 
 class Audio {
  static player;
@@ -65,6 +100,11 @@ class Audio {
   Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
  }
  static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
+}
+
+class Tone {
+ static tones = [];
+
 }
 
 class Tempo {
@@ -226,6 +266,13 @@ class Notes {
    }
    switch (s[0]) {
     case '𝅝':break;
+    case '𝅗𝅥':break;
+    case '𝅘𝅥':break;
+    case '𝅘𝅥𝅮':break;
+    case '𝄻':break;
+    case '𝄼':break;
+    case '𝄽':break;
+    case '𝄾':break;
    }
   }
  }
@@ -385,6 +432,7 @@ class Display {
    Display.#y = View.top;
    Display.#x = View.left;
    composition.Draw();
+   Tool.Draw();
    Display.display.context.drawImage(Display.sheet.canvas, 0, 0, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
    Display.redraw = false;
   }
@@ -394,6 +442,7 @@ class Display {
   Display.sheet.canvas.setAttribute("height", window.innerHeight);
   Display.display.canvas.setAttribute("width", window.innerWidth);
   Display.display.canvas.setAttribute("height", window.innerHeight);
+  Tool.Resize();
   Display.redraw = true;
  }
  static Context() { return Display.sheet.context; }
@@ -415,6 +464,7 @@ class Control {
  }
  static Move(e) {}
  static Up(e) {
+  if (Tool.Up(e)) return;
   Audio.Play();
  }
  static Down(e) {}
