@@ -50,11 +50,11 @@ class Tool {
   }
   return false;
  }
- #Size()      { this.char = new Char(this.c, Math.ceil(View.space*2)); this.r = this.w = this.char.w + View.space; }
+ #Size()      { this.char = new Char(this.c, Math.ceil(View.space*4)); this.r = this.w = this.char.w + View.space; }
  #Stack(left) { this.x = left.r; this.r += this.x; }
  #Draw(c) {
   c.font = this.char.px + "px Arial";
-  c.fillText(this.char.char, this.x + View.space/2, View.space * 3);
+  c.fillText(this.char.char, this.x, View.space * 4);
  }
  static #Play() { console.log("Tool play button"); }
  static #Stop() { console.log("Tool stop button"); }
@@ -68,14 +68,14 @@ class Tool {
   this.f = f; 
   Tool.tools.push(this); 
  }
- static { // ▶️▶ ⏸️⏸ ⏹️⏹ 🔁⟳ 📂📁 💾🖫 🔽⤓ 🔼⤒ 💻🖳 🗖
-  new Tool("▶️▶", Tool.#Play );
-  new Tool("⏸️⏸", Tool.#Pause );
-  new Tool("⏹️⏹", Tool.#Stop );
-  new Tool("📂🗀", Tool.#Load );
-  new Tool("💾🖫", Tool.#Download );
-  new Tool("💻🖳", Tool.#Store );
-  new Tool("🪟🗖", Tool.#Maximise );
+ static { // ▶️▶ ⏸️⏸ ⏹️⏹ 🔁⟳ 📂📁🗀 💾🖫 🔽⤓ 🔼⤒ 💻🖳 🗖
+  new Tool("▶️", Tool.#Play );
+  new Tool("⏸️", Tool.#Pause );
+  new Tool("⏹️", Tool.#Stop );
+  new Tool("📂", Tool.#Load );
+  new Tool("💾", Tool.#Download );
+  new Tool("💻", Tool.#Store );
+  new Tool("🪟", Tool.#Maximise );
  }
  static Resize() {
   for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Size();
