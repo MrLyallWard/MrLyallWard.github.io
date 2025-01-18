@@ -55,6 +55,7 @@ class Tool {
   Display.redraw |= old != Tool.hover;
  }
  static Up(e) {
+  Tool.hover = undefined;
   if ((Tool.down != undefined) && (e.offsetY <= (View.space*Tool.region))) { if ((e.offsetX >= Tool.down.x) && (e.offsetX <= Tool.down.r)) {
    Tool.down.f(Tool.down); Display.redraw |= true; Tool.down = undefined; return true; } }
   return false; }
