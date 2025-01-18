@@ -27,10 +27,11 @@ class Char {
   this.w = m.width;
  } 
  static #Measure(c, char, px) { c.font = px + "px Arial"; return c.measureText(char); }
- Draw(x, y) {
+ Draw(x, y, a = 1) {
   var c = Display.Context();
   c.font = this.px+"px Arial";
   c.fillStyle = "#000000";
+  c.globalAlpha = a;
   c.fillText(this.char, x, y+this.h);
  }
 }
@@ -39,11 +40,18 @@ class Char {
 class Tool {
  static size = 4;
  static down = -1;
+ static hover = undefined;
  static tools = [];
  static play;
  static Down(e) {
-  if (e.offsetY <= (View.space*(1 + Tool.size))) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.down = i; return true; } } }
+  if (e.offsetY <= (View.space*(1.5 + Tool.size))) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.down = i; return true; } } }
   Tool.down = -1; return false; }
+ static Move(e) {
+  let old = Tool.hover;
+  Tool.hover = undefined;
+  if (e.offsetY <= (View.space*(1.5 + Tool.size))) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.hover = Tool.tools[i]; break; } } }
+  Display.redraw |= old != Tool.hover;
+ }
  static Up(e) {
   if ((Tool.down >= 0) && (e.offsetY <= (View.space*(1 + Tool.size)))) { let b = Tool.tools[Tool.down]; if ((e.offsetX >= b.x) && (e.offsetX <= b.r)) { b.f(b); return true; } }
   Tool.down = -1; return false; }
@@ -52,16 +60,14 @@ class Tool {
   for (let i = 1; i < Tool.tools.length; i++) Tool.tools[i].#Stack(Tool.tools[i-1]);
  }
  static Draw() { for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Draw(); }
- //static Active() { return Tool.tools[Tool.down]; }
+ static #Mute(b) { if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
  static #Play(b) { if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); Tool.play = b; }
  static #Stop(b) { if (Tool.play != undefined) { Tool.play.#SetChar("▶️");} }
  static #Loop(b) { if (b.c == "➡️") b.#SetChar("🔄"); else b.#SetChar("➡️"); }
- //static #Pause() { console.log("Tool pause button"); }
  static #Download() { console.log("Tool download button"); }
  static #Load() { console.log("Tool load button"); }
  static #Store() { console.log("Tool store button"); }
  static #Maximise() { if (document.fullscreenElement != undefined) document.exitFullscreen(); else Display.display.canvas.requestFullscreen(); }
- static #Mute(b) { if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
  static {
   new Tool("🔊", Tool.#Mute     );
   new Tool("▶️", Tool.#Play     );
@@ -81,7 +87,13 @@ class Tool {
  #SetChar(c)  { this.c = c; Tool.Resize(); Display.redraw = true; }
  #Size()      { this.char = new Char(this.c, Math.ceil(View.space*Tool.size)); this.r = this.char.w; }
  #Stack(left) { this.x = left.r; this.r = this.x + this.char.w; }
- #Draw()      { this.char.Draw(this.x, 0); }
+ #Draw()      {
+  var c = Display.Context();
+  c.fillStyle = (this==Tool.hover) ? "#000000" : "#FFFFFF";
+  c.fillRect(this.x, 0, this.char.w, View.space*(1.5 + Tool.size)); // .roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
+  this.char.Draw(this.x, 0, (this==Tool.hover) ? 1 : 0.5 );
+  c.globalAlpha = 1;
+ }
 }
 
 class Audio {
@@ -457,7 +469,9 @@ class Control {
   window.addEventListener("wheel",             function(e) {try {Display.Wheel(e);                     } catch(x){console.log("wheel "     +x)}});
   window.addEventListener("toggle-fullscreen", function(e) {try {View.FullScreen(e);                   } catch(x){console.log("fullscreen "+x)}});
  }
- static Move(e) {}
+ static Move(e) {
+  if (Tool.Move(e)) return;
+ }
  static Up(e) {
   if (Tool.Up(e)) return;
  }
