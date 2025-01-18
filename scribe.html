@@ -39,22 +39,25 @@ class Char {
 
 class Tool {
  static size = 4;
- static down = -1;
+ static region = 5.5;
+ static down = undefined;
  static hover = undefined;
  static tools = [];
  static play;
  static Down(e) {
-  if (e.offsetY <= (View.space*(1.5 + Tool.size))) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.down = i; return true; } } }
-  Tool.down = -1; return false; }
+  if (e.offsetY <= (View.space*Tool.region)) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.down = Tool.tools[i]; Display.redraw |= true; return true; } } }
+  Tool.down = undefined; return false; }
  static Move(e) {
   let old = Tool.hover;
   Tool.hover = undefined;
-  if (e.offsetY <= (View.space*(1.5 + Tool.size))) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.hover = Tool.tools[i]; break; } } }
+  if (e.offsetY <= (View.space*Tool.region)) { for (let i = 0; i < Tool.tools.length; i++) { if (e.offsetX < Tool.tools[i].r) { Tool.hover = Tool.tools[i]; break; } } }
+  if (Tool.hover != Tool.down) Tool.down = undefined;
   Display.redraw |= old != Tool.hover;
  }
  static Up(e) {
-  if ((Tool.down >= 0) && (e.offsetY <= (View.space*(1 + Tool.size)))) { let b = Tool.tools[Tool.down]; if ((e.offsetX >= b.x) && (e.offsetX <= b.r)) { b.f(b); return true; } }
-  Tool.down = -1; return false; }
+  if ((Tool.down != undefined) && (e.offsetY <= (View.space*Tool.region))) { if ((e.offsetX >= Tool.down.x) && (e.offsetX <= Tool.down.r)) {
+   Tool.down.f(Tool.down); Display.redraw |= true; Tool.down = undefined; return true; } }
+  return false; }
  static Resize() {
   for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Size();
   for (let i = 1; i < Tool.tools.length; i++) Tool.tools[i].#Stack(Tool.tools[i-1]);
@@ -89,7 +92,10 @@ class Tool {
  #Stack(left) { this.x = left.r; this.r = this.x + this.char.w; }
  #Draw()      {
   var c = Display.Context();
-  c.fillStyle = (this==Tool.hover) ? "#000000" : "#FFFFFF";
+  if ((this == Tool.hover) || (this == Tool.down)) { 
+   c.globalAlpha = 1;
+   c.fillStyle = (this==Tool.down) ? "#FFFFFF" : "#00A6ED";
+  } else c.fillStyle = "#FFFFFF";
   c.fillRect(this.x, 0, this.char.w, View.space*(1.5 + Tool.size)); // .roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
   this.char.Draw(this.x, 0, (this==Tool.hover) ? 1 : 0.5 );
   c.globalAlpha = 1;
