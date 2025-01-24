@@ -60,12 +60,12 @@ class Tool {
    Tool.down.f(Tool.down); Display.redraw |= true; Tool.down = undefined; return true; } }
   return false; }
  static Resize() {
-  for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Size();
-  for (let i = 1; i < Tool.tools.length; i++) Tool.tools[i].#Stack(Tool.tools[i-1]);
+  for (let i = 0; i < Tool.tools.length; i++) { Tool.tools[i].#Size(); if (i > 0) Tool.tools[i].#Stack(Tool.tools[i-1]); }
+//for (let i = 1; i < Tool.tools.length; i++) Tool.tools[i].#Stack(Tool.tools[i-1]);
  }
  static Draw() { for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Draw(); }
  static #Mute(b) { if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
- static #Play(b) { if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); Tool.play = b; }
+ static #Play(b) { if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); }
  static #Stop(b) { if (Tool.play != undefined) { Tool.play.#SetChar("▶️");} }
  static #Loop(b) { if (b.c == "➡️") b.#SetChar("🔄"); else b.#SetChar("➡️"); }
  static #Download() { console.log("Tool download button"); }
@@ -74,7 +74,7 @@ class Tool {
  static #Maximise() { if (document.fullscreenElement != undefined) document.exitFullscreen(); else Display.display.canvas.requestFullscreen(); }
  static {
   new Tool("🔊", Tool.#Mute     );
-  new Tool("▶️", Tool.#Play     );
+  Tool.play = new Tool("▶️", Tool.#Play);
   new Tool("⏹️", Tool.#Stop     );
   new Tool("➡️", Tool.#Loop     ); //🔁🔄🔂
   new Tool("📂", Tool.#Load     );
@@ -93,11 +93,8 @@ class Tool {
  #Stack(left) { this.x = left.r; this.r = this.x + this.char.w; }
  #Draw()      {
   var c = Display.Context();
-  if ((this == Tool.hover) || (this == Tool.down)) { 
-   c.globalAlpha = 1;
-   c.fillStyle = (this==Tool.down) ? "#FFFFFF" : "#00A6ED";
-  } else c.fillStyle = "#FFFFFF";
-  c.fillRect(this.x, 0, this.char.w, View.space*(1.5 + Tool.size)); // .roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
+  if ((this == Tool.hover) || (this == Tool.down)) { c.fillStyle = (this==Tool.down) ? "#FFFFFF" : "#00A6ED"; } else c.fillStyle = "#FFFFFF";
+  c.fillRect(this.x, 0, this.char.w, View.space*Tool.region); // .roundRect(x, y, w, h, [View.size, View.size, View.size, View.size]);
   this.char.Draw(this.x, 0, (this==Tool.hover) ? 1 : 0.5 );
   c.globalAlpha = 1;
  }
@@ -108,17 +105,33 @@ class Audio {
  static samples = 44100;
  static angle;
  static beat = 44100 * 0.6;
+ static muted = false;
  static Start() {
   Audio.player = new (window.AudioContext || window.webkitAudioContext);
   Audio.samples = Audio.player.sampleRate;
   Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
  }
  static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
+ static Mute(m) { Audio.muted = m; }
+ static Angle(f) { return Math.sin((2*Math.PI*f)/Audio.samples); }
+ static Samples() { return 44100; }
+}
+
+class Wave {
+ p = []; 
+ constructor (f,t) {
+  var s=0; var c=1; var a = Audio.Angle(f);
+  for (let x = Math.ceil(t * Audio.Samples()); x > 0; x--) {
+   this.p.push(s); s = s + (c * a); c = c - (s * a);
+  }
+ } 
+ static {
+  a = new Wave(440, 1/8); // A4 120bpm 1/4
+ }
 }
 
 class Tone {
  static tones = [];
-
 }
 
 class Tempo {
