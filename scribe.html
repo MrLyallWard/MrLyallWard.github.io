@@ -65,7 +65,7 @@ class Tool {
  }
  static Draw() { for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Draw(); }
  static #Mute(b) { if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
- static #Play(b) { if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); }
+ static #Play(b) { Tone.Test(); if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); }
  static #Stop(b) { if (Tool.play != undefined) { Tool.play.#SetChar("▶️");} }
  static #Loop(b) { if (b.c == "➡️") b.#SetChar("🔄"); else b.#SetChar("➡️"); }
  static #Download() { console.log("Tool download button"); }
@@ -102,36 +102,48 @@ class Tool {
 
 class Audio {
  static player;
- static samples = 44100;
- static angle;
+ static rate = 44100;
  static beat = 44100 * 0.6;
  static muted = false;
- static Start() {
-  Audio.player = new (window.AudioContext || window.webkitAudioContext);
-  Audio.samples = Audio.player.sampleRate;
-  Audio.angle = Math.round(((2000000000) * Math.PI) / Audio.player.sampleRate)/1000000000;
+ static Player() {
+  if (Audio.player == undefined) {
+   Audio.player = new (window.AudioContext || window.webkitAudioContext);
+   Audio.rate = Audio.player.sampleRate;
+  }
+  return Audio.player;
  }
- static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
+ //static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
  static Mute(m) { Audio.muted = m; }
- static Angle(f) { return Math.sin((2*Math.PI*f)/Audio.samples); }
- static Samples() { return 44100; }
+ static Angle(f) { return Math.sin((2*Math.PI*f)/Audio.rate); }
+ static Rate() { return (Audio.player == undefined) ? 44100 : Audio.rate; }
 }
 
 class Wave {
  p = []; 
  constructor (f,t) {
   var s=0; var c=1; var a = Audio.Angle(f);
-  for (let x = Math.ceil(t * Audio.Samples()); x > 0; x--) {
+  for (let x = Math.ceil(t * Audio.Rate()); x > 0; x--) {
    this.p.push(s); s = s + (c * a); c = c - (s * a);
   }
  } 
- static {
-  a = new Wave(440, 1/8); // A4 120bpm 1/4
- }
+ //static {
+ // a = new Wave(440, 1/8); // A4 120bpm 1/4
+ //}
 }
 
 class Tone {
  static tones = [];
+ static Test() {
+  var a4 = new Wave(880, 1/4); // A4 120bpm 1/2
+  var player = Audio.Player();
+  var buffer = player.createBuffer(1, a4.p.length, Audio.Rate());
+  var data = buffer.getChannelData(0);
+  for (let i = 0; i < a4.p.length; i++) data[i] = a4.p[i];
+  var source = player.createBufferSource();
+  source.buffer = buffer;
+  source.connect(player.destination);
+  source.start();
+ }
 }
 
 class Tempo {
