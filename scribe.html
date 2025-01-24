@@ -114,31 +114,21 @@ class Audio {
  }
  //static Beat() { Audio.beat = Audio.samples * Tempo.beat; }
  static Mute(m) { Audio.muted = m; }
- static Angle(f) { return Math.sin((2*Math.PI*f)/Audio.rate); }
+ static Sine1(f) { return Math.sin((2*Math.PI*f)/Audio.rate); }
  static Rate() { return (Audio.player == undefined) ? 44100 : Audio.rate; }
 }
 
-class Wave {
- p = []; 
- constructor (f,t) {
-  var s=0; var c=1; var a = Audio.Angle(f);
-  for (let x = Math.ceil(t * Audio.Rate()); x > 0; x--) {
-   this.p.push(s); s = s + (c * a); c = c - (s * a);
-  }
- } 
- //static {
- // a = new Wave(440, 1/8); // A4 120bpm 1/4
- //}
+class Sine {
+ static Add(buffer, sine1) { for (let sin = 0, cos = 1, i = 1; i < buffer.length; cos -= sin*sine1) buffer[i++] += sin += cos*sine1; }
 }
 
 class Tone {
  static tones = [];
  static Test() {
-  var a4 = new Wave(880, 1/4); // A4 120bpm 1/2
   var player = Audio.Player();
-  var buffer = player.createBuffer(1, a4.p.length, Audio.Rate());
+  var buffer = player.createBuffer(1, Audio.Rate()/4, Audio.Rate());
   var data = buffer.getChannelData(0);
-  for (let i = 0; i < a4.p.length; i++) data[i] = a4.p[i];
+  Sine.Add(data, Audio.Sine1(440)); // A4:440Hz
   var source = player.createBufferSource();
   source.buffer = buffer;
   source.connect(player.destination);
