@@ -63,14 +63,14 @@ class Tool {
   for (let i = 0; i < Tool.tools.length; i++) { Tool.tools[i].#Size(); if (i > 0) Tool.tools[i].#Stack(Tool.tools[i-1]); }
  }
  static Draw() { for (let i = 0; i < Tool.tools.length; i++) Tool.tools[i].#Draw(); }
- static #Mute(b) { if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
- static #Play(b) { Tone.Test(220); if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); } // A3:220Hz
- static #Stop(b) { Tone.Test(440); if (Tool.play != undefined) { Tool.play.#SetChar("▶️");} }   // A4:440Hz
- static #Loop(b) { Tone.Test(880); if (b.c == "➡️") b.#SetChar("🔄"); else b.#SetChar("➡️"); } // A5:880Hz
- static #Download() { console.log("Tool download button"); }
- static #Load() { console.log("Tool load button"); }
- static #Store() { console.log("Tool store button"); }
- static #Maximise() { if (document.fullscreenElement != undefined) document.exitFullscreen(); else Display.display.canvas.requestFullscreen(); }
+ static #Mute(b)    { Tone.Test(27.5); if (b.c == "🔊") b.#SetChar("🔇"); else b.#SetChar("🔊"); }
+ static #Play(b)    { Tone.Test(  55); if (b.c == "▶️") b.#SetChar("⏸️"); else b.#SetChar("▶️"); } // A3:220Hz
+ static #Stop(b)    { Tone.Test( 110); if (Tool.play != undefined) { Tool.play.#SetChar("▶️");} }   // A4:440Hz
+ static #Loop(b)    { Tone.Test( 220); if (b.c == "➡️") b.#SetChar("🔄"); else b.#SetChar("➡️"); } // A5:880Hz
+ static #Load()     { Tone.Test( 440); console.log("Tool load button"); }
+ static #Download() { Tone.Test( 880); console.log("Tool download button"); }
+ static #Store()    { Tone.Test(1760); console.log("Tool store button"); }
+ static #Maximise() { Tone.Test(3520); if (document.fullscreenElement != undefined) document.exitFullscreen(); else Display.display.canvas.requestFullscreen(); }
  static {
   new Tool("🔊", Tool.#Mute     );
   Tool.play = new Tool("▶️", Tool.#Play);
@@ -119,15 +119,16 @@ class Audio {
 
 class Sine {
  static Add(buffer, sine1) { for (let sin = 0, cos = 1, i = 1; i < buffer.length; cos -= sin*sine1) buffer[i++] += sin += cos*sine1; }
+ static Decay(buffer, sine1) { var d = Math.pow(0.01, 1/(buffer.length-1)); for (let sin = 0, cos = 1, i = 1, a = 1; i < buffer.length; cos -= sin*sine1, a *= d) buffer[i++] += a * (sin += cos*sine1); }
 }
 
 class Tone {
  static tones = [];
  static Test(frequency) {
   var player = Audio.Player();
-  var buffer = player.createBuffer(1, Audio.Rate()/4, Audio.Rate());
+  var buffer = player.createBuffer(1, Audio.Rate(), Audio.Rate());
   var data = buffer.getChannelData(0);
-  Sine.Add(data, Audio.Sine1(frequency));
+  Sine.Decay(data, Audio.Sine1(frequency));
   var source = player.createBufferSource();
   source.buffer = buffer;
   source.connect(player.destination);
