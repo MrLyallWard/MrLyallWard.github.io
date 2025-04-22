@@ -306,9 +306,11 @@ class Cursor {
  }
  State(s) { for (let i=0; i<Cursor.cursors.length; i++) Cursor.cursors[i].state=Cursor.states.nothing; this.state = s; }
  static Draw(image) {
-  if (Side.IsZooming()) Cursor.#DrawZooming(image); 
-  else if (!Cursor.#DrawCrosshair(image.context)) { 
-   for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(image.context, Cursor.cursors[i]); 
+  if (Side.IsZooming()) Cursor.#DrawZooming(image);
+  else if (!Side.IsMousing()) {
+   if (!Cursor.#DrawCrosshair(image.context)) {
+    for (var i=0; i<Cursor.cursors.length;i++) Cursor.#Draw(image.context, Cursor.cursors[i]);
+   }
   }
  }
  Update(e)      {this.point.x = e.offsetX; this.point.y = e.offsetY;}
