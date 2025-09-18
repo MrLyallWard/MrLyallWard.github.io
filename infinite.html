@@ -191,8 +191,8 @@ class Column {
  insert(){this.cells.splice(0, 0, new Cell());}
  append(){this.cells.push(new Cell());} }
 class Level {
- static width = 256;
- static height = 256;
+ static width = 512;
+ static height = 512;
  static #columns = [];
  static Left(x)  {if (x < 3)              {Level.#columns.splice(0, 0, new Column(Level.height));                  Level.width++;  return false;} return true;}
  static Right(x) {if (x > Level.width-3)  {Level.#columns.push(new Column(this.height));                           Level.width++;               } return true;}
@@ -483,7 +483,7 @@ class View {
   View.bottom = View.top+(View.high*View.size);
  }
  static Size() {
-  View.size   = Math.floor(window.innerWidth/Math.sqrt(Level.width*(window.innerWidth/window.innerHeight)));
+  View.size   = Math.floor(window.innerWidth/Math.sqrt(2*Level.width*(window.innerWidth/window.innerHeight)));
   View.wide   = Math.floor(window.innerWidth /View.size);
   View.high   = Math.floor(window.innerHeight/View.size);
   View.#Window();
